@@ -382,7 +382,7 @@ class CommonRepository(CommonRepositoryInterface):
         result = await self.session.execute(query)
         return result.scalar_one()
     
-    async def get_make(
+    async def get_state(
         self,
         cursor: int | None,
         limit: int,
@@ -477,7 +477,7 @@ class CommonRepository(CommonRepositoryInterface):
 
     async def get_total_city(self, state_id:int | None = None, search: str | None = None) -> int:
         query = select(func.count()).select_from(
-            mstcity.join(mststate, mstcity.c.state_id == mstmake.c.id)
+            mstcity.join(mststate, mstcity.c.state_id == mststate.c.id)
         ).where(mstcity.c.is_active)
 
         if state_id is not None:

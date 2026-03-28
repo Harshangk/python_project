@@ -10,6 +10,7 @@ tblbuylead = Table(
     "tblbuylead",
     mapper_registry.metadata,
     Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("branch", String(50), nullable=False),
     Column("mobile", String(15), nullable=False),
     Column("alternate_mobile", String(15), nullable=True),
     Column("source", String(50), nullable=False),
@@ -38,15 +39,29 @@ tblbuylead = Table(
     Column("modified_by", String(length=50), nullable=True),
     Column("is_active", Boolean, default=True, nullable=False),
     Column("is_deleted", Boolean, default=False, nullable=False),
+    Index("idx_tblbuylead_branch", "branch"),
     Index("idx_tblbuylead_mobile", "mobile"),
     Index("idx_tblbuylead_status", "status"),
     Index("idx_tblbuylead_telecaller", "telecaller"),
     Index("idx_tblbuylead_executive", "executive"),
 )
 
+tblbuylead_address = Table(
+    "tblbuylead_address",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("buylead_id", Integer, ForeignKey("tblbuylead.id"), nullable=False),
+    Column("address", String(100), nullable=False),
+    Column("state", String(25), nullable=False),
+    Column("city", String(25), nullable=False),
+    Column("area", String(25), nullable=True),
+    Column("pincode", Integer(), nullable=True),
+)
+
 
 def start_mappers() -> None:
     mapper_registry.map_imperatively(BuyModel.BuyLead, tblbuylead)
+    mapper_registry.map_imperatively(BuyModel.BuyLeadAddress, tblbuylead_address)
 
 
 def stop_mappers() -> None:

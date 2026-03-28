@@ -7,23 +7,34 @@ from api.schema_types import BuyMode, Color, FuelType
 
 @dataclass
 class BuyLead:
+    branch: str
     mobile: str
     alternate_mobile: Optional[str]
     source: str
     mode: BuyMode
-    broker_name: str
     customer_name: str
     make_id: int
     model_id: int
-    variant: str
-    color: Color
     fuel_type: FuelType
     year: int
     kms: int
     owner: str
     client_offer: int
     our_offer: int
-    telecaller: str
-    executive: str
     remarks: str
+    broker_name: str | None = None
+    variant: str | None = None
+    color: Color | None = None
+    telecaller: str | None = None
+    executive: str | None = None
+    lead_address: BuyLeadAddress | None = None
     created_by: str | None = None
+    
+
+@dataclass
+class BuyLeadAddress:
+    address: str
+    state: str
+    city: str
+    area: Optional[str]
+    pincode: int | None = None

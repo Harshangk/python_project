@@ -2,38 +2,49 @@ from datetime import datetime
 from enum import Enum
 from typing import Annotated, List, Optional
 
-from pydantic import Field, StringConstraints, field_validator
+from pydantic import Field, StringConstraints, field_validator, BeforeValidator
 
 from api.buy.example import BUY_LEAD
 from api.schema_types import BuyMode, CamelBaseModel, Color, FuelType
 from model.buy import buy as BuyModel
 
 
+def empty_to_none(v):
+    return None if v == "" else v
+
 class Response(CamelBaseModel):
     id: int
     message: str
 
+class LeadAddress(CamelBaseModel):
+    address: str = Field(..., min_length=1, max_length=100)
+    state: str = Field(..., min_length=1, max_length=25)
+    city: str = Field(..., min_length=1, max_length=25)
+    area: str | None = Field(None, min_length=1, max_length=25)
+    pincode: int | None = None
 
 class CreateBuyLead(CamelBaseModel):
+    branch: str
     mobile: str
     alternate_mobile: str
     source: str
     mode: BuyMode
-    broker_name: str = Field(..., min_length=1, max_length=255)
+    broker_name: str | None = Field(None, max_length=255)
     customer_name: str = Field(..., min_length=1, max_length=255)
+    lead_address: LeadAddress | None = None
     make_id: int
     model_id: int
-    variant: str = Field(..., min_length=1, max_length=255)
-    color: Color
+    variant: str | None = Field(None, max_length=255)
+    color: Annotated[Color | None, BeforeValidator(empty_to_none)] = None
     fuel_type: FuelType
     year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
     kms: int
     owner: str = Field(..., min_length=1, max_length=1)
     client_offer: int
     our_offer: int
-    telecaller: str = Field(..., min_length=1, max_length=50)
-    executive: str = Field(..., min_length=1, max_length=50)
     remarks: str = Field(..., min_length=1, max_length=500)
+    telecaller: str | None = Field(None, max_length=50)
+    executive: str | None = Field(None, max_length=50)
 
     @field_validator("mobile")
     def validate_mobile(cls, v):
@@ -49,6 +60,7 @@ class CreateBuyLead(CamelBaseModel):
 
     def to_model(self) -> BuyModel.BuyLead:
         return BuyModel.BuyLead(
+            branch=self.branch,
             mobile=self.mobile,
             alternate_mobile=self.alternate_mobile,
             source=self.source,
@@ -68,11 +80,22 @@ class CreateBuyLead(CamelBaseModel):
             telecaller=self.telecaller,
             executive=self.executive,
             remarks=self.remarks,
+            lead_address=(
+                BuyModel.BuyLeadAddress(
+                    address=self.lead_address.address,
+                    state=self.lead_address.state,
+                    city=self.lead_address.city,
+                    area=self.lead_address.area,
+                    pincode=self.lead_address.pincode,
+                )
+                if self.lead_address else None
+            ),
         )
 
 
 class BuyLeadItem(CamelBaseModel):
     id: int
+    branch: str
     mobile: str
     alternate_mobile: str | None = None
     source: str

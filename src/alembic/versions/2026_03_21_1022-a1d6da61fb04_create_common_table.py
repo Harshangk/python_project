@@ -296,4 +296,4 @@ def downgrade() -> None:
 # (1,'Ahmedabad','Harshang'),
 # (1,'Surat','Harshang'),
 # (2,'Bombay','Harshang'),
-# (2,'Pune','Harshang'),
+# (2,'Pune','Harshang');

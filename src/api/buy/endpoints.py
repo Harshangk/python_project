@@ -1,8 +1,9 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status, Body
 
 from api.buy import deps
+from api.buy import example
 from api.deps import get_authenticated_user, get_trace_id
 from api.schema_types import SortOrder
 from app import constant
@@ -24,7 +25,7 @@ router = APIRouter(prefix="/buy", tags=["buy"])
 )
 async def create_lead(
     request: Request,
-    lead: CreateBuyLead,
+    lead: CreateBuyLead = Body(..., example=example.BUY_LEAD),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),

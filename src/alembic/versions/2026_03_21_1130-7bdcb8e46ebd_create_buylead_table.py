@@ -30,6 +30,7 @@ def upgrade() -> None:
             sa.Identity(always=False, start=1, increment=1),
             nullable=False,
         ),
+        sa.Column("branch", sa.String(50), nullable=False),
         sa.Column("mobile", sa.String(15), nullable=False),
         sa.Column("alternate_mobile", sa.String(15), nullable=True),
         sa.Column("source", sa.String(50), nullable=False),
@@ -77,6 +78,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", name=op.f("pk_tblbuylead")),
     )
 
+    op.create_index("idx_tblbuylead_branch", "tblbuylead", ["branch"])
     op.create_index("idx_tblbuylead_mobile", "tblbuylead", ["mobile"])
     op.create_index("idx_tblbuylead_status", "tblbuylead", ["status"])
     op.create_index("idx_tblbuylead_telecaller", "tblbuylead", ["telecaller"])
@@ -95,7 +97,7 @@ def upgrade() -> None:
         sa.Column("address", sa.String(100), nullable=False),
         sa.Column("state", sa.String(25), nullable=False),
         sa.Column("city", sa.String(25), nullable=False),
-        sa.Column("area", sa.String(25), nullable=False),
+        sa.Column("area", sa.String(25), nullable=True),
         sa.Column("pincode", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
             ["buylead_id"],

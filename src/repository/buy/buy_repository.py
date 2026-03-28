@@ -1,6 +1,6 @@
 from typing import Any, Mapping, Sequence
 
-from sqlalchemy import asc, desc, func, insert, or_, select
+from sqlalchemy import asc, desc, func, insert, or_, select, cast, String
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -8,18 +8,19 @@ from api.schema_types import BuyStatus
 from app import constant
 from auth.exceptions import CreationError
 from model.buy.buy import BuyLead as BuyLeadModel
-from orm.buy.buy import tblbuylead
-from orm.common.common import mstmake, mstmodel
+from orm.buy.buy import tblbuylead, tblbuylead_address
+from orm.common.common import mstmake, mstmodel, mstbroker
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 
 LEAD_SEARCHABLE_COLUMNS = {
+    "branch": tblbuylead.c.branch,
     "mobile": tblbuylead.c.mobile,
     "source": tblbuylead.c.source,
     "mode": tblbuylead.c.mode,
     "broker_name": tblbuylead.c.broker_name,
     "customer_name": tblbuylead.c.customer_name,
-    "make_id": tblbuylead.c.make_id,
-    "model_id": tblbuylead.c.model_id,
+    "make": mstmake.c.make,
+    "model": mstmodel.c.model,
     "fuel_type": tblbuylead.c.fuel_type,
     "year": tblbuylead.c.year,
     "kms": tblbuylead.c.kms,
@@ -34,14 +35,13 @@ LEAD_SORTABLE_COLUMNS = {
     "mobile": tblbuylead.c.mobile,
     "source": tblbuylead.c.source,
     "mode": tblbuylead.c.mode,
-    "make_id": tblbuylead.c.make_id,
-    "model_id": tblbuylead.c.model_id,
-    "year": tblbuylead.c.year,
-    "kms": tblbuylead.c.kms,
+    "make": mstmake.c.make,
+    "model": mstmodel.c.model,
 }
 
 LEAD_COLUMNS = [
     tblbuylead.c.id,
+    tblbuylead.c.branch,
     tblbuylead.c.mobile,
     tblbuylead.c.alternate_mobile,
     tblbuylead.c.source,
@@ -85,10 +85,10 @@ class BuyRepository(BuyRepositoryInterface):
                 status = BuyStatus.Allocated.value
                 allocated_at = func.now()
                 allocated_by = created_by
-
             stmt = (
                 insert(tblbuylead)
                 .values(
+                    branch=lead.branch,
                     mobile=lead.mobile,
                     alternate_mobile=lead.alternate_mobile,
                     source=lead.source,
@@ -98,7 +98,7 @@ class BuyRepository(BuyRepositoryInterface):
                     make_id=lead.make_id,
                     model_id=lead.model_id,
                     variant=lead.variant,
-                    color=lead.color.value,
+                    color=lead.color.value if lead.color else None,
                     fuel_type=lead.fuel_type.value,
                     year=str(lead.year),
                     kms=lead.kms,
@@ -115,12 +115,25 @@ class BuyRepository(BuyRepositoryInterface):
                 )
                 .returning(tblbuylead.c.id)
             )
-
             result = await self.session.execute(stmt)
+            buylead_id = result.scalar_one() 
+
+            if lead.lead_address:
+                stmt = (
+                    insert(tblbuylead_address)
+                    .values(
+                        buylead_id=buylead_id,
+                        address=lead.lead_address.address,
+                        state=lead.lead_address.state,
+                        city=lead.lead_address.city,
+                        area=lead.lead_address.area,
+                        pincode=lead.lead_address.pincode,
+                    )
+                )
+                await self.session.execute(stmt)
 
             await self.session.commit()
-
-            return result.scalar_one()
+            return buylead_id
         except IntegrityError:
             await self.session.rollback()
             raise CreationError(constant.FAILED)
@@ -135,10 +148,20 @@ class BuyRepository(BuyRepositoryInterface):
 
     def _apply_search(self, stmt, search: str | None):
         if search:
-            filters = [
-                col.ilike(f"%{search}%") for col in LEAD_SEARCHABLE_COLUMNS.values()
-            ]
+            filters = []
+
+            for col in LEAD_SEARCHABLE_COLUMNS.values():
+                if col is None:
+                    continue
+
+                if hasattr(col.type, "python_type") and col.type.python_type is str:
+                    filters.append(col.ilike(f"%{search}%"))
+
+                else:
+                    filters.append(cast(col, String).ilike(f"%{search}%"))
+
             stmt = stmt.where(or_(*filters))
+
         return stmt
 
     def _apply_sort(self, stmt, sort_by: str | None, sort_order: str | None):
@@ -160,11 +183,13 @@ class BuyRepository(BuyRepositoryInterface):
         stmt = self._apply_search(stmt, search)
 
         if cursor:
-            stmt = stmt.where(tblbuylead.c.id > cursor)
+            if sort_order == "desc":
+                stmt = stmt.where(tblbuylead.c.id < cursor)
+            else:
+                stmt = stmt.where(tblbuylead.c.id > cursor)
 
         stmt = self._apply_sort(stmt, sort_by, sort_order)
         stmt = stmt.limit(limit)
-
         result = await self.session.execute(stmt)
         return result.mappings().all()
 
