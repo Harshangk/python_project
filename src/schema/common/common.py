@@ -109,3 +109,43 @@ class BrokerList(CamelBaseModel):
 class BrokerSortBy(str, Enum):
     id = "id"
     booker="booker"
+
+
+class StateItem(CamelBaseModel):
+    id: int
+    state: str
+    created_at: datetime
+    created_by: str
+
+
+class StateList(CamelBaseModel):
+    total: int
+    limit: int
+    next: Optional[str]
+    items: List[StateItem]
+
+
+class StateSortBy(str, Enum):
+    id = "id"
+    state = "state"
+
+class CityItem(CamelBaseModel):
+    id: int
+    state_id: int
+    state: str
+    city: str
+    created_at: datetime
+    created_by: str
+
+
+class CityList(CamelBaseModel):
+    total: int
+    limit: int
+    next: Optional[str]
+    items: List[CityItem]
+
+
+class CitySortBy(str, Enum):
+    id = "id"
+    state="state"
+    city="city"

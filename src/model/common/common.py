@@ -27,3 +27,13 @@ class Year:
 @dataclass
 class Broker:
     broker: str
+
+@dataclass
+class State:
+    state: str
+
+
+@dataclass
+class City:
+    state_id: int
+    city: str

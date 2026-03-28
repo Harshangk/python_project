@@ -25,6 +25,10 @@ from schema.common.common import (
     YearList,
     BrokerList,
     BrokerSortBy,
+    StateList,
+    StateSortBy,
+    CityList,
+    CitySortBy,
     )
 router = APIRouter(prefix="/common", tags=["common"])
 
@@ -242,3 +246,70 @@ async def get_year(
         next_url = build_next_page_url(request, last_id, limit)
 
     return YearList(total=total, limit=limit, next=next_url, items=year)
+
+
+@router.get(
+    "/state",
+    response_model=StateList,
+    status_code=status.HTTP_200_OK,
+)
+async def get_state(
+    request: Request,
+    cursor: int | None = None,
+    limit: int | None = None,
+    search: str | None = None,
+    sort_by: StateSortBy = Query(StateSortBy.id, description="Field to sort by"),
+    sort_order: SortOrder = Query(SortOrder.desc, description="Sort direction"),
+    commmon_service: CommonServiceInterface = Depends(deps.common_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+) -> StateList:
+    logger.info(f"request:{request},current_user:{current_user}")
+    limit = normalize_limit(limit)
+    state = await commmon_service.get_state(
+        cursor, limit, search, sort_by.value, sort_order.value
+    )
+    total = await commmon_service.get_total_state(search)
+
+    next_url = None
+    if len(state) == limit:
+        last_id = state[-1].id
+        next_url = build_next_page_url(request, last_id, limit)
+
+    return StateList(total=total, limit=limit, next=next_url, items=state)
+
+
+@router.get(
+    "/city",
+    response_model=CityList,
+    status_code=status.HTTP_200_OK,
+)
+async def get_city(
+    request: Request,
+    state_id: int | None = None,
+    cursor: int | None = None,
+    limit: int | None = None,
+    search: str | None = None,
+    sort_by: CitySortBy = Query(CitySortBy.id, description="Field to sort by"),
+    sort_order: SortOrder = Query(SortOrder.desc, description="Sort direction"),
+    commmon_service: CommonServiceInterface = Depends(deps.common_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+) -> CityList:
+    logger.info(f"request:{request},current_user:{current_user}")
+    limit = normalize_limit(limit)
+    city = await commmon_service.get_city(
+        state_id=state_id,
+        cursor=cursor, 
+        limit=limit, 
+        search=search, 
+        sort_by=sort_by.value, 
+        sort_order=sort_order.value
+    )
+    total = await commmon_service.get_total_city(state_id=state_id,search=search)
+
+    next_url = None
+    if len(city) == limit:
+        last_id = city[-1].id
+        next_url = build_next_page_url(request, last_id, limit)
+
+    return CityList(total=total, limit=limit, next=next_url, items=city)
+

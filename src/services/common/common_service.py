@@ -8,6 +8,8 @@ from schema.common.common import (
     BranchItem,
     YearItem,
     BrokerItem,
+    StateItem,
+    CityItem,
 )
 from services.common.common_service_interface import CommonServiceInterface
 
@@ -123,3 +125,45 @@ class CommonService(CommonServiceInterface):
 
     async def get_total_year(self, search: str | None = None) -> int:
         return await self.common_repository.get_total_year(search)
+    
+
+    async def get_state(
+        self,
+        cursor: int | None,
+        limit: int,
+        search: str | None = None,
+        sort_by: str | None = None,
+        sort_order: str | None = None,
+    ) -> List[StateItem]:
+        rows = await self.common_repository.get_state(
+            cursor, limit, search, sort_by, sort_order
+        )
+        state = [StateItem(**row) for row in rows]
+        return state
+
+    async def get_total_state(self, search: str | None = None) -> int:
+        return await self.common_repository.get_total_state(search)
+    
+
+    async def get_city(
+        self,
+        cursor: int | None,
+        limit: int,
+        state_id: int | None = None,
+        search: str | None = None,
+        sort_by: str | None = None,
+        sort_order: str | None = None,
+    ) -> List[CityItem]:
+        rows = await self.common_repository.get_city(
+            state_id=state_id,
+            cursor=cursor, 
+            limit=limit, 
+            search=search,
+            sort_by= sort_by, 
+            sort_order=sort_order
+        )
+        city = [CityItem(**row) for row in rows]
+        return city
+
+    async def get_total_city(self, state_id: int | None = None, search: str | None = None) -> int:
+        return await self.common_repository.get_total_city(state_id=state_id,search=search)
