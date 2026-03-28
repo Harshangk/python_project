@@ -172,6 +172,65 @@ def upgrade() -> None:
 
     op.create_index("idx_mstbroker_broker", "mstbroker", ["broker"])
 
+    op.create_table(
+        "mststate",
+        sa.Column(
+            "id",
+            sa.Integer(),
+            sa.Identity(always=False, start=1, increment=1),
+            nullable=False,
+        ),
+        sa.Column("state", sa.String(25), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+        ),
+        sa.Column("created_by", sa.String(50), nullable=False),
+        sa.Column("modified_at", sa.DateTime(), nullable=True),
+        sa.Column("modified_by", sa.String(50), nullable=True),
+        sa.Column(
+            "is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False
+        ),
+        sa.Column(
+            "is_deleted", sa.Boolean(), server_default=sa.text("false"), nullable=False
+        ),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_mststate")),
+        sa.UniqueConstraint("state", name=op.f("uq_mststate_state")),
+    )
+
+    op.create_index("idx_mststate_state", "mststate", ["state"])
+
+    op.create_table(
+        "mstcity",
+        sa.Column(
+            "id",
+            sa.Integer(),
+            sa.Identity(always=False, start=1, increment=1),
+            nullable=False,
+        ),
+        sa.Column("state_id", sa.Integer(), nullable=False),
+        sa.Column("city", sa.String(25), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+        ),
+        sa.Column("created_by", sa.String(50), nullable=False),
+        sa.Column("modified_at", sa.DateTime(), nullable=True),
+        sa.Column("modified_by", sa.String(50), nullable=True),
+        sa.Column(
+            "is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False
+        ),
+        sa.Column(
+            "is_deleted", sa.Boolean(), server_default=sa.text("false"), nullable=False
+        ),
+        sa.ForeignKeyConstraint(
+            ["state_id"],
+            ["mststate.id"],
+            name=op.f("fk_mstcity_state_id_mststate"),
+        ),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_mstcity")),
+    )
+
+    op.create_index("idx_mstcity_city", "mstcity", ["city"])
+
 
 def downgrade() -> None:
     """Downgrade schema."""
@@ -181,6 +240,8 @@ def downgrade() -> None:
     op.drop_table("mstsource")
     op.drop_table("mstyear")
     op.drop_table("mstbroker")
+    op.drop_table("mstcity")
+    op.drop_table("mststate")
 
 
 # insert into mstmake
@@ -222,3 +283,17 @@ def downgrade() -> None:
 # values
 # ('ABC','Harshang'),
 # ('Test Test','Harshang');
+
+# insert into mststate
+# (state,created_by)
+# values
+# ('Gujarat','Harshang'),
+# ('Maharastra','Harshang');
+
+# insert into mstcity
+# (state_id,city,created_by)
+# values
+# (1,'Ahmedabad','Harshang'),
+# (1,'Surat','Harshang'),
+# (2,'Bombay','Harshang'),
+# (2,'Pune','Harshang'),

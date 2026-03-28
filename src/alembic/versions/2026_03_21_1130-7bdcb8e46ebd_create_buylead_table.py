@@ -83,6 +83,30 @@ def upgrade() -> None:
     op.create_index("idx_tblbuylead_executive", "tblbuylead", ["executive"])
 
 
+    op.create_table(
+        "tblbuylead_address",
+        sa.Column(
+            "id",
+            sa.Integer(),
+            sa.Identity(always=False, start=1, increment=1),
+            nullable=False,
+        ),
+        sa.Column("buylead_id", sa.Integer(), nullable=False),
+        sa.Column("address", sa.String(100), nullable=False),
+        sa.Column("state", sa.String(25), nullable=False),
+        sa.Column("city", sa.String(25), nullable=False),
+        sa.Column("area", sa.String(25), nullable=False),
+        sa.Column("pincode", sa.Integer(), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["buylead_id"],
+            ["tblbuylead.id"],
+            name=op.f("fk_tblbuylead_address_buylead_id_tblbuylead"),
+        ),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_tblbuylead_address")),
+    )
+
+
 def downgrade() -> None:
     """Downgrade schema."""
+    op.drop_table("tblbuylead_address")
     op.drop_table("tblbuylead")
