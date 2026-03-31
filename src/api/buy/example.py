@@ -23,7 +23,7 @@ BUY_LEAD = {
     "owner": "1",
     "clientOffer": 500000,
     "ourOffer": 480000,
-    "telecaller": "",
-    "executive": "",
+    "telecaller": "Harshang",
+    "executive": "Harshang",
     "remarks": "Customer wants urgent deal",
 }

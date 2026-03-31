@@ -117,11 +117,11 @@ def downgrade() -> None:
 # ('Workload Monitor', NULL, '/workload', 6, 10),
 # ('Round Robin Setup', NULL, '/round-robin', 6, 11),
 # ('SLA & Escalation', NULL, '/sla', 6, 12),
-# ('Automation', NULL, '/automation', 6, 13);
+# ('Automation', NULL, '/automation', 6, 13),
 # ('Buy', 'ShoppingCart', NULL, NULL, 14),
 # ('Untouched', NULL, '/leads/untouchedlist', 14, 15),
 # ('Sale', 'TrendingUp', NULL, NULL, 16),
-# ('Untouched', NULL, '/leads/untouched', 16, 17),
+# ('Untouched', NULL, '/leads/untouched', 16, 17);
 
 
 # insert into maprolemenu
