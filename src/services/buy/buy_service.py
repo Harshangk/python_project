@@ -40,3 +40,15 @@ class BuyService(BuyServiceInterface):
             search, sort_by, sort_order
         ):
             yield BuyLeadItem(**row)
+
+    async def get_lead_by_id(
+        self,
+        lead_id: int,
+    ) -> BuyLeadItem:
+        row = await self.buy_repository.get_lead_by_id(lead_id)
+        if not row:
+            return None
+        return BuyLeadItem(**row)
+    
+    async def remove_lead(self, lead_id: int, created_by: str) -> bool:
+        return await self.buy_repository.remove_lead(lead_id, created_by)

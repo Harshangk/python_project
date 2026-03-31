@@ -33,3 +33,18 @@ class BuyRepositoryInterface(ABC):
         sort_order: str | None = None,
     ):
         pass
+
+    @abstractmethod
+    async def get_lead_by_id(
+        self,
+        lead_id: int,
+    ) -> BuyLeadModel:
+        pass
+
+    @abstractmethod
+    async def remove_lead(
+        self,
+        lead_id: int,
+        created_by: str
+    ) -> bool:
+        pass

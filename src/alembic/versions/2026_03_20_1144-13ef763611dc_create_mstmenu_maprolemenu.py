@@ -107,8 +107,8 @@ def downgrade() -> None:
 # values
 # ('Dashboard', 'LayoutDashboard', '/dashboard', NULL, 1),
 # ('Leads', 'Users', NULL, NULL, 2),
-# ('Buy', NULL, '/leads/buylead', 2, 3),
-# ('Sell', NULL, '/leads/add', 2, 4),
+# ('Buy Lead: Single', NULL, '/leads/buylead', 2, 3),
+# ('Buy Lead: List', NULL, '/leads/buyleadlist', 2, 4),
 # ('Untouched', NULL, '/leads/untouched', 2, 5),
 # ('Smart Assignment', 'Brain', NULL, NULL, 6),
 # ('Assignment Rules', NULL, '/assignment-rules', 6, 7),
@@ -118,6 +118,11 @@ def downgrade() -> None:
 # ('Round Robin Setup', NULL, '/round-robin', 6, 11),
 # ('SLA & Escalation', NULL, '/sla', 6, 12),
 # ('Automation', NULL, '/automation', 6, 13);
+# ('Buy', 'ShoppingCart', NULL, NULL, 14),
+# ('Untouched', NULL, '/leads/untouched', 14, 15),
+# ('Sale', 'TrendingUp', NULL, NULL, 16),
+# ('Untouched', NULL, '/leads/untouched', 16, 17),
+
 
 # insert into maprolemenu
 # (role_id, menu_id,created_by)

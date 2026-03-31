@@ -1,6 +1,7 @@
 from typing import Any, Mapping, Sequence
+from datetime import datetime
 
-from sqlalchemy import asc, desc, func, insert, or_, select, cast, String
+from sqlalchemy import asc, desc, func, insert, or_, select, update, cast, String
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -222,3 +223,39 @@ class BuyRepository(BuyRepositoryInterface):
         stream = await self.session.stream(stmt)
         async for row in stream:
             yield dict(row._mapping)
+
+
+    async def get_lead_by_id(
+        self,
+        lead_id: int,
+    ) -> BuyLeadModel:
+        stmt = self._base_lead_query()
+        stmt = stmt.where(
+            tblbuylead.c.id == lead_id,
+            tblbuylead.c.is_active.is_(True),
+            tblbuylead.c.is_deleted.is_(False)
+        )
+        result = await self.session.execute(stmt)
+        return result.mappings().one_or_none()
+
+
+    async def remove_lead(self, lead_id: int, created_by: str) -> bool:
+        stmt = (
+            update(tblbuylead)
+            .where(
+                tblbuylead.c.id == lead_id,
+                tblbuylead.c.is_active.is_(True),
+                tblbuylead.c.is_deleted.is_(False)
+            )
+            .values(
+                modified_by=created_by,
+                modified_at=datetime.now,
+                is_active=False,
+                is_deleted=True
+            )
+        )
+
+        result = await self.session.execute(stmt)
+        await self.session.commit()
+
+        return result.rowcount > 0
