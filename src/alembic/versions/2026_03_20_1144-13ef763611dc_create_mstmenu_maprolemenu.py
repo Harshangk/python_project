@@ -119,7 +119,7 @@ def downgrade() -> None:
 # ('SLA & Escalation', NULL, '/sla', 6, 12),
 # ('Automation', NULL, '/automation', 6, 13);
 # ('Buy', 'ShoppingCart', NULL, NULL, 14),
-# ('Untouched', NULL, '/leads/untouched', 14, 15),
+# ('Untouched', NULL, '/leads/untouchedlist', 14, 15),
 # ('Sale', 'TrendingUp', NULL, NULL, 16),
 # ('Untouched', NULL, '/leads/untouched', 16, 17),
 

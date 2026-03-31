@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-
+from api.schema_types import BuyStatus
 from model.buy.buy import BuyLead as BuyLeadModel
 from schema.buy.buy import BuyLeadItem
 
@@ -17,19 +17,21 @@ class BuyServiceInterface(ABC):
         cursor: Optional[int],
         limit: int,
         search: str | None = None,
+        buy_status: BuyStatus | None = None,
         sort_by: str | None = None,
         sort_order: str | None = None,
     ) -> List[BuyLeadItem]:
         pass
 
     @abstractmethod
-    async def get_total_lead(self, search: str | None = None) -> int:
+    async def get_total_lead(self, search: str | None = None, buy_status: BuyStatus | None = None) -> int:
         pass
 
     @abstractmethod
     async def get_lead_export(
         self,
         search: str | None = None,
+        buy_status: BuyStatus | None = None,
         sort_by: str | None = None,
         sort_order: str | None = None,
     ):

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status, B
 from api.buy import deps
 from api.buy import example
 from api.deps import get_authenticated_user, get_trace_id
-from api.schema_types import SortOrder
+from api.schema_types import SortOrder, BuyStatus
 from app import constant
 from app.core.logging import logger
 from auth.dto import AuthenticatedUser
@@ -55,6 +55,7 @@ async def get_buy_lead(
     cursor: int | None = None,
     limit: int | None = None,
     search: str | None = None,
+    buy_status: BuyStatus | None = None,
     sort_by: BuyLeadSortBy = Query(BuyLeadSortBy.id, description="Field to sort by"),
     sort_order: SortOrder = Query(SortOrder.desc, description="Sort direction"),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
@@ -65,9 +66,9 @@ async def get_buy_lead(
     try:
         limit = normalize_limit(limit)
         leads = await buy_service.get_lead(
-            cursor, limit, search, sort_by.value, sort_order.value
+            cursor, limit, search, buy_status, sort_by.value, sort_order.value
         )
-        total = await buy_service.get_total_lead(search)
+        total = await buy_service.get_total_lead(search, buy_status)
 
         next_url = None
         if len(leads) == limit:
@@ -90,13 +91,14 @@ async def get_buy_lead(
 async def export_lead(
     request: Request,
     search: str | None = None,
+    buy_status: BuyStatus | None = None,
     sort_by: BuyLeadSortBy = Query(BuyLeadSortBy.id, description="Field to sort by"),
     sort_order: SortOrder = Query(SortOrder.desc, description="Sort direction"),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ):
-    leads = buy_service.get_lead_export(search, sort_by.value, sort_order.value)
+    leads = buy_service.get_lead_export(search, buy_status, sort_by.value, sort_order.value)
     return stream_csv(rows=leads, filename="users_export.csv")
 
 

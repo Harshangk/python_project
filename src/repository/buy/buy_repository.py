@@ -177,12 +177,15 @@ class BuyRepository(BuyRepositoryInterface):
         cursor: int | None,
         limit: int,
         search: str | None = None,
+        buy_status: BuyStatus | None = None,
         sort_by: str | None = None,
         sort_order: str | None = None,
     ) -> Sequence[Mapping[str, Any]]:
         stmt = self._base_lead_query()
         stmt = self._apply_search(stmt, search)
 
+        if buy_status:
+            stmt = stmt.where(tblbuylead.c.status == buy_status)
         if cursor:
             if sort_order == "desc":
                 stmt = stmt.where(tblbuylead.c.id < cursor)
@@ -194,7 +197,7 @@ class BuyRepository(BuyRepositoryInterface):
         result = await self.session.execute(stmt)
         return result.mappings().all()
 
-    async def get_total_lead(self, search: str | None = None) -> int:
+    async def get_total_lead(self, search: str | None = None, buy_status: BuyStatus | None = None) -> int:
         stmt = (
             select(func.count())
             .select_from(tblbuylead)
@@ -202,20 +205,24 @@ class BuyRepository(BuyRepositoryInterface):
             .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
             .where(tblbuylead.c.is_active)
         )
-
+        
         stmt = self._apply_search(stmt, search)
-
+        if buy_status:
+            stmt = stmt.where(tblbuylead.c.status == buy_status)
         result = await self.session.execute(stmt)
         return result.scalar_one()
 
     async def get_lead_export(
         self,
         search: str | None = None,
+        buy_status: BuyStatus | None = None,
         sort_by: str | None = None,
         sort_order: str | None = None,
     ):
         stmt = self._base_lead_query()
         stmt = self._apply_search(stmt, search)
+        if buy_status:
+            stmt = stmt.where(tblbuylead.c.status == buy_status)
         stmt = self._apply_sort(stmt, sort_by, sort_order)
 
         stmt = stmt.execution_options(stream_results=True)
