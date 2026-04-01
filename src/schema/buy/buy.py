@@ -2,9 +2,9 @@ from datetime import datetime
 from enum import Enum
 from typing import Annotated, List, Optional
 
-from pydantic import Field, StringConstraints, field_validator, BeforeValidator
+from pydantic import Field, StringConstraints, field_validator, BeforeValidator, model_validator
 
-from api.buy.example import BUY_LEAD
+from api.buy.example import BUY_LEAD, BUY_LEAD_ALLOCATION
 from api.schema_types import BuyMode, CamelBaseModel, Color, FuelType
 from model.buy import buy as BuyModel
 
@@ -140,3 +140,26 @@ class BuyLeadSortBy(str, Enum):
     model_id = "model"
     year = "year"
     kms = "kms"
+
+
+class AllocateLeadsRequest(CamelBaseModel):
+    lead_ids: List[int]  = Field(..., min_length=1)
+    telecaller: str | None = None
+    executive: str | None = None
+
+    @model_validator(mode="after")
+    def check_at_least_one(self):
+        if not self.telecaller and not self.executive:
+            raise ValueError("Either telecaller or executive must be provided")
+        return self
+    
+    class config:
+        schema_extra = {"example": BUY_LEAD_ALLOCATION}
+        orm_mode = True
+
+    def to_model(self) -> BuyModel.AllocateLeadsRequest:
+        return BuyModel.AllocateLeadsRequest(
+            lead_ids=self.lead_ids,
+            telecaller=self.telecaller,
+            executive=self.executive,
+        )

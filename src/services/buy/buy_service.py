@@ -1,6 +1,6 @@
 from typing import List
 
-from model.buy.buy import BuyLead as BuyLeadModel
+from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 from schema.buy.buy import BuyLeadItem
 from services.buy.buy_service_interface import BuyServiceInterface
@@ -54,3 +54,7 @@ class BuyService(BuyServiceInterface):
     
     async def remove_lead(self, lead_id: int, created_by: str) -> bool:
         return await self.buy_repository.remove_lead(lead_id, created_by)
+    
+
+    async def allocate_leads(self, allocate: AllocateLeadsRequest, created_by: str) -> int:
+        return await self.buy_repository.allocate_leads(allocate, created_by=created_by)

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Mapping, Optional, Sequence
 from api.schema_types import BuyStatus
-from model.buy.buy import BuyLead as BuyLeadModel
+from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
 
 
 class BuyRepositoryInterface(ABC):
@@ -49,4 +49,9 @@ class BuyRepositoryInterface(ABC):
         lead_id: int,
         created_by: str
     ) -> bool:
+        pass
+
+
+    @abstractmethod
+    async def allocate_leads(self, allocate: AllocateLeadsRequest, created_by: str) -> int:
         pass

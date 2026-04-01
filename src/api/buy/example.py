@@ -27,3 +27,9 @@ BUY_LEAD = {
     "executive": "Harshang",
     "remarks": "Customer wants urgent deal",
 }
+
+BUY_LEAD_ALLOCATION = {
+    "leadIds":[1,2,3],
+    "telecaller": "Harshang",
+    "executive": "Harshang",
+}

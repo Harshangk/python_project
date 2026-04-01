@@ -12,7 +12,7 @@ from auth.dto import AuthenticatedUser
 from auth.exceptions import CreationError
 from common.csv_utils import stream_csv
 from common.cursor_pagination import build_next_page_url, normalize_limit
-from schema.buy.buy import BuyLeadList, BuyLeadItem, BuyLeadSortBy, CreateBuyLead, Response
+from schema.buy.buy import BuyLeadList, BuyLeadItem, BuyLeadSortBy, CreateBuyLead, Response, AllocateLeadsRequest
 from services.buy.buy_service_interface import BuyServiceInterface
 
 router = APIRouter(prefix="/buy", tags=["buy"])
@@ -98,7 +98,7 @@ async def export_lead(
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ):
-    leads = buy_service.get_lead_export(search, buy_status, sort_by.value, sort_order.value)
+    leads = await buy_service.get_lead_export(search, buy_status, sort_by.value, sort_order.value)
     return stream_csv(rows=leads, filename="users_export.csv")
 
 
@@ -154,6 +154,38 @@ async def get_buy_lead_by_id(
         return Response(id=lead_id, message=constant.REMOVED)
     except HTTPException:
         raise
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
+@router.patch(
+    "/allocation",
+    response_model=Response,
+    status_code=status.HTTP_200_OK,
+)
+async def allocate_leads(
+    request: Request,
+    allocate: AllocateLeadsRequest = Body(..., example=example.BUY_LEAD_ALLOCATION),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> Response:
+    logger.info(f"request: {request}, user: {current_user}, allocate:{allocate}")
+    try:
+        if len(allocate.lead_ids) > constant.MAX_LIMIT:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                constant.MAXLIMITREACH
+            )
+        alocate_count = await buy_service.allocate_leads(allocate.to_model(), current_user.user_name)
+        if alocate_count > 0:
+            return Response(id=alocate_count, message=constant.CREATED)
+        else:
+            return Response(id=alocate_count, message=constant.FAILED)
     except ValueError as ex:
         logger.error(f"ValueError error: {ex}")
         raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from pydantic.dataclasses import dataclass
 
@@ -38,3 +38,10 @@ class BuyLeadAddress:
     city: str
     area: Optional[str]
     pincode: int | None = None
+
+
+@dataclass
+class AllocateLeadsRequest:
+    lead_ids: List[int]
+    telecaller: str | None = None
+    executive: str | None = None

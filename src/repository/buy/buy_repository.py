@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 
 from api.schema_types import BuyStatus
 from app import constant
-from auth.exceptions import CreationError
-from model.buy.buy import BuyLead as BuyLeadModel
+from auth.exceptions import CreationError, AllocationError
+from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
 from orm.buy.buy import tblbuylead, tblbuylead_address
 from orm.common.common import mstmake, mstmodel, mstbroker
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
@@ -256,7 +256,7 @@ class BuyRepository(BuyRepositoryInterface):
             )
             .values(
                 modified_by=created_by,
-                modified_at=datetime.now,
+                modified_at=func.now(),
                 is_active=False,
                 is_deleted=True
             )
@@ -266,3 +266,35 @@ class BuyRepository(BuyRepositoryInterface):
         await self.session.commit()
 
         return result.rowcount > 0
+    
+
+    async def allocate_leads(self, allocate: AllocateLeadsRequest, created_by: str) -> int:
+        try:
+            update_data = {
+                "allocated_at": func.now(),
+                "allocated_by": created_by,
+                "status": BuyStatus.Allocated.value,
+            }
+
+            if allocate.telecaller:
+                update_data["telecaller"] = allocate.telecaller
+
+            if allocate.executive:
+                update_data["executive"] = allocate.executive
+
+            stmt = (
+                update(tblbuylead)
+                .where(
+                    tblbuylead.c.id.in_(allocate.lead_ids),
+                    tblbuylead.c.is_active.is_(True),
+                    tblbuylead.c.is_deleted.is_(False),
+                    tblbuylead.c.status == BuyStatus.NotAllocated.value,
+                )
+                .values(**update_data)
+            )
+            result = await self.session.execute(stmt)
+            await self.session.commit()
+            return result.rowcount
+        except IntegrityError:
+            await self.session.rollback()
+            raise AllocationError(constant.FAILED)
