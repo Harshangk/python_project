@@ -77,6 +77,58 @@ LEAD_COLUMNS = [
     tblbuylead_address.c.pincode,
 ]
 
+FOLLOWUP_LEAD_SEARCHABLE_COLUMNS = {
+    "branch": tblbuylead.c.branch,
+    "mobile": tblbuylead.c.mobile,
+    "source": tblbuylead.c.source,
+    "mode": tblbuylead.c.mode,
+    "broker_name": tblbuylead.c.broker_name,
+    "customer_name": tblbuylead.c.customer_name,
+    "make": mstmake.c.make,
+    "model": mstmodel.c.model,
+    "fuel_type": tblbuylead.c.fuel_type,
+    "year": tblbuylead.c.year,
+    "kms": tblbuylead.c.kms,
+    "owner": tblbuylead.c.owner,
+    "status": tblbuylead.c.status,
+    "telecaller": tblbuylead.c.telecaller,
+    "executive": tblbuylead.c.executive,
+    "stage": tblbuylead_followup.c.stage,
+    "disposition": tblbuylead_followup.c.disposition,
+}
+
+FOLLOWUP_LEAD_COLUMNS = [
+    tblbuylead.c.id,
+    tblbuylead.c.status,
+    tblbuylead.c.mobile,
+    tblbuylead.c.customer_name,
+    tblbuylead_followup.c.stage,
+    tblbuylead_followup.c.disposition,
+    tblbuylead_followup.c.calldate,
+    tblbuylead.c.branch,
+    tblbuylead.c.source,
+    tblbuylead.c.mode,
+    tblbuylead.c.broker_name,
+    mstmake.c.make,
+    mstmodel.c.model,
+    tblbuylead.c.variant,
+    tblbuylead.c.color,
+    tblbuylead.c.fuel_type,
+    tblbuylead.c.year,
+    tblbuylead.c.kms,
+    tblbuylead.c.owner,
+    tblbuylead.c.client_offer,
+    tblbuylead.c.our_offer,
+    tblbuylead.c.telecaller,
+    tblbuylead.c.executive,
+    tblbuylead.c.allocated_at,
+    tblbuylead.c.allocated_by,
+    tblbuylead.c.created_at,
+    tblbuylead.c.created_by,
+    tblbuylead_followup.c.created_at,
+    tblbuylead_followup.c.created_by,
+]
+
 
 class BuyRepository(BuyRepositoryInterface):
     def __init__(self, session: Session):
@@ -300,6 +352,7 @@ class BuyRepository(BuyRepositoryInterface):
             .select_from(tblbuylead)
             .join(mstmake, tblbuylead.c.make_id == mstmake.c.id)
             .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
+            .outerjoin(tblbuylead_address, tblbuylead.c.id == tblbuylead_address.c.buylead_id)
             .where(tblbuylead.c.is_active)
         )
         
@@ -430,3 +483,98 @@ class BuyRepository(BuyRepositoryInterface):
         except IntegrityError:
             await self.session.rollback()
             raise AllocationError(constant.FAILED)
+        
+    def _base_followup_lead_query(self,created_by: str,role_id: int):
+        stmt = (
+            select(*FOLLOWUP_LEAD_COLUMNS)
+            .join(mstmake, tblbuylead.c.make_id == mstmake.c.id)
+            .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
+            .join(tblbuylead_followup, tblbuylead.c.id == tblbuylead_followup.c.buylead_id)
+            .where(tblbuylead.c.is_active)
+        )
+        if role_id != 1:
+            stmt = stmt.where(
+                or_(
+                    tblbuylead.c.telecaller == created_by,
+                    tblbuylead.c.executive == created_by,
+                )
+            )
+        return stmt
+
+    def _apply_followup_search(self, stmt, search: str | None):
+        if search:
+            filters = []
+
+            for col in FOLLOWUP_LEAD_SEARCHABLE_COLUMNS.values():
+                if col is None:
+                    continue
+
+                if hasattr(col.type, "python_type") and col.type.python_type is str:
+                    filters.append(col.ilike(f"%{search}%"))
+
+                else:
+                    filters.append(cast(col, String).ilike(f"%{search}%"))
+
+            stmt = stmt.where(or_(*filters))
+
+        return stmt
+
+
+    async def get_followup_lead(
+        self,
+        cursor: int | None,
+        limit: int,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> Sequence[Mapping[str, Any]]:
+        stmt = self._base_followup_lead_query(created_by,role_id)
+        
+        stmt = self._apply_followup_search(stmt, search)
+
+        if cursor:
+            stmt = stmt.where(tblbuylead.c.id < cursor)
+
+        stmt = stmt.limit(limit)
+        result = await self.session.execute(stmt)
+        return result.mappings().all()
+
+    async def get_total_followup_lead(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> int:
+        stmt = (
+            select(func.count())
+            .select_from(tblbuylead)
+            .join(mstmake, tblbuylead.c.make_id == mstmake.c.id)
+            .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
+            .join(tblbuylead_followup, tblbuylead.c.id == tblbuylead_followup.c.buylead_id)
+            .where(tblbuylead.c.is_active)
+        )
+        if role_id != 1:
+            stmt = stmt.where(
+                or_(
+                    tblbuylead.c.telecaller == created_by,
+                    tblbuylead.c.executive == created_by,
+                )
+            )
+        
+        stmt = self._apply_followup_search(stmt, search)
+        result = await self.session.execute(stmt)
+        return result.scalar_one()
+
+    async def get_lead_export(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ):
+        stmt = self._base_followup_lead_query(created_by,role_id)
+        stmt = self._apply_followup_search(stmt, search)
+        stmt = stmt.execution_options(stream_results=True)
+
+        stream = await self.session.stream(stmt)
+        async for row in stream:
+            yield dict(row._mapping)

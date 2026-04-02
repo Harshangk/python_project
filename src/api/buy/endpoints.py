@@ -12,7 +12,16 @@ from auth.dto import AuthenticatedUser
 from auth.exceptions import CreationError, NotFound
 from common.csv_utils import stream_csv
 from common.cursor_pagination import build_next_page_url, normalize_limit
-from schema.buy.buy import BuyLeadList, BuyLeadItem, BuyLeadSortBy, CreateBuyLead, UpdateBuyLead, Response, AllocateLeadsRequest
+from schema.buy.buy import (
+    BuyLeadList,
+    BuyLeadItem,
+    BuyLeadSortBy,
+    CreateBuyLead,
+    UpdateBuyLead,
+    Response,
+    AllocateLeadsRequest,
+    BuyLeadFollowupList,
+)
 from services.buy.buy_service_interface import BuyServiceInterface
 
 router = APIRouter(prefix="/buy", tags=["buy"])
@@ -80,7 +89,6 @@ async def update_lead(
     return Response(id=lead_id, message=constant.UPDATED)
 
 
-
 @router.get(
     "",
     response_model=BuyLeadList,
@@ -135,7 +143,7 @@ async def export_lead(
     trace_id: UUID = Depends(get_trace_id),
 ):
     leads = await buy_service.get_lead_export(search, buy_status, sort_by.value, sort_order.value)
-    return stream_csv(rows=leads, filename="users_export.csv")
+    return stream_csv(rows=leads, filename="buy_lead_export.csv")
 
 
 @router.get(
@@ -260,3 +268,52 @@ async def reallocate_leads(
     except Exception as ex:
         logger.error(f"Exception error: {ex}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+@router.get(
+    "/followup",
+    response_model=BuyLeadFollowupList,
+    status_code=status.HTTP_200_OK,
+)
+async def get_buy_followup_lead(
+    request: Request,
+    cursor: int | None = None,
+    limit: int | None = None,
+    search: str | None = None,
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> BuyLeadFollowupList:
+    logger.info(f"request: {request}, user: {current_user}")
+    try:
+        limit = normalize_limit(limit)
+        leads = await buy_service.get_followup_lead(
+            cursor, limit, current_user.user_name,current_user.role_id, search
+        )
+        total = await buy_service.get_total_followup_lead(current_user.user_name,current_user.role_id,search)
+
+        next_url = None
+        if len(leads) == limit:
+            last_id = leads[-1].id
+            next_url = build_next_page_url(request, last_id, limit)
+
+        return BuyLeadFollowupList(total=total, limit=limit, next=next_url, items=leads)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+    
+@router.get(
+    "/followup/export",
+    status_code=status.HTTP_200_OK,
+)
+async def export_followup_lead(
+    request: Request,
+    search: str | None = None,
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+):
+    leads = await buy_service.get_followup_lead_export(current_user.user_name,current_user.role_id,search)
+    return stream_csv(rows=leads, filename="buy_followup_export.csv")

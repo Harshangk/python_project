@@ -217,3 +217,42 @@ class AllocateLeadsRequest(CamelBaseModel):
             telecaller=self.telecaller,
             executive=self.executive,
         )
+    
+
+class BuyLeadFollowupItem(CamelBaseModel):
+    id: int
+    status: str
+    mobile: str
+    customer_name: str
+    stage: str
+    disposition: str
+    call_date: datetime
+    branch: str
+    source: str
+    mode: BuyMode
+    broker_name: str | None = None
+    make: str
+    model: str
+    variant: str | None = None
+    color: Color | None = None
+    fuel_type: FuelType
+    year: str
+    kms: int
+    owner: str
+    client_offer: int
+    our_offer: int
+    telecaller: str | None = None
+    executive: str | None = None
+    allocated_at: datetime | None = None
+    allocated_by: str | None = None
+    created_at: datetime
+    created_by: str
+    followup_created_at: datetime
+    followup_created_by: str
+
+
+class BuyLeadFollowupList(CamelBaseModel):
+    total: int
+    limit: int
+    next: Optional[str]
+    items: List[BuyLeadFollowupItem]

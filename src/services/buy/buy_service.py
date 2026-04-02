@@ -69,3 +69,37 @@ class BuyService(BuyServiceInterface):
     
     async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
         return await self.buy_repository.reallocate_leads(reallocate, created_by=created_by)
+    
+
+    async def get_followup_lead(
+        self,
+        cursor: int | None,
+        limit: int,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> List[BuyLeadItem]:
+        rows = await self.buy_repository.get_followup_lead(
+            cursor, limit,created_by, role_id ,search
+        )
+        leads = [BuyLeadItem(**row) for row in rows]
+        return leads
+
+    async def get_total_followup_lead(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> int:
+        return await self.buy_repository.get_total_followup_lead(created_by, role_id ,search)
+
+    async def get_followup_lead_export(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ):
+        async for row in self.buy_repository.get_followup_lead_export(
+            created_by, role_id ,search
+        ):
+            yield BuyLeadItem(**row)

@@ -63,3 +63,32 @@ class BuyRepositoryInterface(ABC):
     @abstractmethod
     async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
         pass
+
+    @abstractmethod
+    async def get_followup_lead(
+        self,
+        cursor: Optional[int],
+        limit: int,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> Sequence[Mapping[str, Any]]:
+        pass
+
+    @abstractmethod
+    async def get_total_followup_lead(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def get_followup_lead_export(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ):
+        pass
