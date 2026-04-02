@@ -55,3 +55,7 @@ class BuyRepositoryInterface(ABC):
     @abstractmethod
     async def allocate_leads(self, allocate: AllocateLeadsRequest, created_by: str) -> int:
         pass
+
+    @abstractmethod
+    async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
+        pass

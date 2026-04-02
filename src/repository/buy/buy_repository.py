@@ -298,3 +298,31 @@ class BuyRepository(BuyRepositoryInterface):
         except IntegrityError:
             await self.session.rollback()
             raise AllocationError(constant.FAILED)
+        
+    
+    async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
+        try:
+            update_data = {}
+
+            # if reallocate.telecaller:
+            update_data["telecaller"] = reallocate.telecaller
+
+            # if reallocate.executive:
+            update_data["executive"] = reallocate.executive
+
+            stmt = (
+                update(tblbuylead)
+                .where(
+                    tblbuylead.c.id.in_(reallocate.lead_ids),
+                    tblbuylead.c.is_active.is_(True),
+                    tblbuylead.c.is_deleted.is_(False),
+                    tblbuylead.c.status == BuyStatus.Allocated.value,
+                )
+                .values(**update_data)
+            )
+            result = await self.session.execute(stmt)
+            await self.session.commit()
+            return result.rowcount
+        except IntegrityError:
+            await self.session.rollback()
+            raise AllocationError(constant.FAILED)

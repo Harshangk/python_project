@@ -58,3 +58,6 @@ class BuyService(BuyServiceInterface):
 
     async def allocate_leads(self, allocate: AllocateLeadsRequest, created_by: str) -> int:
         return await self.buy_repository.allocate_leads(allocate, created_by=created_by)
+    
+    async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
+        return await self.buy_repository.reallocate_leads(reallocate, created_by=created_by)

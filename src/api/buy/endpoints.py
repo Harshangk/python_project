@@ -192,3 +192,35 @@ async def allocate_leads(
     except Exception as ex:
         logger.error(f"Exception error: {ex}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+    
+
+@router.patch(
+    "/re-allocation",
+    response_model=Response,
+    status_code=status.HTTP_200_OK,
+)
+async def reallocate_leads(
+    request: Request,
+    reallocate: AllocateLeadsRequest = Body(..., example=example.BUY_LEAD_ALLOCATION),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> Response:
+    logger.info(f"request: {request}, user: {current_user}, reallocate:{reallocate}")
+    try:
+        if len(reallocate.lead_ids) > constant.MAX_LIMIT:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                constant.MAXLIMITREACH
+            )
+        realocate_count = await buy_service.reallocate_leads(reallocate.to_model(), current_user.user_name)
+        if realocate_count > 0:
+            return Response(id=realocate_count, message=constant.CREATED)
+        else:
+            return Response(id=realocate_count, message=constant.FAILED)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
