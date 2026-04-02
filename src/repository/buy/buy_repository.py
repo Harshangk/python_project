@@ -168,7 +168,6 @@ class BuyRepository(BuyRepositoryInterface):
                     branch=lead.branch,
                     alternate_mobile=lead.alternate_mobile,
                     source=lead.source,
-                    mode=lead.mode.value,
                     broker_name=lead.broker_name,
                     customer_name=lead.customer_name,
                     make_id=lead.make_id,

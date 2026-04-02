@@ -36,7 +36,6 @@ class UpdateLead:
     branch: str
     alternate_mobile: Optional[str]
     source: str
-    mode: BuyMode
     customer_name: str
     make_id: int
     model_id: int

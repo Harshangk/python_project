@@ -23,8 +23,8 @@ BUY_LEAD = {
     "owner": "1",
     "clientOffer": 500000,
     "ourOffer": 480000,
-    "telecaller": "Harshang",
-    "executive": "Harshang",
+    "telecaller": "harshang",
+    "executive": "harshang",
     "remarks": "Customer wants urgent deal",
 }
 
@@ -32,7 +32,6 @@ UPDATE_LEAD = {
     "branch": "YMCA",
     "alternateMobile": "90855484515",
     "source": "Website",
-    "mode": "Home",
     "brokerName": "",
     "customerName": "Vishal Mehta",
     "leadAddress":{

@@ -96,7 +96,6 @@ class UpdateBuyLead(CamelBaseModel):
     branch: str
     alternate_mobile: str
     source: str
-    mode: BuyMode
     broker_name: str | None = Field(None, max_length=255)
     customer_name: str = Field(..., min_length=1, max_length=255)
     lead_address: LeadAddress | None = None
@@ -121,7 +120,6 @@ class UpdateBuyLead(CamelBaseModel):
             branch=self.branch,
             alternate_mobile=self.alternate_mobile,
             source=self.source,
-            mode=self.mode,
             broker_name=self.broker_name,
             customer_name=self.customer_name,
             make_id=self.make_id,
