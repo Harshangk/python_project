@@ -105,6 +105,7 @@ def upgrade() -> None:
             name=op.f("fk_tblbuylead_address_buylead_id_tblbuylead"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_tblbuylead_address")),
+        sa.UniqueConstraint("buylead_id", name=op.f("uq_tblbuylead_address_buylead_id")),
     )
 
 

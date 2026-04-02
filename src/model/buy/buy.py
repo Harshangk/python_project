@@ -29,6 +29,29 @@ class BuyLead:
     executive: str | None = None
     lead_address: BuyLeadAddress | None = None
     created_by: str | None = None
+
+
+@dataclass
+class UpdateLead:
+    branch: str
+    alternate_mobile: Optional[str]
+    source: str
+    mode: BuyMode
+    customer_name: str
+    make_id: int
+    model_id: int
+    fuel_type: FuelType
+    year: int
+    kms: int
+    owner: str
+    client_offer: int
+    our_offer: int
+    remarks: str
+    broker_name: str | None = None
+    variant: str | None = None
+    color: Color | None = None
+    lead_address: BuyLeadAddress | None = None
+    created_by: str | None = None
     
 
 @dataclass

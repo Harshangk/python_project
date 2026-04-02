@@ -11,6 +11,10 @@ class BuyRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def update_lead(self, lead_id: int, lead: BuyLeadModel, created_by: str) -> int:
+        pass
+
+    @abstractmethod
     async def get_lead(
         self,
         cursor: Optional[int],

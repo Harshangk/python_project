@@ -9,10 +9,10 @@ from api.schema_types import SortOrder, BuyStatus
 from app import constant
 from app.core.logging import logger
 from auth.dto import AuthenticatedUser
-from auth.exceptions import CreationError
+from auth.exceptions import CreationError, NotFound
 from common.csv_utils import stream_csv
 from common.cursor_pagination import build_next_page_url, normalize_limit
-from schema.buy.buy import BuyLeadList, BuyLeadItem, BuyLeadSortBy, CreateBuyLead, Response, AllocateLeadsRequest
+from schema.buy.buy import BuyLeadList, BuyLeadItem, BuyLeadSortBy, CreateBuyLead, UpdateBuyLead, Response, AllocateLeadsRequest
 from services.buy.buy_service_interface import BuyServiceInterface
 
 router = APIRouter(prefix="/buy", tags=["buy"])
@@ -43,6 +43,42 @@ async def create_lead(
         logger.error(f"[{trace_id}] create_lead failed: {str(ex)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
     return Response(id=buy_id, message=constant.CREATED)
+
+
+@router.put(
+    "/{lead_id}",
+    response_model=Response,
+    status_code=status.HTTP_200_OK,
+)
+async def update_lead(
+    request: Request,
+    lead_id: int,
+    lead: UpdateBuyLead = Body(..., example=example.UPDATE_LEAD),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> Response:
+    logger.info(f"request: {request}")
+
+    try:
+        await buy_service.update_lead(
+            lead_id,
+            lead.to_model(),
+            current_user.user_name
+        )
+
+    except NotFound as ex:
+        logger.error(f"Not Found error: {ex}")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"[{trace_id}] update_lead failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+    return Response(id=lead_id, message=constant.UPDATED)
+
 
 
 @router.get(

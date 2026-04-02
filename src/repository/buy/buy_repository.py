@@ -1,13 +1,14 @@
 from typing import Any, Mapping, Sequence
 from datetime import datetime
 
-from sqlalchemy import asc, desc, func, insert, or_, select, update, cast, String
+from sqlalchemy import asc, desc, func, or_, select, update, cast, String
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from api.schema_types import BuyStatus
 from app import constant
-from auth.exceptions import CreationError, AllocationError
+from auth.exceptions import CreationError, AllocationError, NotFound
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
 from orm.buy.buy import tblbuylead, tblbuylead_address
 from orm.common.common import mstmake, mstmodel, mstbroker
@@ -132,9 +133,87 @@ class BuyRepository(BuyRepositoryInterface):
                     )
                 )
                 await self.session.execute(stmt)
-
+            
             await self.session.commit()
             return buylead_id
+        except IntegrityError:
+            await self.session.rollback()
+            raise CreationError(constant.FAILED)
+        
+
+    async def update_lead(self, lead_id: int, lead: BuyLeadModel, created_by: str) -> int:
+        try:
+            existing_stmt = select(
+                tblbuylead.c.id,
+            ).where(
+                tblbuylead.c.id == lead_id,
+                tblbuylead.c.is_active.is_(True),
+                tblbuylead.c.is_deleted.is_(False),
+            )
+
+            result = await self.session.execute(existing_stmt)
+            existing = result.fetchone()
+
+            if not existing:
+                raise NotFound(constant.NOTFOUND)
+        
+            stmt = (
+                update(tblbuylead)
+                .where(
+                    tblbuylead.c.id == lead_id,
+                    tblbuylead.c.is_active.is_(True),
+                    tblbuylead.c.is_deleted.is_(False),
+                )
+                .values(
+                    branch=lead.branch,
+                    alternate_mobile=lead.alternate_mobile,
+                    source=lead.source,
+                    mode=lead.mode.value,
+                    broker_name=lead.broker_name,
+                    customer_name=lead.customer_name,
+                    make_id=lead.make_id,
+                    model_id=lead.model_id,
+                    variant=lead.variant,
+                    color=lead.color.value if lead.color else None,
+                    fuel_type=lead.fuel_type.value,
+                    year=str(lead.year),
+                    kms=lead.kms,
+                    owner=lead.owner,
+                    client_offer=lead.client_offer,
+                    our_offer=lead.our_offer,
+                    remarks=lead.remarks,
+                    modified_by=created_by,
+                    modified_at=func.now(),
+                )
+            )
+            await self.session.execute(stmt)
+
+            if lead.lead_address:
+                stmt = (
+                    insert(tblbuylead_address)
+                    .values(
+                        buylead_id=lead_id,
+                        address=lead.lead_address.address,
+                        state=lead.lead_address.state,
+                        city=lead.lead_address.city,
+                        area=lead.lead_address.area,
+                        pincode=lead.lead_address.pincode,
+                    )
+                )
+                stmt = stmt.on_conflict_do_update(
+                    index_elements=[tblbuylead_address.c.buylead_id],
+                    set_=dict(
+                        address=lead.lead_address.address,
+                        state=lead.lead_address.state,
+                        city=lead.lead_address.city,
+                        area=lead.lead_address.area,
+                        pincode=lead.lead_address.pincode,
+                    )
+                )
+                await self.session.execute(stmt)
+
+            await self.session.commit()
+            return lead_id
         except IntegrityError:
             await self.session.rollback()
             raise CreationError(constant.FAILED)
@@ -231,7 +310,6 @@ class BuyRepository(BuyRepositoryInterface):
         async for row in stream:
             yield dict(row._mapping)
 
-
     async def get_lead_by_id(
         self,
         lead_id: int,
@@ -244,7 +322,6 @@ class BuyRepository(BuyRepositoryInterface):
         )
         result = await self.session.execute(stmt)
         return result.mappings().one_or_none()
-
 
     async def remove_lead(self, lead_id: int, created_by: str) -> bool:
         stmt = (
@@ -267,7 +344,6 @@ class BuyRepository(BuyRepositoryInterface):
 
         return result.rowcount > 0
     
-
     async def allocate_leads(self, allocate: AllocateLeadsRequest, created_by: str) -> int:
         try:
             update_data = {
@@ -299,7 +375,6 @@ class BuyRepository(BuyRepositoryInterface):
             await self.session.rollback()
             raise AllocationError(constant.FAILED)
         
-    
     async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
         try:
             update_data = {}

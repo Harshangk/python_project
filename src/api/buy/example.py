@@ -28,6 +28,33 @@ BUY_LEAD = {
     "remarks": "Customer wants urgent deal",
 }
 
+UPDATE_LEAD = {
+    "branch": "YMCA",
+    "alternateMobile": "90855484515",
+    "source": "Website",
+    "mode": "Home",
+    "brokerName": "",
+    "customerName": "Vishal Mehta",
+    "leadAddress":{
+        "address" : "Updated address",
+        "state": "Gujarat",
+        "city": "Ahmedabad",
+        "area": "test area",
+        "pincode": 654321,
+    },
+    "makeId": 1,
+    "modelId": 2,
+    "variant": "",
+    "color": "",
+    "fuelType": "Petrol",
+    "year": "2022",
+    "kms": 35000,
+    "owner": "1",
+    "clientOffer": 500000,
+    "ourOffer": 480000,
+    "remarks": "Update customer wants urgent deal",
+}
+
 BUY_LEAD_ALLOCATION = {
     "leadIds":[1,2,3],
     "telecaller": "Harshang",

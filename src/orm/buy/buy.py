@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Identity, Index,
-                        Integer, String, Table)
+                        Integer, String, Table, UniqueConstraint)
 
 from common.db import mapper_registry
 from model.buy import buy as BuyModel
@@ -56,6 +56,8 @@ tblbuylead_address = Table(
     Column("city", String(25), nullable=False),
     Column("area", String(25), nullable=True),
     Column("pincode", Integer(), nullable=True),
+    UniqueConstraint("buylead_id"),
+
 )
 
 

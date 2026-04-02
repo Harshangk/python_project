@@ -12,6 +12,9 @@ class BuyService(BuyServiceInterface):
 
     async def create_lead(self, lead: BuyLeadModel, created_by: str) -> int:
         return await self.buy_repository.create_lead(lead, created_by=created_by)
+    
+    async def update_lead(self, lead_id: int, lead: BuyLeadModel, created_by: str) -> int:
+        return await self.buy_repository.update_lead(lead_id, lead, created_by=created_by)
 
     async def get_lead(
         self,
