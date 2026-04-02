@@ -209,7 +209,6 @@ class BuyRepository(BuyRepositoryInterface):
         except IntegrityError:
             await self.session.rollback()
             raise CreationError(constant.FAILED)
-        
 
     async def update_lead(self, lead_id: int, lead: BuyLeadModel, created_by: str) -> int:
         try:
@@ -518,7 +517,6 @@ class BuyRepository(BuyRepositoryInterface):
             stmt = stmt.where(or_(*filters))
 
         return stmt
-
 
     async def get_followup_lead(
         self,
