@@ -137,6 +137,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_table("tblbuylead_address")
+    op.drop_table("tblbuylead_followup")
     op.drop_table("tblbuylead_address")
     op.drop_table("tblbuylead")

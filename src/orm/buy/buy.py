@@ -55,7 +55,21 @@ tblbuylead_address = Table(
     Column("state", String(25), nullable=False),
     Column("city", String(25), nullable=False),
     Column("area", String(25), nullable=True),
-    Column("pincode", Integer(), nullable=True),
+    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+    UniqueConstraint("buylead_id"),
+
+)
+
+tblbuylead_followup = Table(
+    "tblbuylead_followup",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("buylead_id", Integer, ForeignKey("tblbuylead.id"), nullable=False),
+    Column("stage", String(25), nullable=False),
+    Column("disposition", String(50), nullable=False),
+    Column("calldate", DateTime, nullable=False),
+    Column("notes", String(500), nullable=False),
     UniqueConstraint("buylead_id"),
 
 )
@@ -64,6 +78,7 @@ tblbuylead_address = Table(
 def start_mappers() -> None:
     mapper_registry.map_imperatively(BuyModel.BuyLead, tblbuylead)
     mapper_registry.map_imperatively(BuyModel.BuyLeadAddress, tblbuylead_address)
+    mapper_registry.map_imperatively(BuyModel.BuyLeadFollowup, tblbuylead_followup)
 
 
 def stop_mappers() -> None:

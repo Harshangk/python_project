@@ -61,6 +61,13 @@ class BuyLeadAddress:
     area: Optional[str]
     pincode: int | None = None
 
+@dataclass
+class BuyLeadFollowup:
+    stage: str
+    disposition: str
+    calldate: str
+    notes: Optional[str]
+
 
 @dataclass
 class AllocateLeadsRequest:
