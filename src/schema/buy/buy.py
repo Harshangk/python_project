@@ -175,6 +175,7 @@ class BuyLeadItem(CamelBaseModel):
     created_by: str
     make: str
     model: str
+    lead_address: LeadAddress | None = None
 
 
 class BuyLeadList(CamelBaseModel):

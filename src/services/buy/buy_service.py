@@ -2,7 +2,7 @@ from typing import List
 
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
-from schema.buy.buy import BuyLeadItem
+from schema.buy.buy import BuyLeadItem, LeadAddress
 from services.buy.buy_service_interface import BuyServiceInterface
 from api.schema_types import BuyStatus
 
@@ -53,7 +53,12 @@ class BuyService(BuyServiceInterface):
         row = await self.buy_repository.get_lead_by_id(lead_id)
         if not row:
             return None
-        return BuyLeadItem(**row)
+        
+        lead_address_data = {k: row[k] for k in LeadAddress.model_fields if k in row and row[k] is not None}
+        lead_address = LeadAddress(**lead_address_data) if lead_address_data else None
+        item_data = {k: v for k, v in row.items() if k not in lead_address_data}
+        item_data["lead_address"] = lead_address
+        return BuyLeadItem(**item_data)
     
     async def remove_lead(self, lead_id: int, created_by: str) -> bool:
         return await self.buy_repository.remove_lead(lead_id, created_by)

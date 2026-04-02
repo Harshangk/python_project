@@ -70,6 +70,11 @@ LEAD_COLUMNS = [
     tblbuylead.c.created_by,
     mstmake.c.make,
     mstmodel.c.model,
+    tblbuylead_address.c.address,
+    tblbuylead_address.c.state,
+    tblbuylead_address.c.city,
+    tblbuylead_address.c.area,
+    tblbuylead_address.c.pincode,
 ]
 
 
@@ -222,6 +227,7 @@ class BuyRepository(BuyRepositoryInterface):
             select(*LEAD_COLUMNS)
             .join(mstmake, tblbuylead.c.make_id == mstmake.c.id)
             .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
+            .outerjoin(tblbuylead_address, tblbuylead.c.id == tblbuylead_address.c.buylead_id)
             .where(tblbuylead.c.is_active)
         )
 
