@@ -139,6 +139,25 @@ class BuyRepository(BuyRepositoryInterface):
             await self.session.rollback()
             raise CreationError(constant.FAILED)
 
+    async def get_make_id_by_name(self, make: str) -> int | None:
+        stmt = (
+            select(mstmake.c.id)
+            .where(mstmake.c.is_active)
+            .where(func.lower(mstmake.c.make) == make.strip().lower())
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def get_model_id_by_name(self, make_id: int, model: str) -> int | None:
+        stmt = (
+            select(mstmodel.c.id)
+            .where(mstmodel.c.is_active)
+            .where(mstmodel.c.make_id == make_id)
+            .where(func.lower(mstmodel.c.model) == model.strip().lower())
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
     def _base_lead_query(self):
         return (
             select(*LEAD_COLUMNS)

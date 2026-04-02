@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
+
+from fastapi import UploadFile
 from api.schema_types import BuyStatus
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
 from schema.buy.buy import BuyLeadItem
@@ -9,6 +11,10 @@ class BuyServiceInterface(ABC):
 
     @abstractmethod
     async def create_lead(self, lead: BuyLeadModel, created_by: str) -> int:
+        pass
+
+    @abstractmethod
+    async def validate_lead_import(self, file: UploadFile) -> None:
         pass
 
     @abstractmethod

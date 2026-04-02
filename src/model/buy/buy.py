@@ -4,6 +4,13 @@ from pydantic.dataclasses import dataclass
 
 from api.schema_types import BuyMode, Color, FuelType
 
+@dataclass
+class BuyLeadAddress:
+    address: str
+    state: str
+    city: str
+    area: Optional[str]
+    pincode: int | None = None
 
 @dataclass
 class BuyLead:
@@ -30,15 +37,6 @@ class BuyLead:
     lead_address: BuyLeadAddress | None = None
     created_by: str | None = None
     
-
-@dataclass
-class BuyLeadAddress:
-    address: str
-    state: str
-    city: str
-    area: Optional[str]
-    pincode: int | None = None
-
 
 @dataclass
 class AllocateLeadsRequest:

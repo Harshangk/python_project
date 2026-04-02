@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status, Body
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Request, UploadFile, status
 
 from api.buy import deps
 from api.buy import example
@@ -12,10 +12,19 @@ from auth.dto import AuthenticatedUser
 from auth.exceptions import CreationError
 from common.csv_utils import stream_csv
 from common.cursor_pagination import build_next_page_url, normalize_limit
-from schema.buy.buy import BuyLeadList, BuyLeadItem, BuyLeadSortBy, CreateBuyLead, Response, AllocateLeadsRequest
+from schema.buy.buy import (
+    BuyLeadItem,
+    BuyLeadList,
+    BuyLeadSortBy,
+    CreateBuyLead,
+    GeneralResponse,
+    Response,
+)
 from services.buy.buy_service_interface import BuyServiceInterface
 
 router = APIRouter(prefix="/buy", tags=["buy"])
+
+CSV_CONTENT_TYPES = {"text/csv", "application/csv", "application/vnd.ms-excel"}
 
 
 @router.post(
@@ -43,6 +52,45 @@ async def create_lead(
         logger.error(f"[{trace_id}] create_lead failed: {str(ex)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
     return Response(id=buy_id, message=constant.CREATED)
+
+
+@router.post(
+    "/import",
+    response_model=GeneralResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def import_lead(
+    request: Request,
+    file: UploadFile = File(...),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> GeneralResponse:
+    logger.info(f"request: {request}, user: {current_user}, filename: {file.filename}")
+    try:
+        filename = (file.filename or "").strip()
+        if not filename:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "file name is required.",
+            )
+
+        if not filename.lower().endswith(".csv") or file.content_type not in CSV_CONTENT_TYPES:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "only CSV files are allowed.",
+            )
+
+        await buy_service.validate_lead_import(file)
+        return GeneralResponse(detail=constant.RECIEVED_REQUEST)
+    except HTTPException:
+        raise
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"import_lead failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
 
 
 @router.get(

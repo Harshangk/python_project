@@ -11,6 +11,14 @@ class BuyRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def get_make_id_by_name(self, make: str) -> int | None:
+        pass
+
+    @abstractmethod
+    async def get_model_id_by_name(self, make_id: int, model: str) -> int | None:
+        pass
+
+    @abstractmethod
     async def get_lead(
         self,
         cursor: Optional[int],
