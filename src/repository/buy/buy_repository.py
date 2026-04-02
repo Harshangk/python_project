@@ -303,11 +303,7 @@ class BuyRepository(BuyRepositoryInterface):
     async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
         try:
             update_data = {}
-
-            # if reallocate.telecaller:
             update_data["telecaller"] = reallocate.telecaller
-
-            # if reallocate.executive:
             update_data["executive"] = reallocate.executive
 
             stmt = (
