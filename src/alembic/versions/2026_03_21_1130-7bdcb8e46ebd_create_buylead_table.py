@@ -108,8 +108,35 @@ def upgrade() -> None:
         sa.UniqueConstraint("buylead_id", name=op.f("uq_tblbuylead_address_buylead_id")),
     )
 
+    op.create_table(
+        "tblbuylead_followup",
+        sa.Column(
+            "id",
+            sa.Integer(),
+            sa.Identity(always=False, start=1, increment=1),
+            nullable=False,
+        ),
+        sa.Column("buylead_id", sa.Integer(), nullable=False),
+        sa.Column("stage", sa.String(25), nullable=False),
+        sa.Column("disposition", sa.String(50), nullable=False),
+        sa.Column("calldate", sa.DateTime(), nullable=False),
+        sa.Column("notes", sa.String(500), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+        ),
+        sa.Column("created_by", sa.String(50), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["buylead_id"],
+            ["tblbuylead.id"],
+            name=op.f("fk_tblbuylead_address_buylead_id_tblbuylead"),
+        ),
+        sa.PrimaryKeyConstraint("id", name=op.f("tblbuylead_followup")),
+        sa.UniqueConstraint("buylead_id", name=op.f("uq_tblbuylead_address_buylead_id")),
+    )
+
 
 def downgrade() -> None:
     """Downgrade schema."""
+    op.drop_table("tblbuylead_address")
     op.drop_table("tblbuylead_address")
     op.drop_table("tblbuylead")
