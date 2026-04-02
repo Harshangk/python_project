@@ -1,0 +1,4 @@
+branch,mobile,mode,customer_name,fuel_type,year,kms,owner,make,model,our_offer
+YMCA,9876543210,branch,Rahul Sharma,petrol,2021,25000,1,Audi,A4,1
+YMCA,9123456789,branch,Priya Patel,petrol,2020,18000,1,Audi,A3,1
+YMCA,9123456789,branch,xyz,petrol,20AB,50,12,Audi,A4,1

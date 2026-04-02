@@ -1,10 +1,18 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import List, Optional
 
-from fastapi import UploadFile
 from api.schema_types import BuyStatus
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
 from schema.buy.buy import BuyLeadItem
+
+
+@dataclass
+class ImportLeadResult:
+    created_count: int
+    error_csv_content: bytes | None = None
+    error_filename: str | None = None
+    failed_count: int = 0
 
 
 class BuyServiceInterface(ABC):
@@ -14,7 +22,14 @@ class BuyServiceInterface(ABC):
         pass
 
     @abstractmethod
-    async def validate_lead_import(self, file: UploadFile) -> None:
+    async def import_lead_content(
+        self,
+        content: bytes,
+        filename: str | None,
+        source: str,
+        broker_name: str | None = None,
+        created_by: str | None = None,
+    ) -> ImportLeadResult:
         pass
 
     @abstractmethod

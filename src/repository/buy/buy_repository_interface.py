@@ -19,6 +19,10 @@ class BuyRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def get_active_sources(self) -> set[str]:
+        pass
+
+    @abstractmethod
     async def get_lead(
         self,
         cursor: Optional[int],

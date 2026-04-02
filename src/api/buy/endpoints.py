@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Request, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
 
 from api.buy import deps
 from api.buy import example
@@ -13,6 +13,7 @@ from auth.exceptions import CreationError
 from common.csv_utils import stream_csv
 from common.cursor_pagination import build_next_page_url, normalize_limit
 from schema.buy.buy import (
+    AllocateLeadsRequest,
     BuyLeadItem,
     BuyLeadList,
     BuyLeadSortBy,
@@ -61,7 +62,10 @@ async def create_lead(
 )
 async def import_lead(
     request: Request,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
+    source: str = Form(...),
+    broker_name: str | None = Form(None),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
@@ -80,14 +84,22 @@ async def import_lead(
                 status.HTTP_400_BAD_REQUEST,
                 "only CSV files are allowed.",
             )
-
-        await buy_service.validate_lead_import(file)
+        content = await file.read()
+        await file.seek(0)
+        background_tasks.add_task(
+            buy_service.import_lead_content,
+            content=content,
+            filename=filename,
+            source=source,
+            broker_name=broker_name,
+            created_by=current_user.user_name,
+        )
         return GeneralResponse(detail=constant.RECIEVED_REQUEST)
     except HTTPException:
         raise
     except ValueError as ex:
         logger.error(f"ValueError error: {ex}")
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(ex))
     except Exception as ex:
         logger.error(f"import_lead failed: {str(ex)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
@@ -184,7 +196,7 @@ async def get_buy_lead_by_id(
     response_model=Response,
     status_code=status.HTTP_200_OK,
 )
-async def get_buy_lead_by_id(
+async def remove_buy_lead(
     request: Request,
     lead_id: int,
     buy_service: BuyServiceInterface = Depends(deps.buy_service),

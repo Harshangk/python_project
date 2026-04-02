@@ -1,8 +1,8 @@
 from fastapi import APIRouter
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import Depends, Query, Request, status
 
 from common.utils import enum_to_dict_list
-from api.deps import get_authenticated_user, get_trace_id
+from api.deps import get_authenticated_user
 from api.common import deps
 
 from api.schema_types import BuyMode, Color, FuelType, Owner

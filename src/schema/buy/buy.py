@@ -163,3 +163,7 @@ class AllocateLeadsRequest(CamelBaseModel):
             telecaller=self.telecaller,
             executive=self.executive,
         )
+
+
+class GeneralResponse(CamelBaseModel):
+    detail: str

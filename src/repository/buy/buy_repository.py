@@ -1,5 +1,4 @@
 from typing import Any, Mapping, Sequence
-from datetime import datetime
 
 from sqlalchemy import asc, desc, func, insert, or_, select, update, cast, String
 from sqlalchemy.exc import IntegrityError
@@ -10,7 +9,7 @@ from app import constant
 from auth.exceptions import CreationError, AllocationError
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
 from orm.buy.buy import tblbuylead, tblbuylead_address
-from orm.common.common import mstmake, mstmodel, mstbroker
+from orm.common.common import mstmake, mstmodel, mstsource
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 
 LEAD_SEARCHABLE_COLUMNS = {
@@ -132,7 +131,6 @@ class BuyRepository(BuyRepositoryInterface):
                     )
                 )
                 await self.session.execute(stmt)
-
             await self.session.commit()
             return buylead_id
         except IntegrityError:
@@ -157,6 +155,15 @@ class BuyRepository(BuyRepositoryInterface):
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def get_active_sources(self) -> set[str]:
+        stmt = (
+            select(mstsource.c.source)
+            .where(mstsource.c.is_active)
+            .where(mstsource.c.is_deleted.is_(False))
+        )
+        result = await self.session.execute(stmt)
+        return {source.strip().lower() for source in result.scalars().all() if source}
 
     def _base_lead_query(self):
         return (

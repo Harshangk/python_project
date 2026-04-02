@@ -23,6 +23,7 @@ REQUIRED_IMPORT_FIELDS = {
     "fuel_type",
     "year",
     "kms",
+    "our_offer",
     "owner",
     "make",
     "model",
