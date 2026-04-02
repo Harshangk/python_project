@@ -5,7 +5,7 @@ from common.utils import enum_to_dict_list
 from api.deps import get_authenticated_user, get_trace_id
 from api.common import deps
 
-from api.schema_types import BuyMode, Color, FuelType, Owner
+from api.schema_types import BuyMode, Color, FuelType, Owner, BuyStage, STAGE_DISPOSITION_MAP
 from app.core.logging import logger
 from api.schema_types import SortOrder
 from common.cursor_pagination import build_next_page_url, normalize_limit
@@ -51,6 +51,17 @@ def get_fuel_type():
 def get_owner():
     return enum_to_dict_list(Owner)
 
+@router.get("/buy-stage")
+def get_buy_stage():
+    return enum_to_dict_list(BuyStage)
+
+@router.get("/disposition/{buy-stage}")
+def get_buy_stage_disposition(stage: BuyStage):
+    dispositon = STAGE_DISPOSITION_MAP.get(stage, [])
+    return enum_to_dict_list(dispositon)
+
+
+
 # Optional: Single API for all enums
 @router.get("/all")
 def get_all_enums():
@@ -59,6 +70,7 @@ def get_all_enums():
         "color": enum_to_dict_list(Color),
         "fuelType": enum_to_dict_list(FuelType),
         "owner": enum_to_dict_list(Owner),
+        "buyStage": enum_to_dict_list(BuyStage),
     }
 
 # endregion Enum

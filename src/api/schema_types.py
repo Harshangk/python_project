@@ -34,6 +34,43 @@ class BuyStatus(str, Enum):
     Lost = "Lost"
 
 
+class BuyStage(str, Enum):
+    Fresh = "Fresh"
+    UnderFollowup = "Under Followup"
+    Appointment = "Appointment"
+    Lost = "Lost"
+    DND = "DND"
+
+
+class BuyDisposition(str, Enum):
+    Fresh = "Fresh"
+    CallLater = "Call Later"
+    NotContactable = "Not Contactable"
+    Appointment = "Appointment"
+    NotInterested = "Not Interested"
+    PriceIssue="Price Issue"
+    DND = "DND"
+
+STAGE_DISPOSITION_MAP = {
+    BuyStage.Fresh: [
+        BuyDisposition.Fresh
+    ],
+    BuyStage.UnderFollowup: [
+        BuyDisposition.CallLater,
+        BuyDisposition.NotContactable
+    ],
+    BuyStage.Appointment: [
+        BuyDisposition.Appointment
+    ],
+    BuyStage.Lost: [
+        BuyDisposition.NotInterested,
+        BuyDisposition.PriceIssue
+    ], 
+    BuyStage.DND: [
+        BuyDisposition.DND
+    ],
+}
+
 class BuyMode(str, Enum):
     Branch = "Branch"
     Home = "Home"
