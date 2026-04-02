@@ -6,12 +6,12 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from api.schema_types import BuyStatus
+from api.schema_types import BuyStatus, BuyStage,BuyDisposition
 from app import constant
 from auth.exceptions import CreationError, AllocationError, NotFound
-from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
-from orm.buy.buy import tblbuylead, tblbuylead_address
-from orm.common.common import mstmake, mstmodel, mstbroker
+from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest, BuyLeadFollowup
+from orm.buy.buy import tblbuylead, tblbuylead_address, tblbuylead_followup
+from orm.common.common import mstmake, mstmodel
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 
 LEAD_SEARCHABLE_COLUMNS = {
@@ -138,7 +138,20 @@ class BuyRepository(BuyRepositoryInterface):
                     )
                 )
                 await self.session.execute(stmt)
-            
+
+            if status == BuyStatus.Allocated.value:
+                stmt = (
+                    insert(tblbuylead_followup)
+                    .values(
+                        buylead_id=buylead_id,
+                        stage=BuyStage.Fresh.value,
+                        disposition=BuyDisposition.Fresh.value,
+                        calldate=func.now(),
+                        notes=BuyStage.Fresh.value,
+                    )
+                )
+                await self.session.execute(stmt)
+
             await self.session.commit()
             return buylead_id
         except IntegrityError:
@@ -363,7 +376,7 @@ class BuyRepository(BuyRepositoryInterface):
             if allocate.executive:
                 update_data["executive"] = allocate.executive
 
-            stmt = (
+            update_stmt = (
                 update(tblbuylead)
                 .where(
                     tblbuylead.c.id.in_(allocate.lead_ids),
@@ -373,7 +386,22 @@ class BuyRepository(BuyRepositoryInterface):
                 )
                 .values(**update_data)
             )
-            result = await self.session.execute(stmt)
+            result = await self.session.execute(update_stmt)
+
+            followup_data = [
+                {
+                    "buylead_id": lead_id,
+                    "stage": BuyStage.Fresh.value,
+                    "disposition": BuyDisposition.Fresh.value,
+                    "calldate": func.now(),
+                    "notes": BuyStage.Fresh.value,
+                }
+                for lead_id in allocate.lead_ids
+            ]
+
+            insert_stmt = insert(tblbuylead_followup).values(followup_data)
+            await self.session.execute(insert_stmt)
+            
             await self.session.commit()
             return result.rowcount
         except IntegrityError:
