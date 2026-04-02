@@ -128,10 +128,10 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["buylead_id"],
             ["tblbuylead.id"],
-            name=op.f("fk_tblbuylead_address_buylead_id_tblbuylead"),
+            name=op.f("fk_tblbuylead_followup_buylead_id_tblbuylead"),
         ),
-        sa.PrimaryKeyConstraint("id", name=op.f("tblbuylead_followup")),
-        sa.UniqueConstraint("buylead_id", name=op.f("uq_tblbuylead_address_buylead_id")),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_tblbuylead_followup")),
+        sa.UniqueConstraint("buylead_id", name=op.f("uq_tblbuylead_followup_buylead_id")),
     )
 
 

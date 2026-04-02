@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from api.schema_types import BuyStatus, BuyStage,BuyDisposition
 from app import constant
 from auth.exceptions import CreationError, AllocationError, NotFound
-from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest, BuyLeadFollowup
+from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
 from orm.buy.buy import tblbuylead, tblbuylead_address, tblbuylead_followup
 from orm.common.common import mstmake, mstmodel
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
