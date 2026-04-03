@@ -89,7 +89,7 @@ BUY_LEAD_FOLLOWUP = {
     "leadFollowup":{
         "stage": "Appointment",
         "disposition": "Appointment",
-        "calldate": "06/04/2026",
+        "calldate": "2026-04-03T18:30:00.000",
         "preferredTime":"09:00 AM to 10:00 AM",
         "notes": "Customer wants urgent deal",
     },
