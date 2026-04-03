@@ -54,9 +54,9 @@ tblbuylead_address = Table(
     Column("address", String(100), nullable=False),
     Column("state", String(25), nullable=False),
     Column("city", String(25), nullable=False),
-    Column("area", String(25), nullable=False),
+    Column("area", String(25), nullable=True),
     Column("pincode", Integer(), nullable=True),
-    UniqueConstraint("buylead_id"),
+    UniqueConstraint("buylead_id", name="uq_tblbuylead_address_buylead_id"),
 
 )
 
@@ -71,7 +71,7 @@ tblbuylead_followup = Table(
     Column("notes", String(500), nullable=False),
     Column("created_at", DateTime, default=datetime.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
-    UniqueConstraint("buylead_id"),
+    UniqueConstraint("buylead_id", name="uq_tblbuylead_followup_buylead_id"),
 
 )
 

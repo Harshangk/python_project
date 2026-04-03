@@ -33,7 +33,7 @@ maprolemenu = Table(
     Column("modified_by", String(length=50), nullable=True),
     Column("is_active", Boolean, default=True, nullable=False),
     Column("is_deleted", Boolean, default=False, nullable=False),
-    UniqueConstraint("role_id", "menu_id"),
+    UniqueConstraint("role_id", "menu_id", name="uq_maprolemenu_role_id_menu_id"),
     Index("idx_maprolemenu_role_id", "role_id"),
     Index("idx_maprolemenu_menu_id", "menu_id"),
 )

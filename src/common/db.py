@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeMeta, registry
 class MetaData(BaseMetaData):
     def __repr__(self):
         # enables access to the metadata in alembic.
-        # see alembic.env.render_item
+        # see `alembic.env.render_item`
         return "Base.metadata"
 
 
@@ -22,7 +22,6 @@ meta = MetaData(
 mapper_registry: registry = registry(metadata=meta)
 
 
-# https://docs.sqlalchemy.org/en/14/orm/declarative_styles.html#creating-an-explicit-base-non-dynamically-for-use-with-mypy-similar
 class Base(metaclass=DeclarativeMeta):
     __abstract__ = True
     registry = mapper_registry

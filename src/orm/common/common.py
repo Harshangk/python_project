@@ -35,7 +35,7 @@ mstmodel = Table(
     Column("modified_by", String(length=50), nullable=True),
     Column("is_active", Boolean, default=True, nullable=False),
     Column("is_deleted", Boolean, default=False, nullable=False),
-    UniqueConstraint("make_id", "model"),
+    UniqueConstraint("make_id", "model", name="uq_mstmodel_make_id_model"),
     Index("idx_mstmodel_model", "model"),
 )
 
