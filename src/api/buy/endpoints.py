@@ -21,6 +21,7 @@ from schema.buy.buy import (
     Response,
     AllocateLeadsRequest,
     BuyLeadFollowupList,
+    BuyLeadFollowupDetail,
 )
 from services.buy.buy_service_interface import BuyServiceInterface
 
@@ -142,12 +143,12 @@ async def export_lead(
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ):
-    leads = await buy_service.get_lead_export(search, buy_status, sort_by.value, sort_order.value)
+    leads = buy_service.get_lead_export(search, buy_status, sort_by.value, sort_order.value)
     return stream_csv(rows=leads, filename="buy_lead_export.csv")
 
 
 @router.get(
-    "/{lead_id}",
+    "/lead/{lead_id}",
     response_model=BuyLeadItem,
     status_code=status.HTTP_200_OK,
 )
@@ -283,6 +284,7 @@ async def get_buy_followup_lead(
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ) -> BuyLeadFollowupList:
+    
     logger.info(f"request: {request}, user: {current_user}")
     try:
         limit = normalize_limit(limit)
@@ -315,5 +317,34 @@ async def export_followup_lead(
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ):
-    leads = await buy_service.get_followup_lead_export(current_user.user_name,current_user.role_id,search)
+    leads = buy_service.get_followup_lead_export(current_user.user_name,current_user.role_id,search)
     return stream_csv(rows=leads, filename="buy_followup_export.csv")
+
+
+@router.get(
+    "/followup/lead/{lead_id}",
+    response_model=BuyLeadFollowupDetail,
+    status_code=status.HTTP_200_OK,
+)
+async def get_buy_followup_lead_by_id(
+    request: Request,
+    lead_id: int,
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> BuyLeadFollowupDetail:
+    logger.info(f"request: {request}, user: {current_user}, id:{lead_id}")
+    try:
+        lead = await buy_service.get_followup_lead_by_id(lead_id, current_user.user_name,current_user.role_id)
+        if not lead:
+            logger.info(f"Not Found: {lead_id}")
+            raise HTTPException(status.HTTP_404_NOT_FOUND,constant.NOTFOUND)
+        return lead
+    except HTTPException:
+        raise
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)

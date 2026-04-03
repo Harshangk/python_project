@@ -230,7 +230,6 @@ class BuyLeadFollowupItem(CamelBaseModel):
     branch: str
     source: str
     mode: BuyMode
-    broker_name: str | None = None
     make: str
     model: str
     variant: str | None = None
@@ -243,6 +242,8 @@ class BuyLeadFollowupItem(CamelBaseModel):
     our_offer: int
     telecaller: str | None = None
     executive: str | None = None
+    alternate_mobile: str | None = None
+    broker_name: str | None = None
     allocated_at: datetime | None = None
     allocated_by: str | None = None
     created_at: datetime
@@ -256,3 +257,46 @@ class BuyLeadFollowupList(CamelBaseModel):
     limit: int
     next: Optional[str]
     items: List[BuyLeadFollowupItem]
+
+class BuyLeadAddress(CamelBaseModel):
+    address: str
+    state: str
+    city: str
+    area: str | None = None
+    pincode: int | None = None
+
+
+class BuyLeadFollowupDetail(CamelBaseModel):
+    id: int
+    status: str
+    mobile: str
+    customer_name: str
+    stage: str
+    disposition: str
+    call_date: datetime
+    notes: str
+    branch: str
+    source: str
+    mode: BuyMode
+    make_id: int
+    model_id: int
+    fuel_type: FuelType
+    year: int
+    kms: int
+    owner: str
+    client_offer: int
+    our_offer: int
+    remarks: str
+    allocated_at: datetime
+    allocated_by: str
+    created_at: datetime
+    created_by: str
+    followup_created_at: datetime
+    followup_created_by: str
+    variant: str | None = None
+    color: Color | None = None
+    telecaller: str | None = None
+    executive: str | None = None
+    alternate_mobile: str | None = None
+    broker_name: str | None = None
+    lead_address: BuyLeadAddress | None = None

@@ -2,7 +2,7 @@ from typing import List
 
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
-from schema.buy.buy import BuyLeadItem, LeadAddress
+from schema.buy.buy import BuyLeadItem, LeadAddress, BuyLeadFollowupItem, BuyLeadFollowupDetail, BuyLeadAddress
 from services.buy.buy_service_interface import BuyServiceInterface
 from api.schema_types import BuyStatus
 
@@ -78,11 +78,11 @@ class BuyService(BuyServiceInterface):
         created_by: str,
         role_id: int,
         search: str | None = None,
-    ) -> List[BuyLeadItem]:
+    ) -> List[BuyLeadFollowupItem]:
         rows = await self.buy_repository.get_followup_lead(
             cursor, limit,created_by, role_id ,search
         )
-        leads = [BuyLeadItem(**row) for row in rows]
+        leads = [BuyLeadFollowupItem(**row) for row in rows]
         return leads
 
     async def get_total_followup_lead(
@@ -102,4 +102,19 @@ class BuyService(BuyServiceInterface):
         async for row in self.buy_repository.get_followup_lead_export(
             created_by, role_id ,search
         ):
-            yield BuyLeadItem(**row)
+            yield BuyLeadFollowupItem(**row)
+
+    async def get_followup_lead_by_id(
+        self,
+        lead_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> BuyLeadFollowupDetail:
+        row = await self.buy_repository.get_followup_lead_by_id(lead_id, created_by, role_id)
+        if not row:
+            return None
+        lead_address_data = {k: row[k] for k in BuyLeadAddress.model_fields if k in row and row[k] is not None}
+        lead_address = BuyLeadAddress(**lead_address_data) if lead_address_data else None
+        item_data = {k: v for k, v in row.items() if k not in lead_address_data}
+        item_data["lead_address"] = lead_address
+        return BuyLeadFollowupDetail(**item_data)

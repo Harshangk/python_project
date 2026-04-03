@@ -1,5 +1,5 @@
 from typing import Optional, List
-
+from datetime import datetime
 from pydantic.dataclasses import dataclass
 
 from api.schema_types import BuyMode, Color, FuelType
@@ -58,8 +58,45 @@ class BuyLeadAddress:
     address: str
     state: str
     city: str
-    area: Optional[str]
+    area: str | None = None
     pincode: int | None = None
+
+
+@dataclass
+class BuyLeadFollowupDetail:
+    id: int
+    status: str
+    mobile: str
+    customer_name: str
+    stage: str
+    disposition: str
+    call_date: datetime
+    notes: str
+    branch: str
+    source: str
+    mode: BuyMode
+    make_id: int
+    model_id: int
+    fuel_type: FuelType
+    year: int
+    kms: int
+    owner: str
+    client_offer: int
+    our_offer: int
+    remarks: str
+    allocated_at: datetime
+    allocated_by: str
+    created_at: datetime
+    created_by: str
+    followup_created_at: datetime
+    followup_created_by: str
+    variant: str | None = None
+    color: Color | None = None
+    telecaller: str | None = None
+    executive: str | None = None
+    alternate_mobile: str | None = None
+    broker_name: str | None = None
+    lead_address: BuyLeadAddress | None = None
 
 @dataclass
 class BuyLeadFollowup:

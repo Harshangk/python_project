@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from api.schema_types import BuyStatus
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
-from schema.buy.buy import BuyLeadItem, BuyLeadFollowupItem
+from schema.buy.buy import BuyLeadItem, BuyLeadFollowupItem, BuyLeadFollowupDetail
 
 
 class BuyServiceInterface(ABC):
@@ -92,4 +92,13 @@ class BuyServiceInterface(ABC):
         role_id: int,
         search: str | None = None,
     ):
+        pass
+
+    @abstractmethod
+    async def get_followup_lead_by_id(
+        self,
+        lead_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> BuyLeadFollowupDetail:
         pass

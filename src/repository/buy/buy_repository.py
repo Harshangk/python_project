@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from api.schema_types import BuyStatus, BuyStage,BuyDisposition
 from app import constant
 from auth.exceptions import CreationError, AllocationError, NotFound
-from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
+from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest, BuyLeadFollowupDetail
 from orm.buy.buy import tblbuylead, tblbuylead_address, tblbuylead_followup
 from orm.common.common import mstmake, mstmodel
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
@@ -74,7 +74,7 @@ LEAD_COLUMNS = [
     tblbuylead_address.c.state,
     tblbuylead_address.c.city,
     tblbuylead_address.c.area,
-    tblbuylead_address.c.pincode,
+    tblbuylead_address.c.pincode
 ]
 
 FOLLOWUP_LEAD_SEARCHABLE_COLUMNS = {
@@ -101,14 +101,18 @@ FOLLOWUP_LEAD_COLUMNS = [
     tblbuylead.c.id,
     tblbuylead.c.status,
     tblbuylead.c.mobile,
+    tblbuylead.c.alternate_mobile,
     tblbuylead.c.customer_name,
     tblbuylead_followup.c.stage,
     tblbuylead_followup.c.disposition,
-    tblbuylead_followup.c.calldate,
+    tblbuylead_followup.c.calldate.label("callDate"),
+    tblbuylead_followup.c.notes,
     tblbuylead.c.branch,
     tblbuylead.c.source,
     tblbuylead.c.mode,
     tblbuylead.c.broker_name,
+    tblbuylead.c.make_id,
+    tblbuylead.c.model_id,
     mstmake.c.make,
     mstmodel.c.model,
     tblbuylead.c.variant,
@@ -125,8 +129,14 @@ FOLLOWUP_LEAD_COLUMNS = [
     tblbuylead.c.allocated_by,
     tblbuylead.c.created_at,
     tblbuylead.c.created_by,
-    tblbuylead_followup.c.created_at,
-    tblbuylead_followup.c.created_by,
+    tblbuylead.c.remarks,
+    tblbuylead_address.c.address,
+    tblbuylead_address.c.state,
+    tblbuylead_address.c.city,
+    tblbuylead_address.c.area,
+    tblbuylead_address.c.pincode,
+    tblbuylead_followup.c.created_at.label("followupCreatedAt"),
+    tblbuylead_followup.c.created_by.label("followupCreatedBy"),
 ]
 
 
@@ -200,6 +210,9 @@ class BuyRepository(BuyRepositoryInterface):
                         disposition=BuyDisposition.Fresh.value,
                         calldate=func.now(),
                         notes=BuyStage.Fresh.value,
+                        created_at=func.now(),
+                        created_by=created_by,
+
                     )
                 )
                 await self.session.execute(stmt)
@@ -489,6 +502,7 @@ class BuyRepository(BuyRepositoryInterface):
             .join(mstmake, tblbuylead.c.make_id == mstmake.c.id)
             .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
             .join(tblbuylead_followup, tblbuylead.c.id == tblbuylead_followup.c.buylead_id)
+            .outerjoin(tblbuylead_address, tblbuylead.c.id == tblbuylead_address.c.buylead_id)
             .where(tblbuylead.c.is_active)
         )
         if role_id != 1:
@@ -563,7 +577,7 @@ class BuyRepository(BuyRepositoryInterface):
         result = await self.session.execute(stmt)
         return result.scalar_one()
 
-    async def get_lead_export(
+    async def get_followup_lead_export(
         self,
         created_by: str,
         role_id: int,
@@ -576,3 +590,18 @@ class BuyRepository(BuyRepositoryInterface):
         stream = await self.session.stream(stmt)
         async for row in stream:
             yield dict(row._mapping)
+
+    async def get_followup_lead_by_id(
+        self,
+        lead_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> BuyLeadFollowupDetail:
+        stmt = self._base_followup_lead_query(created_by=created_by, role_id=role_id)
+        stmt = stmt.where(
+            tblbuylead.c.id == lead_id,
+            tblbuylead.c.is_active.is_(True),
+            tblbuylead.c.is_deleted.is_(False)
+        )
+        result = await self.session.execute(stmt)
+        return result.mappings().one_or_none()
