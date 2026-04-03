@@ -120,7 +120,7 @@ def upgrade() -> None:
         sa.Column("stage", sa.String(25), nullable=False),
         sa.Column("disposition", sa.String(50), nullable=False),
         sa.Column("calldate", sa.DateTime(), nullable=False),
-        sa.Column("preferred_time", sa.String(15), nullable=True),
+        sa.Column("preferred_time", sa.String(20), nullable=True),
         sa.Column("notes", sa.String(500), nullable=False),
         sa.Column(
             "created_at", sa.DateTime(), server_default=func.now(), nullable=False

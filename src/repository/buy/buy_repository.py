@@ -105,7 +105,8 @@ FOLLOWUP_LEAD_COLUMNS = [
     tblbuylead.c.customer_name,
     tblbuylead_followup.c.stage,
     tblbuylead_followup.c.disposition,
-    tblbuylead_followup.c.calldate.label("callDate"),
+    tblbuylead_followup.c.calldate,
+    tblbuylead_followup.c.preferred_time,
     tblbuylead_followup.c.notes,
     tblbuylead.c.branch,
     tblbuylead.c.source,
@@ -594,7 +595,7 @@ class BuyRepository(BuyRepositoryInterface):
                 .values(
                     stage=lead.lead_followup.stage,
                     disposition=lead.lead_followup.disposition,
-                    calldate=lead.lead_followup.call_date,
+                    calldate=lead.lead_followup.calldate,
                     preferred_time=lead.lead_followup.preferred_time,
                     notes=lead.lead_followup.notes,
                     created_at=func.now(),
@@ -617,7 +618,7 @@ class BuyRepository(BuyRepositoryInterface):
             .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
             .join(tblbuylead_followup, tblbuylead.c.id == tblbuylead_followup.c.buylead_id)
             .outerjoin(tblbuylead_address, tblbuylead.c.id == tblbuylead_address.c.buylead_id)
-            .where(tblbuylead.c.is_active)
+            .where(tblbuylead.c.is_active, tblbuylead.c.status != BuyStatus.NotAllocated.value)
         )
         if role_id != 1:
             stmt = stmt.where(
@@ -713,9 +714,7 @@ class BuyRepository(BuyRepositoryInterface):
     ) -> BuyLeadFollowupDetail:
         stmt = self._base_followup_lead_query(created_by=created_by, role_id=role_id)
         stmt = stmt.where(
-            tblbuylead.c.id == lead_id,
-            tblbuylead.c.is_active.is_(True),
-            tblbuylead.c.is_deleted.is_(False)
+            tblbuylead.c.id == lead_id
         )
         result = await self.session.execute(stmt)
         return result.mappings().one_or_none()

@@ -66,12 +66,11 @@ class _BuyLeadFollowup:
     stage: str
     disposition: str
     notes: str
-    call_date: datetime
+    calldate: datetime
     preferred_time: str | None = None
 
 @dataclass
 class BuyLeadFollowup:
-    lead_id: int
     branch: str
     customer_name: str
     alternate_mobile: Optional[str]

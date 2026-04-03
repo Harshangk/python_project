@@ -23,8 +23,8 @@ BUY_LEAD = {
     "owner": "1",
     "clientOffer": 500000,
     "ourOffer": 480000,
-    "telecaller": "harshang",
-    "executive": "harshang",
+    "telecaller": "tele",
+    "executive": "exe",
     "remarks": "Customer wants urgent deal",
 }
 
@@ -56,8 +56,8 @@ UPDATE_LEAD = {
 
 BUY_LEAD_ALLOCATION = {
     "leadIds":[1,2,3],
-    "telecaller": "Harshang",
-    "executive": "Harshang",
+    "telecaller": "tele",
+    "executive": "exe",
 }
 
 BUY_LEAD_FOLLOWUP = {
@@ -84,12 +84,12 @@ BUY_LEAD_FOLLOWUP = {
     "owner": "1",
     "clientOffer": 500000,
     "ourOffer": 480000,
-    "telecaller": "harshang",
-    "executive": "harshang",
+    "telecaller": "tele",
+    "executive": "exe",
     "leadFollowup":{
         "stage": "Appointment",
         "disposition": "Appointment",
-        "callDate": "06/04/2026",
+        "calldate": "06/04/2026",
         "preferredTime":"09:00 AM to 10:00 AM",
         "notes": "Customer wants urgent deal",
     },

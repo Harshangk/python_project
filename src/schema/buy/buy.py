@@ -221,9 +221,13 @@ class AllocateLeadsRequest(CamelBaseModel):
 class LeadFollowup(CamelBaseModel):
     stage: str = Field(..., min_length=1, max_length=25)
     disposition: str = Field(..., min_length=1, max_length=50)
-    call_date: datetime
-    preferred_time: str | None = Field(None, max_length=15)
+    calldate: datetime
+    preferred_time: str | None = Field(None, max_length=20)
     notes: str = Field(..., min_length=1, max_length=500)
+
+    @field_validator("calldate")
+    def remove_timezone(cls, v):
+        return v.replace(tzinfo=None) if v.tzinfo else v
 
 class CreateBuyLeadFollowup(CamelBaseModel):
     branch: str
@@ -246,6 +250,8 @@ class CreateBuyLeadFollowup(CamelBaseModel):
     telecaller: str | None = Field(None, max_length=50)
     executive: str | None = Field(None, max_length=50)
     lead_followup: LeadFollowup
+
+    
 
     class config:
         schema_extra = {"example": BUY_LEAD_FOLLOWUP}
@@ -285,7 +291,7 @@ class CreateBuyLeadFollowup(CamelBaseModel):
                 BuyModel._BuyLeadFollowup(
                     stage=self.lead_followup.stage,
                     disposition=self.lead_followup.disposition,
-                    call_date=self.lead_followup.call_date,
+                    calldate=self.lead_followup.calldate,
                     preferred_time=self.lead_followup.preferred_time,
                     notes=self.lead_followup.notes,
                 )
@@ -337,7 +343,6 @@ class BuyLeadFollowupDetail(CamelBaseModel):
     mobile: str
     customer_name: str
     lead_followup: LeadFollowup
-    notes: str
     branch: str
     source: str
     mode: BuyMode
