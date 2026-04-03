@@ -7,7 +7,7 @@ from api.common import deps
 
 from api.schema_types import BuyMode, Color, FuelType, Owner, BuyStage, STAGE_DISPOSITION_MAP
 from app.core.logging import logger
-from api.schema_types import SortOrder
+from api.schema_types import SortOrder, generate_time_slots
 from common.cursor_pagination import build_next_page_url, normalize_limit
 from services.common.common_service_interface import CommonServiceInterface
 
@@ -55,12 +55,14 @@ def get_owner():
 def get_buy_stage():
     return enum_to_dict_list(BuyStage)
 
-@router.get("/disposition/{buy-stage}")
+@router.get("/buy-stage/{stage}/disposition")
 def get_buy_stage_disposition(stage: BuyStage):
     dispositon = STAGE_DISPOSITION_MAP.get(stage, [])
     return enum_to_dict_list(dispositon)
 
-
+@router.get("/preferred-time")
+async def get_preferred_time():
+    return [{"value": t, "label": t} for t in generate_time_slots()]
 
 # Optional: Single API for all enums
 @router.get("/all")
