@@ -4,7 +4,15 @@ from typing import List, Optional
 
 from api.schema_types import BuyStatus
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
-from schema.buy.buy import BuyLeadItem
+from schema.buy.buy import BuyLeadItem, BuyLeadFollowupItem, BuyLeadFollowupDetail
+
+
+@dataclass
+class ImportLeadResult:
+    created_count: int
+    error_csv_content: bytes | None = None
+    error_filename: str | None = None
+    failed_count: int = 0
 
 
 @dataclass
@@ -30,6 +38,10 @@ class BuyServiceInterface(ABC):
         broker_name: str | None = None,
         created_by: str | None = None,
     ) -> ImportLeadResult:
+        pass
+
+    @abstractmethod
+    async def update_lead(self, lead_id:int, lead: BuyLeadModel, created_by: str) -> int:
         pass
 
     @abstractmethod
@@ -75,4 +87,47 @@ class BuyServiceInterface(ABC):
 
     @abstractmethod
     async def allocate_leads(self, allocate: AllocateLeadsRequest, created_by: str) -> int:
+        pass
+
+    @abstractmethod
+    async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
+        pass
+
+
+    @abstractmethod
+    async def get_followup_lead(
+        self,
+        cursor: Optional[int],
+        limit: int,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> List[BuyLeadFollowupItem]:
+        pass
+
+    @abstractmethod
+    async def get_total_followup_lead(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def get_followup_lead_export(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ):
+        pass
+
+    @abstractmethod
+    async def get_followup_lead_by_id(
+        self,
+        lead_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> BuyLeadFollowupDetail:
         pass

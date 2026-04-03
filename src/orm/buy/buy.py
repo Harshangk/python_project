@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Identity, Index,
-                        Integer, String, Table)
+                        Integer, String, Table, UniqueConstraint)
 
 from common.db import mapper_registry
 from model.buy import buy as BuyModel
@@ -54,14 +54,32 @@ tblbuylead_address = Table(
     Column("address", String(100), nullable=False),
     Column("state", String(25), nullable=False),
     Column("city", String(25), nullable=False),
-    Column("area", String(25), nullable=True),
+    Column("area", String(25), nullable=False),
     Column("pincode", Integer(), nullable=True),
+    UniqueConstraint("buylead_id"),
+
+)
+
+tblbuylead_followup = Table(
+    "tblbuylead_followup",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("buylead_id", Integer, ForeignKey("tblbuylead.id"), nullable=False),
+    Column("stage", String(25), nullable=False),
+    Column("disposition", String(50), nullable=False),
+    Column("calldate", DateTime, nullable=False),
+    Column("notes", String(500), nullable=False),
+    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+    UniqueConstraint("buylead_id"),
+
 )
 
 
 def start_mappers() -> None:
     mapper_registry.map_imperatively(BuyModel.BuyLead, tblbuylead)
     mapper_registry.map_imperatively(BuyModel.BuyLeadAddress, tblbuylead_address)
+    mapper_registry.map_imperatively(BuyModel.BuyLeadFollowup, tblbuylead_followup)
 
 
 def stop_mappers() -> None:

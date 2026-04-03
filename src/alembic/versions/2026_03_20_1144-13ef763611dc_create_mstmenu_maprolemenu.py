@@ -119,8 +119,10 @@ def downgrade() -> None:
 # ('Automation', NULL, '/automation', 6, 13),
 # ('Buy', 'ShoppingCart', NULL, NULL, 14),
 # ('Untouched', NULL, '/leads/untouchedlist', 14, 15),
-# ('Sale', 'TrendingUp', NULL, NULL, 16),
-# ('Untouched', NULL, '/leads/untouched', 16, 17);
+# ('Re-Allocation', NULL, '/leads/reallocationlist', 14, 16),
+# ('Followup', NULL, '/leads/buyleadfollowuplist', 14, 17),
+# ('Sale', 'TrendingUp', NULL, NULL, 18),
+# ('Untouched', NULL, '/leads/untouched', 18, 19);
 
 
 # insert into maprolemenu

@@ -4,7 +4,7 @@ from typing import Annotated, List, Optional
 
 from pydantic import Field, StringConstraints, field_validator, BeforeValidator, model_validator
 
-from api.buy.example import BUY_LEAD, BUY_LEAD_ALLOCATION
+from api.buy.example import BUY_LEAD, UPDATE_LEAD, BUY_LEAD_ALLOCATION
 from api.schema_types import BuyMode, CamelBaseModel, Color, FuelType
 from model.buy import buy as BuyModel
 
@@ -91,6 +91,59 @@ class CreateBuyLead(CamelBaseModel):
                 if self.lead_address else None
             ),
         )
+    
+class UpdateBuyLead(CamelBaseModel):
+    branch: str
+    alternate_mobile: str
+    source: str
+    broker_name: str | None = Field(None, max_length=255)
+    customer_name: str = Field(..., min_length=1, max_length=255)
+    lead_address: LeadAddress | None = None
+    make_id: int
+    model_id: int
+    variant: str | None = Field(None, max_length=255)
+    color: Annotated[Color | None, BeforeValidator(empty_to_none)] = None
+    fuel_type: FuelType
+    year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+    kms: int
+    owner: str = Field(..., min_length=1, max_length=1)
+    client_offer: int
+    our_offer: int
+    remarks: str = Field(..., min_length=1, max_length=500)
+
+    class config:
+        schema_extra = {"example": UPDATE_LEAD}
+        orm_mode = True
+
+    def to_model(self) -> BuyModel.UpdateLead:
+        return BuyModel.UpdateLead(
+            branch=self.branch,
+            alternate_mobile=self.alternate_mobile,
+            source=self.source,
+            broker_name=self.broker_name,
+            customer_name=self.customer_name,
+            make_id=self.make_id,
+            model_id=self.model_id,
+            variant=self.variant,
+            color=self.color,
+            fuel_type=self.fuel_type,
+            year=self.year,
+            kms=self.kms,
+            owner=self.owner,
+            client_offer=self.client_offer,
+            our_offer=self.our_offer,
+            remarks=self.remarks,
+            lead_address=(
+                BuyModel.BuyLeadAddress(
+                    address=self.lead_address.address,
+                    state=self.lead_address.state,
+                    city=self.lead_address.city,
+                    area=self.lead_address.area,
+                    pincode=self.lead_address.pincode,
+                )
+                if self.lead_address else None
+            ),
+        )
 
 
 class BuyLeadItem(CamelBaseModel):
@@ -122,6 +175,7 @@ class BuyLeadItem(CamelBaseModel):
     created_by: str
     make: str
     model: str
+    lead_address: LeadAddress | None = None
 
 
 class BuyLeadList(CamelBaseModel):
@@ -167,3 +221,86 @@ class AllocateLeadsRequest(CamelBaseModel):
 
 class GeneralResponse(CamelBaseModel):
     detail: str
+    
+
+class BuyLeadFollowupItem(CamelBaseModel):
+    id: int
+    status: str
+    mobile: str
+    customer_name: str
+    stage: str
+    disposition: str
+    call_date: datetime
+    branch: str
+    source: str
+    mode: BuyMode
+    make: str
+    model: str
+    variant: str | None = None
+    color: Color | None = None
+    fuel_type: FuelType
+    year: str
+    kms: int
+    owner: str
+    client_offer: int
+    our_offer: int
+    telecaller: str | None = None
+    executive: str | None = None
+    alternate_mobile: str | None = None
+    broker_name: str | None = None
+    allocated_at: datetime | None = None
+    allocated_by: str | None = None
+    created_at: datetime
+    created_by: str
+    followup_created_at: datetime
+    followup_created_by: str
+
+
+class BuyLeadFollowupList(CamelBaseModel):
+    total: int
+    limit: int
+    next: Optional[str]
+    items: List[BuyLeadFollowupItem]
+
+class BuyLeadAddress(CamelBaseModel):
+    address: str
+    state: str
+    city: str
+    area: str | None = None
+    pincode: int | None = None
+
+
+class BuyLeadFollowupDetail(CamelBaseModel):
+    id: int
+    status: str
+    mobile: str
+    customer_name: str
+    stage: str
+    disposition: str
+    call_date: datetime
+    notes: str
+    branch: str
+    source: str
+    mode: BuyMode
+    make_id: int
+    model_id: int
+    fuel_type: FuelType
+    year: int
+    kms: int
+    owner: str
+    client_offer: int
+    our_offer: int
+    remarks: str
+    allocated_at: datetime
+    allocated_by: str
+    created_at: datetime
+    created_by: str
+    followup_created_at: datetime
+    followup_created_by: str
+    variant: str | None = None
+    color: Color | None = None
+    telecaller: str | None = None
+    executive: str | None = None
+    alternate_mobile: str | None = None
+    broker_name: str | None = None
+    lead_address: BuyLeadAddress | None = None

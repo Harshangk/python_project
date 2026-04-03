@@ -47,7 +47,7 @@ def upgrade() -> None:
         sa.UniqueConstraint("role", name=op.f("uq_mstrole_role")),
     )
 
-    op.execute("""INSERT INTO mstrole(role) VALUES('Super Admin')""")
+    op.execute("""INSERT INTO mstrole(role) VALUES('Super Admin'),('Telecaller'), ('Executive')""")
 
 
 def downgrade() -> None:

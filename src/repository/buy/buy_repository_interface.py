@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Mapping, Optional, Sequence
 from api.schema_types import BuyStatus
-from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
+from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest,BuyLeadFollowupDetail
 
 
 class BuyRepositoryInterface(ABC):
@@ -20,6 +20,10 @@ class BuyRepositoryInterface(ABC):
 
     @abstractmethod
     async def get_active_sources(self) -> set[str]:
+        pass
+
+    @abstractmethod
+    async def update_lead(self, lead_id: int, lead: BuyLeadModel, created_by: str) -> int:
         pass
 
     @abstractmethod
@@ -66,4 +70,46 @@ class BuyRepositoryInterface(ABC):
 
     @abstractmethod
     async def allocate_leads(self, allocate: AllocateLeadsRequest, created_by: str) -> int:
+        pass
+
+    @abstractmethod
+    async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
+        pass
+
+    @abstractmethod
+    async def get_followup_lead(
+        self,
+        cursor: Optional[int],
+        limit: int,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> Sequence[Mapping[str, Any]]:
+        pass
+
+    @abstractmethod
+    async def get_total_followup_lead(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def get_followup_lead_export(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ):
+        pass
+
+    @abstractmethod
+    async def get_followup_lead_by_id(
+        self,
+        lead_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> BuyLeadFollowupDetail:
         pass
