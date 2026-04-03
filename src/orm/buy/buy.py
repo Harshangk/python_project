@@ -68,6 +68,7 @@ tblbuylead_followup = Table(
     Column("stage", String(25), nullable=False),
     Column("disposition", String(50), nullable=False),
     Column("calldate", DateTime, nullable=False),
+    Column("preferred_time", String(15), nullable=True),
     Column("notes", String(500), nullable=False),
     Column("created_at", DateTime, default=datetime.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
@@ -79,7 +80,7 @@ tblbuylead_followup = Table(
 def start_mappers() -> None:
     mapper_registry.map_imperatively(BuyModel.BuyLead, tblbuylead)
     mapper_registry.map_imperatively(BuyModel.BuyLeadAddress, tblbuylead_address)
-    mapper_registry.map_imperatively(BuyModel.BuyLeadFollowup, tblbuylead_followup)
+    mapper_registry.map_imperatively(BuyModel._BuyLeadFollowup, tblbuylead_followup)
 
 
 def stop_mappers() -> None:

@@ -1,8 +1,8 @@
 from typing import List
 
-from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
+from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest, BuyLeadFollowup
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
-from schema.buy.buy import BuyLeadItem, LeadAddress, BuyLeadFollowupItem, BuyLeadFollowupDetail, BuyLeadAddress
+from schema.buy.buy import BuyLeadItem, LeadAddress, BuyLeadFollowupItem, BuyLeadFollowupDetail, LeadFollowup
 from services.buy.buy_service_interface import BuyServiceInterface
 from api.schema_types import BuyStatus
 
@@ -71,6 +71,10 @@ class BuyService(BuyServiceInterface):
         return await self.buy_repository.reallocate_leads(reallocate, created_by=created_by)
     
 
+
+    async def create_lead_followup(self, lead_id: int, lead: BuyLeadFollowup, created_by: str) -> int:
+        return await self.buy_repository.create_lead_followup(lead_id=lead_id, lead=lead, created_by=created_by)
+
     async def get_followup_lead(
         self,
         cursor: int | None,
@@ -82,7 +86,35 @@ class BuyService(BuyServiceInterface):
         rows = await self.buy_repository.get_followup_lead(
             cursor, limit,created_by, role_id ,search
         )
-        leads = [BuyLeadFollowupItem(**row) for row in rows]
+        leads = []
+
+        followup_fields = set(LeadFollowup.model_fields)
+
+        for row in rows:
+            # Extract followup data
+            lead_followup_data = {
+                k: row[k]
+                for k in followup_fields
+                if k in row and row[k] is not None
+            }
+
+            lead_followup = (
+                LeadFollowup(**lead_followup_data)
+                if lead_followup_data
+                else None
+            )
+
+            # Remaining fields
+            item_data = {
+                k: v
+                for k, v in row.items()
+                if k not in followup_fields
+            }
+
+            item_data["lead_followup"] = lead_followup
+
+            leads.append(BuyLeadFollowupItem(**item_data))
+
         return leads
 
     async def get_total_followup_lead(
@@ -102,7 +134,21 @@ class BuyService(BuyServiceInterface):
         async for row in self.buy_repository.get_followup_lead_export(
             created_by, role_id ,search
         ):
-            yield BuyLeadFollowupItem(**row)
+            lead_followup_data = {
+                k: row[k]
+                for k in LeadFollowup.model_fields
+                if k in row and row[k] is not None
+            }
+            lead_followup = LeadFollowup(**lead_followup_data) if lead_followup_data else None
+
+            item_data = {
+                k: v
+                for k, v in row.items()
+                if k not in lead_followup_data
+            }
+
+            item_data["lead_followup"] = lead_followup
+            yield BuyLeadFollowupItem(**item_data)
 
     async def get_followup_lead_by_id(
         self,
@@ -113,8 +159,29 @@ class BuyService(BuyServiceInterface):
         row = await self.buy_repository.get_followup_lead_by_id(lead_id, created_by, role_id)
         if not row:
             return None
-        lead_address_data = {k: row[k] for k in BuyLeadAddress.model_fields if k in row and row[k] is not None}
-        lead_address = BuyLeadAddress(**lead_address_data) if lead_address_data else None
-        item_data = {k: v for k, v in row.items() if k not in lead_address_data}
+        # Extract address
+        lead_address_data = {
+            k: row[k]
+            for k in LeadAddress.model_fields
+            if k in row and row[k] is not None
+        }
+        lead_address = LeadAddress(**lead_address_data) if lead_address_data else None
+
+        # Extract followup
+        lead_followup_data = {
+            k: row[k]
+            for k in LeadFollowup.model_fields
+            if k in row and row[k] is not None
+        }
+        lead_followup = LeadFollowup(**lead_followup_data) if lead_followup_data else None
+
+        # Remaining fields
+        item_data = {
+            k: v
+            for k, v in row.items()
+            if k not in lead_address_data and k not in lead_followup_data
+        }
+
         item_data["lead_address"] = lead_address
+        item_data["lead_followup"] = lead_followup
         return BuyLeadFollowupDetail(**item_data)

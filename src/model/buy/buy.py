@@ -61,6 +61,38 @@ class BuyLeadAddress:
     area: str | None = None
     pincode: int | None = None
 
+@dataclass
+class _BuyLeadFollowup:
+    stage: str
+    disposition: str
+    notes: str
+    call_date: datetime
+    preferred_time: str | None = None
+
+@dataclass
+class BuyLeadFollowup:
+    lead_id: int
+    branch: str
+    customer_name: str
+    alternate_mobile: Optional[str]
+    mode: BuyMode
+    source: str
+    make_id: int
+    model_id: int
+    fuel_type: FuelType
+    year: int
+    kms: int
+    owner: str
+    client_offer: int
+    our_offer: int
+    lead_followup: _BuyLeadFollowup
+    broker_name: str | None = None
+    variant: str | None = None
+    color: Color | None = None
+    telecaller: str | None = None
+    executive: str | None = None
+    lead_address: BuyLeadAddress | None = None
+    created_by: str | None = None
 
 @dataclass
 class BuyLeadFollowupDetail:
@@ -68,10 +100,7 @@ class BuyLeadFollowupDetail:
     status: str
     mobile: str
     customer_name: str
-    stage: str
-    disposition: str
-    call_date: datetime
-    notes: str
+    lead_followup: _BuyLeadFollowup
     branch: str
     source: str
     mode: BuyMode
@@ -97,13 +126,6 @@ class BuyLeadFollowupDetail:
     alternate_mobile: str | None = None
     broker_name: str | None = None
     lead_address: BuyLeadAddress | None = None
-
-@dataclass
-class BuyLeadFollowup:
-    stage: str
-    disposition: str
-    calldate: str
-    notes: Optional[str]
 
 
 @dataclass

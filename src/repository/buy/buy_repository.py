@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from api.schema_types import BuyStatus, BuyStage,BuyDisposition
 from app import constant
 from auth.exceptions import CreationError, AllocationError, NotFound
-from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest, BuyLeadFollowupDetail
+from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest, BuyLeadFollowupDetail, BuyLeadFollowup
 from orm.buy.buy import tblbuylead, tblbuylead_address, tblbuylead_followup
 from orm.common.common import mstmake, mstmodel
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
@@ -496,6 +496,120 @@ class BuyRepository(BuyRepositoryInterface):
             await self.session.rollback()
             raise AllocationError(constant.FAILED)
         
+    
+    async def create_lead_followup(self, lead_id: int, lead: BuyLeadFollowup, created_by: str) -> int:
+        try:
+            stage_to_status_map = {
+                BuyStage.Appointment.value: BuyStatus.Appointment.value,
+                BuyStage.Lost.value: BuyStatus.Lost.value,
+                BuyStage.DND.value: BuyStatus.DND.value,
+            }
+
+            status = stage_to_status_map.get(
+                lead.lead_followup.stage,
+                BuyStatus.Allocated.value
+            )
+            
+            existing_stmt = select(
+                tblbuylead.c.id,
+            ).where(
+                tblbuylead.c.id == lead_id,
+                tblbuylead.c.is_active.is_(True),
+                tblbuylead.c.is_deleted.is_(False),
+                or_(
+                    tblbuylead.c.status == BuyStatus.Allocated.value,
+                    tblbuylead.c.status == BuyStatus.Appointment.value
+                )
+            )
+
+            result = await self.session.execute(existing_stmt)
+            existing = result.fetchone()
+
+            if not existing:
+                raise NotFound(constant.NOTFOUND)
+        
+            stmt = (
+                update(tblbuylead)
+                .where(
+                    tblbuylead.c.id == lead_id,
+                    tblbuylead.c.is_active.is_(True),
+                    tblbuylead.c.is_deleted.is_(False),
+                    or_(
+                        tblbuylead.c.status == BuyStatus.Allocated.value,
+                        tblbuylead.c.status == BuyStatus.Appointment.value
+                    )
+                )
+                .values(
+                    branch=lead.branch,
+                    customer_name=lead.customer_name,
+                    alternate_mobile=lead.alternate_mobile,
+                    mode=lead.mode,
+                    source=lead.source,
+                    broker_name=lead.broker_name,
+                    make_id=lead.make_id,
+                    model_id=lead.model_id,
+                    variant=lead.variant,
+                    color=lead.color.value if lead.color else None,
+                    fuel_type=lead.fuel_type.value,
+                    year=str(lead.year),
+                    kms=lead.kms,
+                    owner=lead.owner,
+                    client_offer=lead.client_offer,
+                    our_offer=lead.our_offer,
+                    telecaller=lead.telecaller,
+                    executive=lead.executive,
+                    modified_by=created_by,
+                    modified_at=func.now(),
+                )
+            )
+            await self.session.execute(stmt)
+
+            if lead.lead_address:
+                stmt = (
+                    insert(tblbuylead_address)
+                    .values(
+                        buylead_id=lead_id,
+                        address=lead.lead_address.address,
+                        state=lead.lead_address.state,
+                        city=lead.lead_address.city,
+                        area=lead.lead_address.area,
+                        pincode=lead.lead_address.pincode,
+                    )
+                )
+                stmt = stmt.on_conflict_do_update(
+                    index_elements=[tblbuylead_address.c.buylead_id],
+                    set_=dict(
+                        address=lead.lead_address.address,
+                        state=lead.lead_address.state,
+                        city=lead.lead_address.city,
+                        area=lead.lead_address.area,
+                        pincode=lead.lead_address.pincode,
+                    )
+                )
+                await self.session.execute(stmt)
+
+            stmt = (
+                update(tblbuylead_followup)
+                .where(tblbuylead_followup.c.buylead_id == lead_id)
+                .values(
+                    stage=lead.lead_followup.stage,
+                    disposition=lead.lead_followup.disposition,
+                    calldate=lead.lead_followup.call_date,
+                    preferred_time=lead.lead_followup.preferred_time,
+                    notes=lead.lead_followup.notes,
+                    created_at=func.now(),
+                    created_by=created_by,
+
+                )
+            )
+            await self.session.execute(stmt)
+
+            await self.session.commit()
+            return lead_id
+        except IntegrityError:
+            await self.session.rollback()
+            raise CreationError(constant.FAILED)
+    
     def _base_followup_lead_query(self,created_by: str,role_id: int):
         stmt = (
             select(*FOLLOWUP_LEAD_COLUMNS)

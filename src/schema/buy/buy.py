@@ -4,7 +4,7 @@ from typing import Annotated, List, Optional
 
 from pydantic import Field, StringConstraints, field_validator, BeforeValidator, model_validator
 
-from api.buy.example import BUY_LEAD, UPDATE_LEAD, BUY_LEAD_ALLOCATION
+from api.buy.example import BUY_LEAD, UPDATE_LEAD, BUY_LEAD_ALLOCATION, BUY_LEAD_FOLLOWUP
 from api.schema_types import BuyMode, CamelBaseModel, Color, FuelType
 from model.buy import buy as BuyModel
 
@@ -26,7 +26,7 @@ class LeadAddress(CamelBaseModel):
 class CreateBuyLead(CamelBaseModel):
     branch: str
     mobile: str
-    alternate_mobile: str
+    alternate_mobile: str | None = Field(None, max_length=15)
     source: str
     mode: BuyMode
     broker_name: str | None = Field(None, max_length=255)
@@ -94,7 +94,7 @@ class CreateBuyLead(CamelBaseModel):
     
 class UpdateBuyLead(CamelBaseModel):
     branch: str
-    alternate_mobile: str
+    alternate_mobile: str | None = Field(None, max_length=15)
     source: str
     broker_name: str | None = Field(None, max_length=255)
     customer_name: str = Field(..., min_length=1, max_length=255)
@@ -218,15 +218,87 @@ class AllocateLeadsRequest(CamelBaseModel):
             executive=self.executive,
         )
     
+class LeadFollowup(CamelBaseModel):
+    stage: str = Field(..., min_length=1, max_length=25)
+    disposition: str = Field(..., min_length=1, max_length=50)
+    call_date: datetime
+    preferred_time: str | None = Field(None, max_length=15)
+    notes: str = Field(..., min_length=1, max_length=500)
+
+class CreateBuyLeadFollowup(CamelBaseModel):
+    branch: str
+    customer_name: str = Field(..., min_length=1, max_length=255)
+    alternate_mobile: str | None = Field(None, max_length=15)
+    mode: BuyMode
+    source: str
+    broker_name: str | None = Field(None, max_length=255)
+    lead_address: LeadAddress | None = None
+    make_id: int
+    model_id: int
+    variant: str | None = Field(None, max_length=255)
+    color: Annotated[Color | None, BeforeValidator(empty_to_none)] = None
+    fuel_type: FuelType
+    year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+    kms: int
+    owner: str = Field(..., min_length=1, max_length=1)
+    client_offer: int
+    our_offer: int
+    telecaller: str | None = Field(None, max_length=50)
+    executive: str | None = Field(None, max_length=50)
+    lead_followup: LeadFollowup
+
+    class config:
+        schema_extra = {"example": BUY_LEAD_FOLLOWUP}
+        orm_mode = True
+
+    def to_model(self) -> BuyModel.BuyLeadFollowup:
+        return BuyModel.BuyLeadFollowup(
+            branch=self.branch,
+            customer_name=self.customer_name,
+            alternate_mobile=self.alternate_mobile,
+            mode=self.mode,
+            source=self.source,
+            broker_name=self.broker_name,
+            make_id=self.make_id,
+            model_id=self.model_id,
+            variant=self.variant,
+            color=self.color,
+            fuel_type=self.fuel_type,
+            year=self.year,
+            kms=self.kms,
+            owner=self.owner,
+            client_offer=self.client_offer,
+            our_offer=self.our_offer,
+            telecaller=self.telecaller,
+            executive=self.executive,
+            lead_address=(
+                BuyModel.BuyLeadAddress(
+                    address=self.lead_address.address,
+                    state=self.lead_address.state,
+                    city=self.lead_address.city,
+                    area=self.lead_address.area,
+                    pincode=self.lead_address.pincode,
+                )
+                if self.lead_address else None
+            ),
+            lead_followup=(
+                BuyModel._BuyLeadFollowup(
+                    stage=self.lead_followup.stage,
+                    disposition=self.lead_followup.disposition,
+                    call_date=self.lead_followup.call_date,
+                    preferred_time=self.lead_followup.preferred_time,
+                    notes=self.lead_followup.notes,
+                )
+                if self.lead_followup else None
+            ),
+        )
 
 class BuyLeadFollowupItem(CamelBaseModel):
     id: int
     status: str
     mobile: str
     customer_name: str
-    stage: str
-    disposition: str
-    call_date: datetime
+    lead_followup: LeadFollowup
     branch: str
     source: str
     mode: BuyMode
@@ -258,22 +330,13 @@ class BuyLeadFollowupList(CamelBaseModel):
     next: Optional[str]
     items: List[BuyLeadFollowupItem]
 
-class BuyLeadAddress(CamelBaseModel):
-    address: str
-    state: str
-    city: str
-    area: str | None = None
-    pincode: int | None = None
-
 
 class BuyLeadFollowupDetail(CamelBaseModel):
     id: int
     status: str
     mobile: str
     customer_name: str
-    stage: str
-    disposition: str
-    call_date: datetime
+    lead_followup: LeadFollowup
     notes: str
     branch: str
     source: str
@@ -299,4 +362,4 @@ class BuyLeadFollowupDetail(CamelBaseModel):
     executive: str | None = None
     alternate_mobile: str | None = None
     broker_name: str | None = None
-    lead_address: BuyLeadAddress | None = None
+    lead_address: LeadAddress | None = None

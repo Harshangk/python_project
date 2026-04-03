@@ -59,3 +59,38 @@ BUY_LEAD_ALLOCATION = {
     "telecaller": "Harshang",
     "executive": "Harshang",
 }
+
+BUY_LEAD_FOLLOWUP = {
+    "branch": "YMCA",
+    "customerName": "Rahul Sharma",
+    "alternateMobile": "9123456780",
+    "mode": "Home",
+    "source": "Website",
+    "brokerName": "",
+    "leadAddress":{
+        "address" : "test address",
+        "state": "Gujarat",
+        "city": "Ahmedabad",
+        "area": "test area",
+        "pincode": 123456,
+    },
+    "makeId": 1,
+    "modelId": 2,
+    "variant": "",
+    "color": "",
+    "fuelType": "Petrol",
+    "year": "2022",
+    "kms": 35000,
+    "owner": "1",
+    "clientOffer": 500000,
+    "ourOffer": 480000,
+    "telecaller": "harshang",
+    "executive": "harshang",
+    "leadFollowup":{
+        "stage": "Appointment",
+        "disposition": "Appointment",
+        "callDate": "06/04/2026",
+        "preferredTime":"09:00 AM to 10:00 AM",
+        "notes": "Customer wants urgent deal",
+    },
+}

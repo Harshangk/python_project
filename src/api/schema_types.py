@@ -47,6 +47,8 @@ class BuyStatus(str, Enum):
     NotAllocated = "NotAllocated"
     Allocated = "Allocated"
     Lost = "Lost"
+    DND = "DND"
+    Appointment = "Appointment"
 
 
 class BuyStage(str, Enum):

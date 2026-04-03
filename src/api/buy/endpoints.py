@@ -22,6 +22,7 @@ from schema.buy.buy import (
     AllocateLeadsRequest,
     BuyLeadFollowupList,
     BuyLeadFollowupDetail,
+    CreateBuyLeadFollowup,
 )
 from services.buy.buy_service_interface import BuyServiceInterface
 
@@ -269,6 +270,37 @@ async def reallocate_leads(
     except Exception as ex:
         logger.error(f"Exception error: {ex}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+@router.post(
+    "/{lead_id}/followup",
+    response_model=Response,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_lead_followup(
+    request: Request,
+    lead_id: int,
+    lead: CreateBuyLeadFollowup = Body(..., example=example.BUY_LEAD_FOLLOWUP),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> Response:
+    logger.info(f"request: {request}")
+    try:
+        followup_id = await buy_service.create_lead_followup(
+            lead_id=lead_id,
+            lead = lead.to_model(),
+            created_by= current_user.user_name
+        )
+    except CreationError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.FAILED)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"[{trace_id}] create_lead_followup failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+    return Response(id=followup_id, message=constant.CREATED)
 
 @router.get(
     "/followup",

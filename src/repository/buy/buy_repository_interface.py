@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Mapping, Optional, Sequence
 from api.schema_types import BuyStatus
-from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest,BuyLeadFollowupDetail
+from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest,BuyLeadFollowupDetail, BuyLeadFollowup
 
 
 class BuyRepositoryInterface(ABC):
@@ -62,6 +62,11 @@ class BuyRepositoryInterface(ABC):
 
     @abstractmethod
     async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
+        pass
+    
+
+    @abstractmethod
+    async def create_lead_followup(self, lead_id: int, lead: BuyLeadFollowup, created_by: str) -> int:
         pass
 
     @abstractmethod
