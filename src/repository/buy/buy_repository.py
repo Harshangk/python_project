@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from api.schema_types import BuyStatus, BuyStage,BuyDisposition
+from common.schema_types import BuyStatus, BuyStage,BuyDisposition
 from app import constant
 from auth.exceptions import CreationError, AllocationError, NotFound
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest, BuyLeadFollowupDetail, BuyLeadFollowup

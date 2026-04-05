@@ -2,7 +2,7 @@ from typing import Optional, List
 from datetime import datetime
 from pydantic.dataclasses import dataclass
 
-from api.schema_types import BuyMode, Color, FuelType
+from common.schema_types import BuyMode, Color, FuelType
 
 
 @dataclass

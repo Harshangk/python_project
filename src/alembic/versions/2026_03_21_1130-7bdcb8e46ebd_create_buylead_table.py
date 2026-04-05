@@ -97,7 +97,7 @@ def upgrade() -> None:
         sa.Column("address", sa.String(100), nullable=False),
         sa.Column("state", sa.String(25), nullable=False),
         sa.Column("city", sa.String(25), nullable=False),
-        sa.Column("area", sa.String(25), nullable=True),
+        sa.Column("area", sa.String(25), nullable=False),
         sa.Column("pincode", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
             ["buylead_id"],

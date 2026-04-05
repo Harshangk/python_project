@@ -5,7 +5,7 @@ from typing import Annotated, List, Optional
 from pydantic import Field, StringConstraints, field_validator, BeforeValidator, model_validator
 
 from api.buy.example import BUY_LEAD, UPDATE_LEAD, BUY_LEAD_ALLOCATION, BUY_LEAD_FOLLOWUP
-from api.schema_types import BuyMode, CamelBaseModel, Color, FuelType
+from common.schema_types import BuyMode, CamelBaseModel, Color, FuelType
 from model.buy import buy as BuyModel
 
 

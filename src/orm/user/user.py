@@ -17,7 +17,7 @@ mstrole = Table(
     Column("modified_by", String(length=50), nullable=True),
     Column("is_active", Boolean, default=True, nullable=False),
     Column("is_deleted", Boolean, default=False, nullable=False),
-    UniqueConstraint("role"),
+    UniqueConstraint("role", name="uq_mstrole_role"),
 )
 
 mstlogin = Table(

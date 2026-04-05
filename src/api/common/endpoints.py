@@ -5,9 +5,9 @@ from common.utils import enum_to_dict_list
 from api.deps import get_authenticated_user, get_trace_id
 from api.common import deps
 
-from api.schema_types import BuyMode, Color, FuelType, Owner, BuyStage, STAGE_DISPOSITION_MAP
+from common.schema_types import BuyMode, Color, FuelType, Owner, BuyStage, STAGE_DISPOSITION_MAP
 from app.core.logging import logger
-from api.schema_types import SortOrder, generate_time_slots
+from common.schema_types import SortOrder, generate_time_slots
 from common.cursor_pagination import build_next_page_url, normalize_limit
 from services.common.common_service_interface import CommonServiceInterface
 

@@ -141,7 +141,7 @@ def upgrade() -> None:
 
     op.create_table(
         "mstyear",
-        sa.Column("year", sa.Integer(), nullable=False),
+        sa.Column("year", sa.Integer(), nullable=False, autoincrement=False),
         sa.PrimaryKeyConstraint("year", name=op.f("pk_mstyear")),
     )
 

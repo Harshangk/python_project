@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from api.schema_types import CamelBaseModel
+from common.schema_types import CamelBaseModel
 
 
 class MenuBase(CamelBaseModel):

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Mapping, Optional, Sequence
-from api.schema_types import BuyStatus
+from common.schema_types import BuyStatus
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest,BuyLeadFollowupDetail, BuyLeadFollowup
 
 

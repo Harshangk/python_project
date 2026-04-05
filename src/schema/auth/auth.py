@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from api.schema_types import CamelBaseModel
+from common.schema_types import CamelBaseModel
 
 
 class TokenResponse(BaseModel):

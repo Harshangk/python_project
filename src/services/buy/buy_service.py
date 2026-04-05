@@ -4,7 +4,7 @@ from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest, BuyLead
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 from schema.buy.buy import BuyLeadItem, LeadAddress, BuyLeadFollowupItem, BuyLeadFollowupDetail, LeadFollowup
 from services.buy.buy_service_interface import BuyServiceInterface
-from api.schema_types import BuyStatus
+from common.schema_types import BuyStatus
 
 class BuyService(BuyServiceInterface):
     def __init__(self, buy_repository: BuyRepositoryInterface) -> None:

@@ -19,7 +19,7 @@ mstmake = Table(
     Column("modified_by", String(length=50), nullable=True),
     Column("is_active", Boolean, default=True, nullable=False),
     Column("is_deleted", Boolean, default=False, nullable=False),
-    UniqueConstraint("make"),
+    UniqueConstraint("make", name="uq_mstmake_make"),
     Index("idx_mstmake_make", "make"),
 )
 
@@ -35,7 +35,7 @@ mstmodel = Table(
     Column("modified_by", String(length=50), nullable=True),
     Column("is_active", Boolean, default=True, nullable=False),
     Column("is_deleted", Boolean, default=False, nullable=False),
-    UniqueConstraint("make_id", "model"),
+    UniqueConstraint("make_id", "model", name="uq_mstmodel_make_id_model"),
     Index("idx_mstmodel_model", "model"),
 )
 
@@ -72,7 +72,7 @@ mstsource = Table(
 mstyear = Table(
     "mstyear",
     mapper_registry.metadata,
-    Column("year", Integer, primary_key=True),
+    Column("year", Integer, primary_key=True, autoincrement=False),
 )
 
 mstbroker = Table(

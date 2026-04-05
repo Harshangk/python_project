@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status, B
 from api.buy import deps
 from api.buy import example
 from api.deps import get_authenticated_user, get_trace_id
-from api.schema_types import SortOrder, BuyStatus
+from common.schema_types import SortOrder, BuyStatus
 from app import constant
 from app.core.logging import logger
 from auth.dto import AuthenticatedUser

@@ -1,4 +1,4 @@
-from api.schema_types import CamelBaseModel
+from common.schema_types import CamelBaseModel
 from typing import List, Optional
 from enum import Enum
 from datetime import datetime

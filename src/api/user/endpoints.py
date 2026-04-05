@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
 from api.deps import get_authenticated_user, get_trace_id
-from api.schema_types import SortOrder
+from common.schema_types import SortOrder
 from api.user import deps
 from app import constant
 from app.core.logging import logger

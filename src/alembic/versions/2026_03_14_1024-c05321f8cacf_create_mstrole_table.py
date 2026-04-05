@@ -33,9 +33,9 @@ def upgrade() -> None:
         ),
         sa.Column("role", sa.String(length=15), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=True
+            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
         ),
-        sa.Column("created_by", sa.String(50), nullable=True),
+        sa.Column("created_by", sa.String(50), nullable=False),
         sa.Column("modified_at", sa.DateTime(), nullable=True),
         sa.Column("modified_by", sa.String(50), nullable=True),
         sa.Column(
@@ -48,7 +48,7 @@ def upgrade() -> None:
         sa.UniqueConstraint("role", name=op.f("uq_mstrole_role")),
     )
 
-    op.execute("""INSERT INTO mstrole(role) VALUES('Super Admin'),('Telecaller'), ('Executive')""")
+    op.execute("""INSERT INTO mstrole(role,created_by) VALUES('Super Admin','harshang'),('Telecaller','harshang'), ('Executive','harshang')""")
 
 
 def downgrade() -> None:

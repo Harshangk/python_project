@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from api.schema_types import CamelBaseModel
+from common.schema_types import CamelBaseModel
 from api.user.example import USER
 from model.user import user as UserModel
 

@@ -3,7 +3,7 @@ from typing import Annotated, Literal, Optional
 
 from pydantic import Field
 
-from api.schema_types import CamelBaseModel
+from common.schema_types import CamelBaseModel
 
 
 class BaseUser(CamelBaseModel):
