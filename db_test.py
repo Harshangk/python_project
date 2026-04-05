@@ -1,8 +1,9 @@
 # python db_test.py
 
-########### To check DB Connection
+# To check DB Connection
 
 import os
+
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
@@ -21,8 +22,7 @@ except Exception as e:
     print(e)
 
 
-
-########### To check password Hash
+# To check password Hash
 
 # from passlib.context import CryptContext
 

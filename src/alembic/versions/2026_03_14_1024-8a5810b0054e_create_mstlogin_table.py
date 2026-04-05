@@ -6,7 +6,6 @@ Create Date: 2026-03-14 10:24:55.251909
 
 """
 
-from datetime import datetime
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -67,20 +66,62 @@ def upgrade() -> None:
 
     hashed_password = bcrypt.hash("0310")
 
-    op.execute(f"""
-        INSERT INTO mstlogin (role_id, user_name, password, login_at, created_at, created_by, expiry_at)
-        VALUES (1, 'harshang', '{hashed_password}', now(), now(), 'harshang', now() + INTERVAL '5 years')
-    """)
+    op.execute(
+        f"""
+        INSERT INTO mstlogin (role_id,
+        user_name,
+        password,
+        login_at,
+        created_at,
+        created_by,
+        expiry_at)
+        VALUES (1,
+        'harshang',
+        '{hashed_password}',
+        now(),
+        now(),
+        'harshang',
+        now() + INTERVAL '5 years')
+    """
+    )
 
-    op.execute(f"""
-        INSERT INTO mstlogin (role_id, user_name, password, login_at, created_at, created_by, expiry_at)
-        VALUES (2, 'tele', '{hashed_password}', now(), now(), 'harshang', now() + INTERVAL '5 years')
-    """)
+    op.execute(
+        f"""
+        INSERT INTO mstlogin (role_id,
+        user_name,
+        password,
+        login_at,
+        created_at,
+        created_by,
+        expiry_at)
+        VALUES (2,
+        'tele',
+        '{hashed_password}',
+        now(),
+        now(),
+        'harshang',
+        now() + INTERVAL '5 years')
+    """
+    )
 
-    op.execute(f"""
-        INSERT INTO mstlogin (role_id, user_name, password, login_at, created_at, created_by, expiry_at)
-        VALUES (3, 'exe', '{hashed_password}', now(), now(), 'harshang', now() + INTERVAL '5 years')
-    """)
+    op.execute(
+        f"""
+        INSERT INTO mstlogin (role_id,
+        user_name,
+        password,
+        login_at,
+        created_at,
+        created_by,
+        expiry_at)
+        VALUES (3,
+        'exe',
+        '{hashed_password}',
+        now(),
+        now(),
+        'harshang',
+        now() + INTERVAL '5 years')
+    """
+    )
 
 
 def downgrade() -> None:
