@@ -1,18 +1,11 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional
+from uuid import UUID
 
 from api.schema_types import BuyStatus
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
 from schema.buy.buy import BuyLeadItem, BuyLeadFollowupItem, BuyLeadFollowupDetail
-
-
-@dataclass
-class ImportLeadResult:
-    created_count: int
-    error_csv_content: bytes | None = None
-    error_filename: str | None = None
-    failed_count: int = 0
 
 
 @dataclass
@@ -37,6 +30,7 @@ class BuyServiceInterface(ABC):
         source: str,
         broker_name: str | None = None,
         created_by: str | None = None,
+        file_uuid: UUID | None = None,
     ) -> ImportLeadResult:
         pass
 

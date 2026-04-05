@@ -1,19 +1,28 @@
 import csv
 import io
+from pathlib import Path
 from typing import List
+from uuid import UUID, uuid4
 
-from api.schema_types import BuyMode, BuyStatus, FuelType
+from api.schema_types import BuyStatus
+from common.file_storage import AbstractFileStorage
 from app.core.logging import logger
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 from schema.buy.buy import BuyLeadItem, LeadAddress, BuyLeadFollowupItem, BuyLeadFollowupDetail, BuyLeadAddress
+from services.buy.csv_parser import BuyLeadCSVParser, ParsingError
 from services.buy.buy_service_interface import BuyServiceInterface, ImportLeadResult
 from app import constant
 
 
 class BuyService(BuyServiceInterface):
-    def __init__(self, buy_repository: BuyRepositoryInterface) -> None:
+    def __init__(
+        self,
+        buy_repository: BuyRepositoryInterface,
+        file_storage: AbstractFileStorage,
+    ) -> None:
         self.buy_repository = buy_repository
+        self.file_storage = file_storage
 
     async def create_lead(self, lead: BuyLeadModel, created_by: str) -> int:
         return await self.buy_repository.create_lead(lead, created_by=created_by)
@@ -28,7 +37,10 @@ class BuyService(BuyServiceInterface):
         source: str,
         broker_name: str | None = None,
         created_by: str | None = None,
+        file_uuid: UUID | None = None,
     ) -> ImportLeadResult:
+        if file_uuid is None:
+            file_uuid = uuid4()
         valid_sources = await self.buy_repository.get_active_sources()
         normalized_source = source.strip().lower()
         normalized_broker_name = (broker_name or "").strip()
@@ -52,51 +64,40 @@ class BuyService(BuyServiceInterface):
         except UnicodeDecodeError as ex:
             raise ValueError("CSV file must be UTF-8 encoded.") from ex
 
-        reader = csv.DictReader(io.StringIO(decoded_content))
-        if not reader.fieldnames:
-            raise ValueError("CSV header is missing.")
+        parser = BuyLeadCSVParser(
+            file=io.StringIO(decoded_content),
+            buy_repository=self.buy_repository,
+            source=source.strip(),
+            broker_name=normalized_broker_name or None,
+        )
 
-        headers = [header.strip().lower() if header else "" for header in reader.fieldnames]
-        missing_headers = sorted(constant.REQUIRED_IMPORT_FIELDS - set(headers))
-        if missing_headers:
-            raise ValueError(
-                f"Missing required CSV columns: {', '.join(missing_headers)}."
-            )
+        try:
+            parsed_rows = await parser.parse()
+        except ParsingError as ex:
+            raise ValueError(str(ex)) from ex
 
-        if any(header == "" for header in headers):
-            raise ValueError("CSV contains an empty header column.")
-
-        valid_modes = {mode.value.lower() for mode in BuyMode}
-        valid_fuel_types = {fuel_type.value.lower() for fuel_type in FuelType}
+        import_s3_key = self._upload_import_file(
+            filename=filename or "import.csv",
+            content=content,
+            file_uuid=file_uuid,
+        )
+        await self._save_file_reference(
+            s3_key=import_s3_key,
+            file_type=constant.BUY_LEAD_IMPORT_FILE_TYPE,
+            file_uuid=file_uuid,
+        )
+        headers = parser.headers
         invalid_rows: list[dict[str, str]] = []
         leads_to_create: list[BuyLeadModel] = []
 
-        has_rows = False
-        for _, row in enumerate(reader, start=2):
-            has_rows = True
-            normalized_row = {
-                (key.strip().lower() if key else ""): (value.strip() if value else "")
-                for key, value in row.items()
-            }
-            row_errors, lead_model = await self._validate_import_row(
-                row=normalized_row,
-                valid_modes=valid_modes,
-                valid_fuel_types=valid_fuel_types,
-                source=source.strip(),
-                broker_name=normalized_broker_name or None,
-            )
-            if row_errors:
-                invalid_row = {
-                    header: normalized_row.get(header, "")
-                    for header in headers
-                }
-                invalid_row["error"] = " | ".join(row_errors)
+        for result in parsed_rows:
+            if result.error:
+                invalid_row = {header: result.row.get(header, "") for header in headers}
+                invalid_row["error"] = result.error
                 invalid_rows.append(invalid_row)
-            elif lead_model is not None:
-                leads_to_create.append(lead_model)
-
-        if not has_rows:
-            raise ValueError("CSV file must contain at least one data row.")
+                continue
+            if result.parsed is not None:
+                leads_to_create.append(result.parsed)
 
         if invalid_rows:
             error_csv_content = self._build_error_csv(
@@ -105,8 +106,19 @@ class BuyService(BuyServiceInterface):
             )
             original_filename = (filename or "import.csv").strip() or "import.csv"
             filename_root = original_filename.rsplit(".", 1)[0]
+            error_s3_key = self._upload_error_file(
+                filename=f"{filename_root}_errors.csv",
+                content=error_csv_content,
+                file_uuid=file_uuid,
+            )
+            await self._save_file_reference(
+                s3_key=error_s3_key,
+                file_type=constant.BUY_LEAD_ERROR_FILE_TYPE,
+                file_uuid=file_uuid,
+            )
             created_count = 0
             for lead in leads_to_create:
+                lead.file_uuid = file_uuid
                 await self.create_lead(lead, created_by=created_by)
                 created_count += 1
             result = ImportLeadResult(
@@ -132,6 +144,7 @@ class BuyService(BuyServiceInterface):
 
         created_count = 0
         for lead in leads_to_create:
+            lead.file_uuid = file_uuid
             await self.create_lead(lead, created_by=created_by)
             created_count += 1
         result = ImportLeadResult(created_count=created_count)
@@ -195,117 +208,6 @@ class BuyService(BuyServiceInterface):
     async def allocate_leads(self, allocate: AllocateLeadsRequest, created_by: str) -> int:
         return await self.buy_repository.allocate_leads(allocate, created_by=created_by)
 
-    async def _validate_import_row(
-        self,
-        row: dict[str, str],
-        valid_modes: set[str],
-        valid_fuel_types: set[str],
-        source: str,
-        broker_name: str | None,
-    ) -> tuple[list[str], BuyLeadModel | None]:
-        errors: list[str] = []
-        def add_error(message: str) -> None:
-            errors.append(f"{message}")
-
-        for field in constant.REQUIRED_IMPORT_FIELDS:
-            if not row.get(field):
-                add_error(f"'{field}' is required.")
-
-        if row.get("customer_name") and not (1 <= len(row["customer_name"]) <= 255):
-            add_error("'customer_name' must be between 1 to 255 characters.")
-
-        mobile = row.get("mobile", "")
-        if mobile and not constant.MOBILE_PATTERN.fullmatch(mobile):
-            add_error("'mobile' must start with 0 or 9 and contain exactly 10 digits.")
-
-        mode = row.get("mode", "")
-        if mode and mode.lower() not in valid_modes:
-            add_error(f"'mode' must be one of {', '.join(sorted(valid_modes))}.")
-
-        fuel_type = row.get("fuel_type", "")
-        if fuel_type and fuel_type.lower() not in valid_fuel_types:
-            add_error(f"'fuel_type' must be one of {', '.join(sorted(valid_fuel_types))}.")
-
-        year = row.get("year", "")
-        if year and not constant.YEAR_PATTERN.fullmatch(year):
-            add_error("'year' must be a 4-digit value.")
-
-        try:
-            kms = int(row["kms"]) if row.get("kms") else None
-        except ValueError:
-            add_error("'kms' must be an integer.")
-            kms = None
-
-        if kms is not None and kms < 0:
-            add_error("'kms' must be zero or greater.")
-
-        try:
-            int(row["our_offer"]) if row.get("our_offer") else None
-        except ValueError:
-            add_error("'our_offer' must be an integer.")
-
-        owner = row.get("owner", "")
-        if owner and len(owner) != 1:
-            add_error("'owner' must be a single character.")
-
-        make_id = None
-        model_id = None
-        if row.get("make"):
-            make_id = await self.buy_repository.get_make_id_by_name(row["make"])
-            if make_id is None:
-                add_error(f"'make' '{row['make']}' does not exist.")
-
-        if make_id is not None and row.get("model"):
-            model_id = await self.buy_repository.get_model_id_by_name(
-                make_id, row["model"]
-            )
-            if model_id is None:
-                add_error(
-                    f"'model' '{row['model']}' does not exist for make '{row['make']}'."
-                )
-
-        if errors:
-            return errors, None
-
-        lead_model = BuyLeadModel(
-            branch=row["branch"],
-            mobile=row["mobile"],
-            alternate_mobile=None,
-            source=source,
-            mode=self._get_buy_mode(mode),
-            broker_name=broker_name,
-            customer_name=row["customer_name"],
-            make_id=make_id,
-            model_id=model_id,
-            variant=None,
-            color=None,
-            fuel_type=self._get_fuel_type(fuel_type),
-            year=int(row["year"]),
-            kms=int(row["kms"]),
-            owner=row["owner"],
-            client_offer=0,
-            our_offer=int(row["our_offer"]),
-            remarks="Imported from CSV",
-            telecaller=None,
-            executive=None,
-            lead_address=None,
-        )
-        return [], lead_model
-
-    def _get_buy_mode(self, mode: str) -> BuyMode:
-        normalized_mode = mode.strip().lower()
-        for buy_mode in BuyMode:
-            if buy_mode.value.lower() == normalized_mode:
-                return buy_mode
-        raise ValueError(f"Unsupported mode: {mode}")
-
-    def _get_fuel_type(self, fuel_type: str) -> FuelType:
-        normalized_fuel_type = fuel_type.strip().lower()
-        for item in FuelType:
-            if item.value.lower() == normalized_fuel_type:
-                return item
-        raise ValueError(f"Unsupported fuel type: {fuel_type}")
-
     def _build_error_csv(
         self,
         headers: list[str],
@@ -316,8 +218,46 @@ class BuyService(BuyServiceInterface):
         writer.writeheader()
         writer.writerows(invalid_rows)
         csv_content = output.getvalue()
-        logger.info("Generated error CSV:\n%s", csv_content)
         return csv_content.encode("utf-8")
+
+    def _upload_import_file(self, filename: str, content: bytes, file_uuid: UUID) -> str:
+        return self._upload_csv_file("import", filename, content, file_uuid)
+
+    def _upload_error_file(self, filename: str, content: bytes, file_uuid: UUID) -> str:
+        return self._upload_csv_file("error", filename, content, file_uuid)
+
+    def _upload_csv_file(
+        self,
+        folder: str,
+        filename: str,
+        content: bytes,
+        file_uuid: UUID,
+        label: str | None = None,
+    ) -> str:
+        safe_filename = Path(filename).name or "import.csv"
+        stem = Path(safe_filename).stem or "file"
+        suffix = Path(safe_filename).suffix
+        label_suffix = f"_{label}" if label else ""
+        storage_filename = f"{folder}/{stem}{label_suffix}_{str(file_uuid)}{suffix}"
+        return self.file_storage.upload_file(
+            filename=storage_filename,
+            file_obj=content,
+        )
+
+    async def _save_file_reference(self, s3_key: str, file_type: str, file_uuid: UUID) -> int:
+        file_id = await self.buy_repository.create_lead_file(
+            s3_key=s3_key,
+            file_type=file_type,
+            file_uuid=file_uuid,
+        )
+        logger.info(
+            "Stored buy lead file metadata. file_id=%s file_type=%s file_uuid=%s s3_key=%s",
+            file_id,
+            file_type,
+            file_uuid,
+            s3_key,
+        )
+        return file_id
     
     async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
         return await self.buy_repository.reallocate_leads(reallocate, created_by=created_by)

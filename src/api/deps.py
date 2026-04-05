@@ -60,7 +60,7 @@ def get_file_storage_object(bucket: str | None) -> Callable[[], AbstractFileStor
         # storage: AbstractFileStorage
         if settings.application_env == "local":
             return LocalFileStorage("static")
-        elif settings.application_env == "prod" or settings.s3_acess_key_id:
+        elif settings.application_env == "prod" or settings.s3_access_key_id:
             if not bucket:
                 raise RuntimeError("No S3 Bucket provided")
             return S3FileStorage(client=get_s3_client(), bucket_name=bucket)

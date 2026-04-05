@@ -1,4 +1,5 @@
 from typing import Any, Mapping, Sequence
+from uuid import UUID
 
 from sqlalchemy import asc, desc, func, or_, select, update, cast, String
 from sqlalchemy.dialects.postgresql import insert
@@ -9,8 +10,8 @@ from api.schema_types import BuyStatus, BuyStage,BuyDisposition
 from app import constant
 from auth.exceptions import CreationError, AllocationError, NotFound
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest, BuyLeadFollowupDetail
-from orm.buy.buy import tblbuylead, tblbuylead_address, tblbuylead_followup
-from orm.common.common import mstmake, mstmodel
+from orm.buy.buy import tblbuylead, tblbuylead_address, tblbuylead_file, tblbuylead_followup
+from orm.common.common import mstmake, mstmodel, mstsource
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 
 LEAD_SEARCHABLE_COLUMNS = {
@@ -176,6 +177,7 @@ class BuyRepository(BuyRepositoryInterface):
                     status=status,
                     telecaller=lead.telecaller,
                     executive=lead.executive,
+                    file_uuid=lead.file_uuid,
                     remarks=lead.remarks,
                     allocated_at=allocated_at,
                     allocated_by=allocated_by,
@@ -221,6 +223,25 @@ class BuyRepository(BuyRepositoryInterface):
             await self.session.rollback()
             raise CreationError(constant.FAILED)
 
+    async def create_lead_file(self, s3_key: str, file_type: str, file_uuid: UUID) -> int:
+        try:
+            stmt = (
+                insert(tblbuylead_file)
+                .values(
+                    s3_key=s3_key,
+                    file_type=file_type,
+                    file_uuid=file_uuid,
+                )
+                .returning(tblbuylead_file.c.id)
+            )
+            result = await self.session.execute(stmt)
+            file_id = result.scalar_one()
+            await self.session.commit()
+            return file_id
+        except IntegrityError:
+            await self.session.rollback()
+            raise CreationError(constant.FAILED)
+
     async def get_make_id_by_name(self, make: str) -> int | None:
         stmt = (
             select(mstmake.c.id)
@@ -239,6 +260,39 @@ class BuyRepository(BuyRepositoryInterface):
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def get_make_ids_by_names(self, makes: set[str]) -> dict[str, int]:
+        if not makes:
+            return {}
+
+        stmt = (
+            select(
+                func.lower(mstmake.c.make).label("make_key"),
+                mstmake.c.id,
+            )
+            .where(mstmake.c.is_active)
+            .where(mstmake.c.is_deleted.is_(False))
+            .where(func.lower(mstmake.c.make).in_(makes))
+        )
+        result = await self.session.execute(stmt)
+        return {row.make_key: row.id for row in result}
+
+    async def get_model_ids_by_make_ids(self, make_ids: set[int]) -> dict[tuple[int, str], int]:
+        if not make_ids:
+            return {}
+
+        stmt = (
+            select(
+                mstmodel.c.make_id,
+                func.lower(mstmodel.c.model).label("model_key"),
+                mstmodel.c.id,
+            )
+            .where(mstmodel.c.is_active)
+            .where(mstmodel.c.is_deleted.is_(False))
+            .where(mstmodel.c.make_id.in_(make_ids))
+        )
+        result = await self.session.execute(stmt)
+        return {(row.make_id, row.model_key): row.id for row in result}
 
     async def get_active_sources(self) -> set[str]:
         stmt = (

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Identity, Index,
+from sqlalchemy import (UUID, Boolean, Column, DateTime, ForeignKey, Identity, Index,
                         Integer, String, Table, UniqueConstraint)
 
 from common.db import mapper_registry
@@ -30,6 +30,7 @@ tblbuylead = Table(
     Column("status", String(25), nullable=False),
     Column("telecaller", String(50), nullable=True),
     Column("executive", String(50), nullable=True),
+    Column("file_uuid", UUID(as_uuid=True), nullable=True),
     Column("remarks", String(500), nullable=False),
     Column("allocated_at", DateTime, nullable=True),
     Column("allocated_by", String(length=50), nullable=True),
@@ -73,6 +74,16 @@ tblbuylead_followup = Table(
     Column("created_by", String(length=50), nullable=False),
     UniqueConstraint("buylead_id"),
 
+)
+
+tblbuylead_file = Table(
+    "tblbuylead_file",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("s3_key", String(500), nullable=False),
+    Column("file_type", String(50), nullable=False),
+    Column("file_uuid", UUID(as_uuid=True), nullable=False),
+    Index("idx_tblbuylead_file_file_type", "file_type"),
 )
 
 

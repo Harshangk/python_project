@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
 
@@ -75,6 +75,7 @@ async def import_lead(
 ) -> GeneralResponse:
     logger.info(f"request: {request}, user: {current_user}, filename: {file.filename}")
     try:
+        file_uuid = uuid4()
         filename = (file.filename or "").strip()
         if not filename:
             raise HTTPException(
@@ -96,8 +97,9 @@ async def import_lead(
             source=source,
             broker_name=broker_name,
             created_by=current_user.user_name,
+            file_uuid=file_uuid,
         )
-        return GeneralResponse(detail=constant.RECIEVED_REQUEST)
+        return GeneralResponse(detail=constant.RECIEVED_REQUEST, file_uuid=file_uuid)
     except HTTPException:
         raise
     except ValueError as ex:

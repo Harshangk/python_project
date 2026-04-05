@@ -1,0 +1,16 @@
+branch,mobile,mode,customer_name,fuel_type,year,kms,owner,make,model,our_offer,alternate_mobile,client_offer,variant,color,telecaller,executive,address,state,city,area,pincode
+YMCA,9876543210,branch,Rahul Sharma,petrol,2021,25000,1,Audi,A4,100000,9876501234,90000,Premium Plus,Black,Amit,Rohit,MG Road,Gujarat,Ahmedabad,Navrangpura,380009
+YMCA,9123456789,home,Priya Patel,hybrid,2020,18000,1,Audi,A3,95000,,85000,Base,White,Sneha,,Satellite Road,Gujarat,Ahmedabad,,380015
+Navrang,9234567890,branch,Arjun Mehta,petrol,2019,32000,2,Audi,A4,87000,9345678901,80000,S Line,Yellow,Vikas,Neel,Ring Road,Gujarat,Surat,Adajan,395009
+SG Highway,9345678901,notinspected,Karan Shah,disel,2018,41000,3,Audi,A3,73000,,70000,Standard,Black,,Manav,Drive In Road,Gujarat,Ahmedabad,Thaltej,380054
+Prahladnagar,9456789012,branch,Meera Joshi,petrol,2022,12000,1,Audi,A4,120000,9567890123,110000,Technology,White,Rina,Aryan,Corporate Road,Gujarat,Ahmedabad,Prahladnagar,380015
+CG Road,9567890123,home,Nidhi Desai,hybrid,2021,9000,1,Audi,A3,98000,,93000,Premium,Yellow,Krupa,,CG Road,Gujarat,Ahmedabad,Ellisbridge,380006
+Vesu,9678901234,branch,Dev Patel,petrol,2017,54000,2,Audi,A4,69000,9789012345,65000,Sportback,Black,,Harsh,Vesu Main Road,Gujarat,Surat,Vesu,395007
+Bopal,9789012345,home,Asha Trivedi,disel,2016,61000,3,Audi,A3,62000,,60000,Comfort,White,Hina,,Bopal,Gujarat,Ahmedabad,South Bopal,380058
+Maninagar,9890123456,branch,Yash Parmar,petrol,2015,70000,4,Audi,A4,58000,9001123456,55000,Executive,Yellow,,Parth,Maninagar,Gujarat,Ahmedabad,Kankaria,380008
+Pal,9001234567,branch,Ritu Gohil,hybrid,2023,6000,1,Audi,A3,130000,,125000,Luxury,Black,Neha,,Pal,Gujarat,Surat,Pal,395009
+ErrorOne,12345,invalidmode,,invalidfuel,20AB,-5,9,UnknownMake,UnknownModel,abc,notamobile,xyz,Broken,Blue,VeryLongTelecallerNameOverFiftyCharacters_ABCDEFGHIJK,VeryLongExecutiveNameOverFiftyCharacters_ABCDEFGHIJK,Error Street,Gujarat,Ahmedabad,AreaX,12ABCD
+ErrorTwo,8888888888,wrongmode,,wrongfuel,abcd,-10,0,FakeMake,FakeModel,text,777,notint,Invalid Color Row,Purple,TeleCallerName,ExecutiveName,Bad Address,State1,City1,Area1,ABCDE1
+ErrorThree,1111111111,other,,otherfuel,199X,-1,8,NoMake,NoModel,qwe,abcde,1,VariantX,Orange,CallerX,ExecutiveX,Another Road,State2,City2,Area2,99999
+ErrorFour,22222,badmode,,badfuel,2O2O,-99,7,MissingMake,MissingModel,none,333,abc,VariantY,Green,CallerY,ExecutiveY,Third Road,State3,City3,Area3,123
+ErrorFive,3333333333,invalid,,invalid,year,-100,6,WrongMake,WrongModel,offer,44444,def,VariantZ,Pink,CallerZ,ExecutiveZ,Fourth Road,State4,City4,Area4,XYZ123

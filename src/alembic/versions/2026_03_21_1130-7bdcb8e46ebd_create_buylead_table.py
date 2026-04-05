@@ -50,6 +50,7 @@ def upgrade() -> None:
         sa.Column("status", sa.String(25), nullable=False),
         sa.Column("telecaller", sa.String(50), nullable=True),
         sa.Column("executive", sa.String(50), nullable=True),
+        sa.Column("file_uuid", sa.UUID(as_uuid=True), nullable=True),
         sa.Column("remarks", sa.String(500), nullable=False),
         sa.Column("allocated_at", sa.DateTime(), nullable=True),
         sa.Column("allocated_by", sa.String(50), nullable=True),

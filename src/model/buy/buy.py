@@ -1,5 +1,6 @@
 from typing import Optional, List
 from datetime import datetime
+from uuid import UUID
 from pydantic.dataclasses import dataclass
 
 from api.schema_types import BuyMode, Color, FuelType
@@ -35,6 +36,7 @@ class BuyLead:
     telecaller: str | None = None
     executive: str | None = None
     lead_address: BuyLeadAddress | None = None
+    file_uuid: UUID | None = None
     created_by: str | None = None
 
 
@@ -59,16 +61,6 @@ class UpdateLead:
     lead_address: BuyLeadAddress | None = None
     created_by: str | None = None
     
-
-@dataclass
-class BuyLeadAddress:
-    address: str
-    state: str
-    city: str
-    area: str | None = None
-    pincode: int | None = None
-
-
 @dataclass
 class BuyLeadFollowupDetail:
     id: int

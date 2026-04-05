@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Mapping, Optional, Sequence
+from uuid import UUID
 from api.schema_types import BuyStatus
 from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest,BuyLeadFollowupDetail
 
@@ -11,11 +12,23 @@ class BuyRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def create_lead_file(self, s3_key: str, file_type: str, file_uuid: UUID) -> int:
+        pass
+
+    @abstractmethod
     async def get_make_id_by_name(self, make: str) -> int | None:
         pass
 
     @abstractmethod
     async def get_model_id_by_name(self, make_id: int, model: str) -> int | None:
+        pass
+
+    @abstractmethod
+    async def get_make_ids_by_names(self, makes: set[str]) -> dict[str, int]:
+        pass
+
+    @abstractmethod
+    async def get_model_ids_by_make_ids(self, make_ids: set[int]) -> dict[tuple[int, str], int]:
         pass
 
     @abstractmethod

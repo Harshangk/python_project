@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import Annotated, List, Optional
+from uuid import UUID
 
 from pydantic import Field, StringConstraints, field_validator, BeforeValidator, model_validator
 
@@ -221,6 +222,7 @@ class AllocateLeadsRequest(CamelBaseModel):
 
 class GeneralResponse(CamelBaseModel):
     detail: str
+    file_uuid: UUID
     
 
 class BuyLeadFollowupItem(CamelBaseModel):
