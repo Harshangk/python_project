@@ -6,8 +6,8 @@ BUY_LEAD = {
     "mode": "Home",
     "brokerName": "",
     "customerName": "Rahul Sharma",
-    "leadAddress":{
-        "address" : "test address",
+    "leadAddress": {
+        "address": "test address",
         "state": "Gujarat",
         "city": "Ahmedabad",
         "area": "test area",
@@ -34,8 +34,8 @@ UPDATE_LEAD = {
     "source": "Website",
     "brokerName": "",
     "customerName": "Vishal Mehta",
-    "leadAddress":{
-        "address" : "Updated address",
+    "leadAddress": {
+        "address": "Updated address",
         "state": "Gujarat",
         "city": "Ahmedabad",
         "area": "test area",
@@ -55,7 +55,7 @@ UPDATE_LEAD = {
 }
 
 BUY_LEAD_ALLOCATION = {
-    "leadIds":[1,2,3],
+    "leadIds": [1, 2, 3],
     "telecaller": "tele",
     "executive": "exe",
 }
@@ -67,8 +67,8 @@ BUY_LEAD_FOLLOWUP = {
     "mode": "Home",
     "source": "Website",
     "brokerName": "",
-    "leadAddress":{
-        "address" : "test address",
+    "leadAddress": {
+        "address": "test address",
         "state": "Gujarat",
         "city": "Ahmedabad",
         "area": "test area",
@@ -86,11 +86,11 @@ BUY_LEAD_FOLLOWUP = {
     "ourOffer": 480000,
     "telecaller": "tele",
     "executive": "exe",
-    "leadFollowup":{
+    "leadFollowup": {
         "stage": "Appointment",
         "disposition": "Appointment",
         "calldate": "2026-04-03T18:30:00.000",
-        "preferredTime":"09:00 AM to 10:00 AM",
+        "preferredTime": "09:00 AM to 10:00 AM",
         "notes": "Customer wants urgent deal",
     },
 }

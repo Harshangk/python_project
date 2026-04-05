@@ -1,7 +1,9 @@
-from common.schema_types import CamelBaseModel
-from typing import List, Optional
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import List, Optional
+
+from common.schema_types import CamelBaseModel
+
 
 class LeadSourceItem(CamelBaseModel):
     id: int
@@ -40,7 +42,8 @@ class MakeList(CamelBaseModel):
 class MakeSortBy(str, Enum):
     id = "id"
     make = "make"
-    is_premium="is_premium"
+    is_premium = "is_premium"
+
 
 class ModelItem(CamelBaseModel):
     id: int
@@ -60,8 +63,8 @@ class ModelList(CamelBaseModel):
 
 class ModelSortBy(str, Enum):
     id = "id"
-    make="make"
-    model="model"
+    make = "make"
+    model = "model"
 
 
 class BranchItem(CamelBaseModel):
@@ -80,10 +83,12 @@ class BranchList(CamelBaseModel):
 
 class BranchSortBy(str, Enum):
     id = "id"
-    branch="branch"
+    branch = "branch"
+
 
 class YearItem(CamelBaseModel):
     year: int
+
 
 class YearList(CamelBaseModel):
     total: int
@@ -108,7 +113,7 @@ class BrokerList(CamelBaseModel):
 
 class BrokerSortBy(str, Enum):
     id = "id"
-    booker="booker"
+    booker = "booker"
 
 
 class StateItem(CamelBaseModel):
@@ -129,6 +134,7 @@ class StateSortBy(str, Enum):
     id = "id"
     state = "state"
 
+
 class CityItem(CamelBaseModel):
     id: int
     state_id: int
@@ -147,5 +153,5 @@ class CityList(CamelBaseModel):
 
 class CitySortBy(str, Enum):
     id = "id"
-    state="state"
-    city="city"
+    state = "state"
+    city = "city"

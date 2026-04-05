@@ -1,8 +1,9 @@
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import TypeVar
 
 from pydantic import BaseModel as PydanticBaseModel
-from datetime import datetime, timedelta
+
 
 def to_camel(s: str) -> str:
     first, *others = s.split("_")
@@ -27,6 +28,7 @@ class HumanReadableBaseModel(PydanticBaseModel):
 
 T = TypeVar("T")
 
+
 def generate_time_slots(start_hour=9, end_hour=20):
     slots = []
 
@@ -42,6 +44,7 @@ def generate_time_slots(start_hour=9, end_hour=20):
         current = next_time
 
     return slots
+
 
 class BuyStatus(str, Enum):
     NotAllocated = "NotAllocated"
@@ -65,28 +68,18 @@ class BuyDisposition(str, Enum):
     NotContactable = "Not Contactable"
     Appointment = "Appointment"
     NotInterested = "Not Interested"
-    PriceIssue="Price Issue"
+    PriceIssue = "Price Issue"
     DND = "DND"
 
+
 STAGE_DISPOSITION_MAP = {
-    BuyStage.Fresh: [
-        BuyDisposition.Fresh
-    ],
-    BuyStage.UnderFollowup: [
-        BuyDisposition.CallLater,
-        BuyDisposition.NotContactable
-    ],
-    BuyStage.Appointment: [
-        BuyDisposition.Appointment
-    ],
-    BuyStage.Lost: [
-        BuyDisposition.NotInterested,
-        BuyDisposition.PriceIssue
-    ], 
-    BuyStage.DND: [
-        BuyDisposition.DND
-    ],
+    BuyStage.Fresh: [BuyDisposition.Fresh],
+    BuyStage.UnderFollowup: [BuyDisposition.CallLater, BuyDisposition.NotContactable],
+    BuyStage.Appointment: [BuyDisposition.Appointment],
+    BuyStage.Lost: [BuyDisposition.NotInterested, BuyDisposition.PriceIssue],
+    BuyStage.DND: [BuyDisposition.DND],
 }
+
 
 class BuyMode(str, Enum):
     Branch = "Branch"

@@ -1,15 +1,16 @@
-class AuthException(Exception): ...
+class AuthException(Exception): ...  # noqa
 
 
-class Unauthorized(AuthException): ...
+class Unauthorized(AuthException): ...  # noqa
 
 
-class ForbiddenError(AuthException): ...
+class ForbiddenError(AuthException): ...  # noqa
 
 
-class NotFound(AuthException): ...
+class NotFound(AuthException): ...  # noqa
 
 
-class CreationError(Exception): ...
+class CreationError(Exception): ...  # noqa
 
-class AllocationError(Exception): ...
+
+class AllocationError(Exception): ...  # noqa

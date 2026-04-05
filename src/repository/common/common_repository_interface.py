@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Any, Mapping, Optional, Sequence
 
 
-
 class CommonRepositoryInterface(ABC):
 
     @abstractmethod
@@ -48,7 +47,9 @@ class CommonRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_total_model(self, make_id: int | None = None, search: str | None = None) -> int:
+    async def get_total_model(
+        self, make_id: int | None = None, search: str | None = None
+    ) -> int:
         pass
 
     @abstractmethod
@@ -81,7 +82,6 @@ class CommonRepositoryInterface(ABC):
     async def get_total_broker(self, search: str | None = None) -> int:
         pass
 
-
     @abstractmethod
     async def get_year(
         self,
@@ -94,7 +94,6 @@ class CommonRepositoryInterface(ABC):
     @abstractmethod
     async def get_total_year(self, search: str | None = None) -> int:
         pass
-
 
     @abstractmethod
     async def get_state(
@@ -124,5 +123,7 @@ class CommonRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_total_city(self, state_id: int | None = None, search: str | None = None) -> int:
+    async def get_total_city(
+        self, state_id: int | None = None, search: str | None = None
+    ) -> int:
         pass

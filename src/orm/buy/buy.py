@@ -1,7 +1,17 @@
 from datetime import datetime
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Identity, Index,
-                        Integer, String, Table, UniqueConstraint)
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Identity,
+    Index,
+    Integer,
+    String,
+    Table,
+    UniqueConstraint,
+)
 
 from common.db import mapper_registry
 from model.buy import buy as BuyModel
@@ -57,7 +67,6 @@ tblbuylead_address = Table(
     Column("area", String(25), nullable=False),
     Column("pincode", Integer(), nullable=True),
     UniqueConstraint("buylead_id"),
-
 )
 
 tblbuylead_followup = Table(
@@ -73,7 +82,6 @@ tblbuylead_followup = Table(
     Column("created_at", DateTime, default=datetime.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
     UniqueConstraint("buylead_id"),
-
 )
 
 

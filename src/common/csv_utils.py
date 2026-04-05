@@ -50,7 +50,7 @@ def stream_csv(rows: AsyncIterable, filename: str) -> StreamingResponse:
     return StreamingResponse(
         generator(),
         media_type="text/csv",
-        ### if need download option
+        # if need download option
         # headers={
         #     "Content-Disposition": f'attachment; filename="{filename}"'
         # },

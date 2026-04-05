@@ -29,9 +29,7 @@ class UserService(UserServiceInterface):
         return users
 
     async def get_total_user(
-        self,
-        role_id: int | None = None,
-        search: str | None = None
+        self, role_id: int | None = None, search: str | None = None
     ) -> int:
         return await self.user_repository.get_total_user(role_id, search)
 

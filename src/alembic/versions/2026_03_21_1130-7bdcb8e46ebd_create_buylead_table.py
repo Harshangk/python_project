@@ -84,7 +84,6 @@ def upgrade() -> None:
     op.create_index("idx_tblbuylead_telecaller", "tblbuylead", ["telecaller"])
     op.create_index("idx_tblbuylead_executive", "tblbuylead", ["executive"])
 
-
     op.create_table(
         "tblbuylead_address",
         sa.Column(
@@ -105,7 +104,9 @@ def upgrade() -> None:
             name=op.f("fk_tblbuylead_address_buylead_id_tblbuylead"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_tblbuylead_address")),
-        sa.UniqueConstraint("buylead_id", name=op.f("uq_tblbuylead_address_buylead_id")),
+        sa.UniqueConstraint(
+            "buylead_id", name=op.f("uq_tblbuylead_address_buylead_id")
+        ),
     )
 
     op.create_table(
@@ -132,7 +133,9 @@ def upgrade() -> None:
             name=op.f("fk_tblbuylead_followup_buylead_id_tblbuylead"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_tblbuylead_followup")),
-        sa.UniqueConstraint("buylead_id", name=op.f("uq_tblbuylead_followup_buylead_id")),
+        sa.UniqueConstraint(
+            "buylead_id", name=op.f("uq_tblbuylead_followup_buylead_id")
+        ),
     )
 
 

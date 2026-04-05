@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends
 
 import api.auth.endpoints as auth
 import api.buy.endpoints as buy
+import api.common.endpoints as common
 import api.menu.endpoints as menu
 import api.user.endpoints as user
-import api.common.endpoints as common
 from api import deps
 
 router = APIRouter(dependencies=[Depends(deps.get_authenticated_actor)])

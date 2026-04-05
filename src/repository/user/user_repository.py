@@ -91,9 +91,7 @@ class UserRepository(UserRepositoryInterface):
         return rows
 
     async def get_total_user(
-        self,
-        role_id: int | None = None,
-        search: str | None = None
+        self, role_id: int | None = None, search: str | None = None
     ) -> int:
         query = select(func.count()).select_from(
             mstlogin.join(mstrole, mstlogin.c.role_id == mstrole.c.id)
@@ -135,7 +133,7 @@ class UserRepository(UserRepositoryInterface):
 
         if role_id is not None:
             stmt = stmt.where(mstlogin.c.role_id == role_id)
-            
+
         if search:
             search_filters = [
                 col.ilike(f"%{search}%") for col in USER_SEARCHABLE_COLUMNS.values()

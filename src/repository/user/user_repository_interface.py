@@ -24,9 +24,7 @@ class UserRepositoryInterface(ABC):
 
     @abstractmethod
     async def get_total_user(
-        self,
-        role_id: int | None = None,
-        search: str | None = None
+        self, role_id: int | None = None, search: str | None = None
     ) -> int:
         pass
 

@@ -2,9 +2,20 @@ from datetime import datetime
 from enum import Enum
 from typing import Annotated, List, Optional
 
-from pydantic import Field, StringConstraints, field_validator, BeforeValidator, model_validator
+from pydantic import (
+    BeforeValidator,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
-from api.buy.example import BUY_LEAD, UPDATE_LEAD, BUY_LEAD_ALLOCATION, BUY_LEAD_FOLLOWUP
+from api.buy.example import (
+    BUY_LEAD,
+    BUY_LEAD_ALLOCATION,
+    BUY_LEAD_FOLLOWUP,
+    UPDATE_LEAD,
+)
 from common.schema_types import BuyMode, CamelBaseModel, Color, FuelType
 from model.buy import buy as BuyModel
 
@@ -12,9 +23,11 @@ from model.buy import buy as BuyModel
 def empty_to_none(v):
     return None if v == "" else v
 
+
 class Response(CamelBaseModel):
     id: int
     message: str
+
 
 class LeadAddress(CamelBaseModel):
     address: str = Field(..., min_length=1, max_length=100)
@@ -22,6 +35,7 @@ class LeadAddress(CamelBaseModel):
     city: str = Field(..., min_length=1, max_length=25)
     area: str | None = Field(None, min_length=1, max_length=25)
     pincode: int | None = None
+
 
 class CreateBuyLead(CamelBaseModel):
     branch: str
@@ -88,10 +102,12 @@ class CreateBuyLead(CamelBaseModel):
                     area=self.lead_address.area,
                     pincode=self.lead_address.pincode,
                 )
-                if self.lead_address else None
+                if self.lead_address
+                else None
             ),
         )
-    
+
+
 class UpdateBuyLead(CamelBaseModel):
     branch: str
     alternate_mobile: str | None = Field(None, max_length=15)
@@ -141,7 +157,8 @@ class UpdateBuyLead(CamelBaseModel):
                     area=self.lead_address.area,
                     pincode=self.lead_address.pincode,
                 )
-                if self.lead_address else None
+                if self.lead_address
+                else None
             ),
         )
 
@@ -197,7 +214,7 @@ class BuyLeadSortBy(str, Enum):
 
 
 class AllocateLeadsRequest(CamelBaseModel):
-    lead_ids: List[int]  = Field(..., min_length=1)
+    lead_ids: List[int] = Field(..., min_length=1)
     telecaller: str | None = None
     executive: str | None = None
 
@@ -206,7 +223,7 @@ class AllocateLeadsRequest(CamelBaseModel):
         if not self.telecaller and not self.executive:
             raise ValueError("Either telecaller or executive must be provided")
         return self
-    
+
     class config:
         schema_extra = {"example": BUY_LEAD_ALLOCATION}
         orm_mode = True
@@ -217,7 +234,8 @@ class AllocateLeadsRequest(CamelBaseModel):
             telecaller=self.telecaller,
             executive=self.executive,
         )
-    
+
+
 class LeadFollowup(CamelBaseModel):
     stage: str = Field(..., min_length=1, max_length=25)
     disposition: str = Field(..., min_length=1, max_length=50)
@@ -228,6 +246,7 @@ class LeadFollowup(CamelBaseModel):
     @field_validator("calldate")
     def remove_timezone(cls, v):
         return v.replace(tzinfo=None) if v.tzinfo else v
+
 
 class CreateBuyLeadFollowup(CamelBaseModel):
     branch: str
@@ -250,8 +269,6 @@ class CreateBuyLeadFollowup(CamelBaseModel):
     telecaller: str | None = Field(None, max_length=50)
     executive: str | None = Field(None, max_length=50)
     lead_followup: LeadFollowup
-
-    
 
     class config:
         schema_extra = {"example": BUY_LEAD_FOLLOWUP}
@@ -285,7 +302,8 @@ class CreateBuyLeadFollowup(CamelBaseModel):
                     area=self.lead_address.area,
                     pincode=self.lead_address.pincode,
                 )
-                if self.lead_address else None
+                if self.lead_address
+                else None
             ),
             lead_followup=(
                 BuyModel._BuyLeadFollowup(
@@ -295,9 +313,11 @@ class CreateBuyLeadFollowup(CamelBaseModel):
                     preferred_time=self.lead_followup.preferred_time,
                     notes=self.lead_followup.notes,
                 )
-                if self.lead_followup else None
+                if self.lead_followup
+                else None
             ),
         )
+
 
 class BuyLeadFollowupItem(CamelBaseModel):
     id: int

@@ -16,17 +16,21 @@ class Model:
 class Branch:
     branch: str
 
+
 @dataclass
 class Source:
     source: str
+
 
 @dataclass
 class Year:
     year: str
 
+
 @dataclass
 class Broker:
     broker: str
+
 
 @dataclass
 class State:

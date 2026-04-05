@@ -1,10 +1,19 @@
 from typing import List
 
-from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest, BuyLeadFollowup
-from repository.buy.buy_repository_interface import BuyRepositoryInterface
-from schema.buy.buy import BuyLeadItem, LeadAddress, BuyLeadFollowupItem, BuyLeadFollowupDetail, LeadFollowup
-from services.buy.buy_service_interface import BuyServiceInterface
 from common.schema_types import BuyStatus
+from model.buy.buy import AllocateLeadsRequest
+from model.buy.buy import BuyLead as BuyLeadModel
+from model.buy.buy import BuyLeadFollowup
+from repository.buy.buy_repository_interface import BuyRepositoryInterface
+from schema.buy.buy import (
+    BuyLeadFollowupDetail,
+    BuyLeadFollowupItem,
+    BuyLeadItem,
+    LeadAddress,
+    LeadFollowup,
+)
+from services.buy.buy_service_interface import BuyServiceInterface
+
 
 class BuyService(BuyServiceInterface):
     def __init__(self, buy_repository: BuyRepositoryInterface) -> None:
@@ -12,9 +21,13 @@ class BuyService(BuyServiceInterface):
 
     async def create_lead(self, lead: BuyLeadModel, created_by: str) -> int:
         return await self.buy_repository.create_lead(lead, created_by=created_by)
-    
-    async def update_lead(self, lead_id: int, lead: BuyLeadModel, created_by: str) -> int:
-        return await self.buy_repository.update_lead(lead_id, lead, created_by=created_by)
+
+    async def update_lead(
+        self, lead_id: int, lead: BuyLeadModel, created_by: str
+    ) -> int:
+        return await self.buy_repository.update_lead(
+            lead_id, lead, created_by=created_by
+        )
 
     async def get_lead(
         self,
@@ -31,7 +44,9 @@ class BuyService(BuyServiceInterface):
         leads = [BuyLeadItem(**row) for row in rows]
         return leads
 
-    async def get_total_lead(self, search: str | None = None,buy_status: BuyStatus | None = None) -> int:
+    async def get_total_lead(
+        self, search: str | None = None, buy_status: BuyStatus | None = None
+    ) -> int:
         return await self.buy_repository.get_total_lead(search, buy_status)
 
     async def get_lead_export(
@@ -53,27 +68,38 @@ class BuyService(BuyServiceInterface):
         row = await self.buy_repository.get_lead_by_id(lead_id)
         if not row:
             return None
-        
-        lead_address_data = {k: row[k] for k in LeadAddress.model_fields if k in row and row[k] is not None}
+
+        lead_address_data = {
+            k: row[k]
+            for k in LeadAddress.model_fields
+            if k in row and row[k] is not None
+        }
         lead_address = LeadAddress(**lead_address_data) if lead_address_data else None
         item_data = {k: v for k, v in row.items() if k not in lead_address_data}
         item_data["lead_address"] = lead_address
         return BuyLeadItem(**item_data)
-    
+
     async def remove_lead(self, lead_id: int, created_by: str) -> bool:
         return await self.buy_repository.remove_lead(lead_id, created_by)
-    
 
-    async def allocate_leads(self, allocate: AllocateLeadsRequest, created_by: str) -> int:
+    async def allocate_leads(
+        self, allocate: AllocateLeadsRequest, created_by: str
+    ) -> int:
         return await self.buy_repository.allocate_leads(allocate, created_by=created_by)
-    
-    async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
-        return await self.buy_repository.reallocate_leads(reallocate, created_by=created_by)
-    
 
+    async def reallocate_leads(
+        self, reallocate: AllocateLeadsRequest, created_by: str
+    ) -> int:
+        return await self.buy_repository.reallocate_leads(
+            reallocate, created_by=created_by
+        )
 
-    async def create_lead_followup(self, lead_id: int, lead: BuyLeadFollowup, created_by: str) -> int:
-        return await self.buy_repository.create_lead_followup(lead_id=lead_id, lead=lead, created_by=created_by)
+    async def create_lead_followup(
+        self, lead_id: int, lead: BuyLeadFollowup, created_by: str
+    ) -> int:
+        return await self.buy_repository.create_lead_followup(
+            lead_id=lead_id, lead=lead, created_by=created_by
+        )
 
     async def get_followup_lead(
         self,
@@ -84,7 +110,7 @@ class BuyService(BuyServiceInterface):
         search: str | None = None,
     ) -> List[BuyLeadFollowupItem]:
         rows = await self.buy_repository.get_followup_lead(
-            cursor, limit,created_by, role_id ,search
+            cursor, limit, created_by, role_id, search
         )
         leads = []
 
@@ -93,23 +119,15 @@ class BuyService(BuyServiceInterface):
         for row in rows:
             # Extract followup data
             lead_followup_data = {
-                k: row[k]
-                for k in followup_fields
-                if k in row and row[k] is not None
+                k: row[k] for k in followup_fields if k in row and row[k] is not None
             }
 
             lead_followup = (
-                LeadFollowup(**lead_followup_data)
-                if lead_followup_data
-                else None
+                LeadFollowup(**lead_followup_data) if lead_followup_data else None
             )
 
             # Remaining fields
-            item_data = {
-                k: v
-                for k, v in row.items()
-                if k not in followup_fields
-            }
+            item_data = {k: v for k, v in row.items() if k not in followup_fields}
 
             item_data["lead_followup"] = lead_followup
 
@@ -123,7 +141,9 @@ class BuyService(BuyServiceInterface):
         role_id: int,
         search: str | None = None,
     ) -> int:
-        return await self.buy_repository.get_total_followup_lead(created_by, role_id ,search)
+        return await self.buy_repository.get_total_followup_lead(
+            created_by, role_id, search
+        )
 
     async def get_followup_lead_export(
         self,
@@ -132,20 +152,18 @@ class BuyService(BuyServiceInterface):
         search: str | None = None,
     ):
         async for row in self.buy_repository.get_followup_lead_export(
-            created_by, role_id ,search
+            created_by, role_id, search
         ):
             lead_followup_data = {
                 k: row[k]
                 for k in LeadFollowup.model_fields
                 if k in row and row[k] is not None
             }
-            lead_followup = LeadFollowup(**lead_followup_data) if lead_followup_data else None
+            lead_followup = (
+                LeadFollowup(**lead_followup_data) if lead_followup_data else None
+            )
 
-            item_data = {
-                k: v
-                for k, v in row.items()
-                if k not in lead_followup_data
-            }
+            item_data = {k: v for k, v in row.items() if k not in lead_followup_data}
 
             item_data["lead_followup"] = lead_followup
             yield BuyLeadFollowupItem(**item_data)
@@ -156,7 +174,9 @@ class BuyService(BuyServiceInterface):
         created_by: str,
         role_id: int,
     ) -> BuyLeadFollowupDetail:
-        row = await self.buy_repository.get_followup_lead_by_id(lead_id, created_by, role_id)
+        row = await self.buy_repository.get_followup_lead_by_id(
+            lead_id, created_by, role_id
+        )
         if not row:
             return None
         # Extract address
@@ -173,7 +193,9 @@ class BuyService(BuyServiceInterface):
             for k in LeadFollowup.model_fields
             if k in row and row[k] is not None
         }
-        lead_followup = LeadFollowup(**lead_followup_data) if lead_followup_data else None
+        lead_followup = (
+            LeadFollowup(**lead_followup_data) if lead_followup_data else None
+        )
 
         # Remaining fields
         item_data = {

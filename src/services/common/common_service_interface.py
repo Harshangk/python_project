@@ -2,14 +2,14 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from schema.common.common import (
+    BranchItem,
+    BrokerItem,
+    CityItem,
     LeadSourceItem,
     MakeItem,
     ModelItem,
-    BranchItem,
-    YearItem,
-    BrokerItem,
     StateItem,
-    CityItem,
+    YearItem,
 )
 
 
@@ -91,7 +91,6 @@ class CommonServiceInterface(ABC):
     async def get_total_broker(self, search: str | None = None) -> int:
         pass
 
-
     @abstractmethod
     async def get_year(
         self,
@@ -104,7 +103,7 @@ class CommonServiceInterface(ABC):
     @abstractmethod
     async def get_total_year(self, search: str | None = None) -> int:
         pass
-    
+
     @abstractmethod
     async def get_state(
         self,

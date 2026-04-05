@@ -1,15 +1,16 @@
 from typing import Any, Mapping, Sequence
-from datetime import datetime
 
-from sqlalchemy import asc, desc, func, or_, select, update, cast, String
+from sqlalchemy import String, asc, cast, desc, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from common.schema_types import BuyStatus, BuyStage,BuyDisposition
 from app import constant
-from auth.exceptions import CreationError, AllocationError, NotFound
-from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest, BuyLeadFollowupDetail, BuyLeadFollowup
+from auth.exceptions import AllocationError, CreationError, NotFound
+from common.schema_types import BuyDisposition, BuyStage, BuyStatus
+from model.buy.buy import AllocateLeadsRequest
+from model.buy.buy import BuyLead as BuyLeadModel
+from model.buy.buy import BuyLeadFollowup, BuyLeadFollowupDetail
 from orm.buy.buy import tblbuylead, tblbuylead_address, tblbuylead_followup
 from orm.common.common import mstmake, mstmodel
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
@@ -74,7 +75,7 @@ LEAD_COLUMNS = [
     tblbuylead_address.c.state,
     tblbuylead_address.c.city,
     tblbuylead_address.c.area,
-    tblbuylead_address.c.pincode
+    tblbuylead_address.c.pincode,
 ]
 
 FOLLOWUP_LEAD_SEARCHABLE_COLUMNS = {
@@ -186,35 +187,28 @@ class BuyRepository(BuyRepositoryInterface):
                 .returning(tblbuylead.c.id)
             )
             result = await self.session.execute(stmt)
-            buylead_id = result.scalar_one() 
+            buylead_id = result.scalar_one()
 
             if lead.lead_address:
-                stmt = (
-                    insert(tblbuylead_address)
-                    .values(
-                        buylead_id=buylead_id,
-                        address=lead.lead_address.address,
-                        state=lead.lead_address.state,
-                        city=lead.lead_address.city,
-                        area=lead.lead_address.area,
-                        pincode=lead.lead_address.pincode,
-                    )
+                stmt = insert(tblbuylead_address).values(
+                    buylead_id=buylead_id,
+                    address=lead.lead_address.address,
+                    state=lead.lead_address.state,
+                    city=lead.lead_address.city,
+                    area=lead.lead_address.area,
+                    pincode=lead.lead_address.pincode,
                 )
                 await self.session.execute(stmt)
 
             if status == BuyStatus.Allocated.value:
-                stmt = (
-                    insert(tblbuylead_followup)
-                    .values(
-                        buylead_id=buylead_id,
-                        stage=BuyStage.Fresh.value,
-                        disposition=BuyDisposition.Fresh.value,
-                        calldate=func.now(),
-                        notes=BuyStage.Fresh.value,
-                        created_at=func.now(),
-                        created_by=created_by,
-
-                    )
+                stmt = insert(tblbuylead_followup).values(
+                    buylead_id=buylead_id,
+                    stage=BuyStage.Fresh.value,
+                    disposition=BuyDisposition.Fresh.value,
+                    calldate=func.now(),
+                    notes=BuyStage.Fresh.value,
+                    created_at=func.now(),
+                    created_by=created_by,
                 )
                 await self.session.execute(stmt)
 
@@ -224,7 +218,9 @@ class BuyRepository(BuyRepositoryInterface):
             await self.session.rollback()
             raise CreationError(constant.FAILED)
 
-    async def update_lead(self, lead_id: int, lead: BuyLeadModel, created_by: str) -> int:
+    async def update_lead(
+        self, lead_id: int, lead: BuyLeadModel, created_by: str
+    ) -> int:
         try:
             existing_stmt = select(
                 tblbuylead.c.id,
@@ -239,7 +235,7 @@ class BuyRepository(BuyRepositoryInterface):
 
             if not existing:
                 raise NotFound(constant.NOTFOUND)
-        
+
             stmt = (
                 update(tblbuylead)
                 .where(
@@ -271,16 +267,13 @@ class BuyRepository(BuyRepositoryInterface):
             await self.session.execute(stmt)
 
             if lead.lead_address:
-                stmt = (
-                    insert(tblbuylead_address)
-                    .values(
-                        buylead_id=lead_id,
-                        address=lead.lead_address.address,
-                        state=lead.lead_address.state,
-                        city=lead.lead_address.city,
-                        area=lead.lead_address.area,
-                        pincode=lead.lead_address.pincode,
-                    )
+                stmt = insert(tblbuylead_address).values(
+                    buylead_id=lead_id,
+                    address=lead.lead_address.address,
+                    state=lead.lead_address.state,
+                    city=lead.lead_address.city,
+                    area=lead.lead_address.area,
+                    pincode=lead.lead_address.pincode,
                 )
                 stmt = stmt.on_conflict_do_update(
                     index_elements=[tblbuylead_address.c.buylead_id],
@@ -290,7 +283,7 @@ class BuyRepository(BuyRepositoryInterface):
                         city=lead.lead_address.city,
                         area=lead.lead_address.area,
                         pincode=lead.lead_address.pincode,
-                    )
+                    ),
                 )
                 await self.session.execute(stmt)
 
@@ -305,7 +298,9 @@ class BuyRepository(BuyRepositoryInterface):
             select(*LEAD_COLUMNS)
             .join(mstmake, tblbuylead.c.make_id == mstmake.c.id)
             .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
-            .outerjoin(tblbuylead_address, tblbuylead.c.id == tblbuylead_address.c.buylead_id)
+            .outerjoin(
+                tblbuylead_address, tblbuylead.c.id == tblbuylead_address.c.buylead_id
+            )
             .where(tblbuylead.c.is_active)
         )
 
@@ -359,16 +354,20 @@ class BuyRepository(BuyRepositoryInterface):
         result = await self.session.execute(stmt)
         return result.mappings().all()
 
-    async def get_total_lead(self, search: str | None = None, buy_status: BuyStatus | None = None) -> int:
+    async def get_total_lead(
+        self, search: str | None = None, buy_status: BuyStatus | None = None
+    ) -> int:
         stmt = (
             select(func.count())
             .select_from(tblbuylead)
             .join(mstmake, tblbuylead.c.make_id == mstmake.c.id)
             .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
-            .outerjoin(tblbuylead_address, tblbuylead.c.id == tblbuylead_address.c.buylead_id)
+            .outerjoin(
+                tblbuylead_address, tblbuylead.c.id == tblbuylead_address.c.buylead_id
+            )
             .where(tblbuylead.c.is_active)
         )
-        
+
         stmt = self._apply_search(stmt, search)
         if buy_status:
             stmt = stmt.where(tblbuylead.c.status == buy_status)
@@ -402,7 +401,7 @@ class BuyRepository(BuyRepositoryInterface):
         stmt = stmt.where(
             tblbuylead.c.id == lead_id,
             tblbuylead.c.is_active.is_(True),
-            tblbuylead.c.is_deleted.is_(False)
+            tblbuylead.c.is_deleted.is_(False),
         )
         result = await self.session.execute(stmt)
         return result.mappings().one_or_none()
@@ -413,13 +412,13 @@ class BuyRepository(BuyRepositoryInterface):
             .where(
                 tblbuylead.c.id == lead_id,
                 tblbuylead.c.is_active.is_(True),
-                tblbuylead.c.is_deleted.is_(False)
+                tblbuylead.c.is_deleted.is_(False),
             )
             .values(
                 modified_by=created_by,
                 modified_at=func.now(),
                 is_active=False,
-                is_deleted=True
+                is_deleted=True,
             )
         )
 
@@ -427,8 +426,10 @@ class BuyRepository(BuyRepositoryInterface):
         await self.session.commit()
 
         return result.rowcount > 0
-    
-    async def allocate_leads(self, allocate: AllocateLeadsRequest, created_by: str) -> int:
+
+    async def allocate_leads(
+        self, allocate: AllocateLeadsRequest, created_by: str
+    ) -> int:
         try:
             update_data = {
                 "allocated_at": func.now(),
@@ -467,14 +468,16 @@ class BuyRepository(BuyRepositoryInterface):
 
             insert_stmt = insert(tblbuylead_followup).values(followup_data)
             await self.session.execute(insert_stmt)
-            
+
             await self.session.commit()
             return result.rowcount
         except IntegrityError:
             await self.session.rollback()
             raise AllocationError(constant.FAILED)
-        
-    async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
+
+    async def reallocate_leads(
+        self, reallocate: AllocateLeadsRequest, created_by: str
+    ) -> int:
         try:
             update_data = {}
             update_data["telecaller"] = reallocate.telecaller
@@ -496,9 +499,10 @@ class BuyRepository(BuyRepositoryInterface):
         except IntegrityError:
             await self.session.rollback()
             raise AllocationError(constant.FAILED)
-        
-    
-    async def create_lead_followup(self, lead_id: int, lead: BuyLeadFollowup, created_by: str) -> int:
+
+    async def create_lead_followup(
+        self, lead_id: int, lead: BuyLeadFollowup, created_by: str
+    ) -> int:
         try:
             stage_to_status_map = {
                 BuyStage.Appointment.value: BuyStatus.Appointment.value,
@@ -507,10 +511,9 @@ class BuyRepository(BuyRepositoryInterface):
             }
 
             status = stage_to_status_map.get(
-                lead.lead_followup.stage,
-                BuyStatus.Allocated.value
+                lead.lead_followup.stage, BuyStatus.Allocated.value
             )
-            
+
             existing_stmt = select(
                 tblbuylead.c.id,
             ).where(
@@ -519,8 +522,8 @@ class BuyRepository(BuyRepositoryInterface):
                 tblbuylead.c.is_deleted.is_(False),
                 or_(
                     tblbuylead.c.status == BuyStatus.Allocated.value,
-                    tblbuylead.c.status == BuyStatus.Appointment.value
-                )
+                    tblbuylead.c.status == BuyStatus.Appointment.value,
+                ),
             )
 
             result = await self.session.execute(existing_stmt)
@@ -528,7 +531,7 @@ class BuyRepository(BuyRepositoryInterface):
 
             if not existing:
                 raise NotFound(constant.NOTFOUND)
-        
+
             stmt = (
                 update(tblbuylead)
                 .where(
@@ -537,8 +540,8 @@ class BuyRepository(BuyRepositoryInterface):
                     tblbuylead.c.is_deleted.is_(False),
                     or_(
                         tblbuylead.c.status == BuyStatus.Allocated.value,
-                        tblbuylead.c.status == BuyStatus.Appointment.value
-                    )
+                        tblbuylead.c.status == BuyStatus.Appointment.value,
+                    ),
                 )
                 .values(
                     branch=lead.branch,
@@ -559,6 +562,7 @@ class BuyRepository(BuyRepositoryInterface):
                     our_offer=lead.our_offer,
                     telecaller=lead.telecaller,
                     executive=lead.executive,
+                    status=status,
                     modified_by=created_by,
                     modified_at=func.now(),
                 )
@@ -566,16 +570,13 @@ class BuyRepository(BuyRepositoryInterface):
             await self.session.execute(stmt)
 
             if lead.lead_address:
-                stmt = (
-                    insert(tblbuylead_address)
-                    .values(
-                        buylead_id=lead_id,
-                        address=lead.lead_address.address,
-                        state=lead.lead_address.state,
-                        city=lead.lead_address.city,
-                        area=lead.lead_address.area,
-                        pincode=lead.lead_address.pincode,
-                    )
+                stmt = insert(tblbuylead_address).values(
+                    buylead_id=lead_id,
+                    address=lead.lead_address.address,
+                    state=lead.lead_address.state,
+                    city=lead.lead_address.city,
+                    area=lead.lead_address.area,
+                    pincode=lead.lead_address.pincode,
                 )
                 stmt = stmt.on_conflict_do_update(
                     index_elements=[tblbuylead_address.c.buylead_id],
@@ -585,7 +586,7 @@ class BuyRepository(BuyRepositoryInterface):
                         city=lead.lead_address.city,
                         area=lead.lead_address.area,
                         pincode=lead.lead_address.pincode,
-                    )
+                    ),
                 )
                 await self.session.execute(stmt)
 
@@ -600,7 +601,6 @@ class BuyRepository(BuyRepositoryInterface):
                     notes=lead.lead_followup.notes,
                     created_at=func.now(),
                     created_by=created_by,
-
                 )
             )
             await self.session.execute(stmt)
@@ -610,15 +610,22 @@ class BuyRepository(BuyRepositoryInterface):
         except IntegrityError:
             await self.session.rollback()
             raise CreationError(constant.FAILED)
-    
-    def _base_followup_lead_query(self,created_by: str,role_id: int):
+
+    def _base_followup_lead_query(self, created_by: str, role_id: int):
         stmt = (
             select(*FOLLOWUP_LEAD_COLUMNS)
             .join(mstmake, tblbuylead.c.make_id == mstmake.c.id)
             .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
-            .join(tblbuylead_followup, tblbuylead.c.id == tblbuylead_followup.c.buylead_id)
-            .outerjoin(tblbuylead_address, tblbuylead.c.id == tblbuylead_address.c.buylead_id)
-            .where(tblbuylead.c.is_active, tblbuylead.c.status != BuyStatus.NotAllocated.value)
+            .join(
+                tblbuylead_followup, tblbuylead.c.id == tblbuylead_followup.c.buylead_id
+            )
+            .outerjoin(
+                tblbuylead_address, tblbuylead.c.id == tblbuylead_address.c.buylead_id
+            )
+            .where(
+                tblbuylead.c.is_active,
+                tblbuylead.c.status != BuyStatus.NotAllocated.value,
+            )
         )
         if role_id != 1:
             stmt = stmt.where(
@@ -655,8 +662,8 @@ class BuyRepository(BuyRepositoryInterface):
         role_id: int,
         search: str | None = None,
     ) -> Sequence[Mapping[str, Any]]:
-        stmt = self._base_followup_lead_query(created_by,role_id)
-        
+        stmt = self._base_followup_lead_query(created_by, role_id)
+
         stmt = self._apply_followup_search(stmt, search)
 
         if cursor:
@@ -677,7 +684,9 @@ class BuyRepository(BuyRepositoryInterface):
             .select_from(tblbuylead)
             .join(mstmake, tblbuylead.c.make_id == mstmake.c.id)
             .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
-            .join(tblbuylead_followup, tblbuylead.c.id == tblbuylead_followup.c.buylead_id)
+            .join(
+                tblbuylead_followup, tblbuylead.c.id == tblbuylead_followup.c.buylead_id
+            )
             .where(tblbuylead.c.is_active)
         )
         if role_id != 1:
@@ -687,7 +696,7 @@ class BuyRepository(BuyRepositoryInterface):
                     tblbuylead.c.executive == created_by,
                 )
             )
-        
+
         stmt = self._apply_followup_search(stmt, search)
         result = await self.session.execute(stmt)
         return result.scalar_one()
@@ -698,7 +707,7 @@ class BuyRepository(BuyRepositoryInterface):
         role_id: int,
         search: str | None = None,
     ):
-        stmt = self._base_followup_lead_query(created_by,role_id)
+        stmt = self._base_followup_lead_query(created_by, role_id)
         stmt = self._apply_followup_search(stmt, search)
         stmt = stmt.execution_options(stream_results=True)
 
@@ -713,8 +722,6 @@ class BuyRepository(BuyRepositoryInterface):
         role_id: int,
     ) -> BuyLeadFollowupDetail:
         stmt = self._base_followup_lead_query(created_by=created_by, role_id=role_id)
-        stmt = stmt.where(
-            tblbuylead.c.id == lead_id
-        )
+        stmt = stmt.where(tblbuylead.c.id == lead_id)
         result = await self.session.execute(stmt)
         return result.mappings().one_or_none()

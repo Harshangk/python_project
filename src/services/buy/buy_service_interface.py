@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
+
 from common.schema_types import BuyStatus
-from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest, BuyLeadFollowup
-from schema.buy.buy import BuyLeadItem, BuyLeadFollowupItem, BuyLeadFollowupDetail
+from model.buy.buy import AllocateLeadsRequest
+from model.buy.buy import BuyLead as BuyLeadModel
+from model.buy.buy import BuyLeadFollowup
+from schema.buy.buy import BuyLeadFollowupDetail, BuyLeadFollowupItem, BuyLeadItem
 
 
 class BuyServiceInterface(ABC):
@@ -12,7 +15,9 @@ class BuyServiceInterface(ABC):
         pass
 
     @abstractmethod
-    async def update_lead(self, lead_id:int, lead: BuyLeadModel, created_by: str) -> int:
+    async def update_lead(
+        self, lead_id: int, lead: BuyLeadModel, created_by: str
+    ) -> int:
         pass
 
     @abstractmethod
@@ -28,7 +33,9 @@ class BuyServiceInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_total_lead(self, search: str | None = None, buy_status: BuyStatus | None = None) -> int:
+    async def get_total_lead(
+        self, search: str | None = None, buy_status: BuyStatus | None = None
+    ) -> int:
         pass
 
     @abstractmethod
@@ -49,25 +56,25 @@ class BuyServiceInterface(ABC):
         pass
 
     @abstractmethod
-    async def remove_lead(
-        self,
-        lead_id: int,
-        created_by: str
-    ) -> bool:
+    async def remove_lead(self, lead_id: int, created_by: str) -> bool:
         pass
 
     @abstractmethod
-    async def allocate_leads(self, allocate: AllocateLeadsRequest, created_by: str) -> int:
+    async def allocate_leads(
+        self, allocate: AllocateLeadsRequest, created_by: str
+    ) -> int:
         pass
 
     @abstractmethod
-    async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
+    async def reallocate_leads(
+        self, reallocate: AllocateLeadsRequest, created_by: str
+    ) -> int:
         pass
 
-    
-
     @abstractmethod
-    async def create_lead_followup(self, lead_id: int, lead: BuyLeadFollowup, created_by: str) -> int:
+    async def create_lead_followup(
+        self, lead_id: int, lead: BuyLeadFollowup, created_by: str
+    ) -> int:
         pass
 
     @abstractmethod
@@ -83,10 +90,7 @@ class BuyServiceInterface(ABC):
 
     @abstractmethod
     async def get_total_followup_lead(
-        self,
-        created_by: str,
-        role_id: int,
-        search: str | None = None
+        self, created_by: str, role_id: int, search: str | None = None
     ) -> int:
         pass
 

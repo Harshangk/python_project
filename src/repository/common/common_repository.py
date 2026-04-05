@@ -3,7 +3,16 @@ from typing import Any, Mapping, Sequence
 from sqlalchemy import asc, desc, func, or_, select
 from sqlalchemy.orm import Session
 
-from orm.common.common import mstmake,mstmodel,mstbranch,mstsource,mstyear,mstbroker,mststate,mstcity
+from orm.common.common import (
+    mstbranch,
+    mstbroker,
+    mstcity,
+    mstmake,
+    mstmodel,
+    mstsource,
+    mststate,
+    mstyear,
+)
 from repository.common.common_repository_interface import CommonRepositoryInterface
 
 MAKE_SEARCHABLE_COLUMNS = {
@@ -79,6 +88,7 @@ CITY_SORTABLE_COLUMNS = {
     "city": mstcity.c.city,
 }
 
+
 class CommonRepository(CommonRepositoryInterface):
     def __init__(self, session: Session):
         self.session = session
@@ -119,9 +129,7 @@ class CommonRepository(CommonRepositoryInterface):
         return rows
 
     async def get_total_source(self, search: str | None = None) -> int:
-        query = select(func.count()).select_from(
-            mstsource
-        ).where(mstsource.c.is_active)
+        query = select(func.count()).select_from(mstsource).where(mstsource.c.is_active)
 
         if search:
             search_filters = [
@@ -131,7 +139,7 @@ class CommonRepository(CommonRepositoryInterface):
 
         result = await self.session.execute(query)
         return result.scalar_one()
-    
+
     async def get_make(
         self,
         cursor: int | None,
@@ -169,9 +177,7 @@ class CommonRepository(CommonRepositoryInterface):
         return rows
 
     async def get_total_make(self, search: str | None = None) -> int:
-        query = select(func.count()).select_from(
-            mstmake
-        ).where(mstmake.c.is_active)
+        query = select(func.count()).select_from(mstmake).where(mstmake.c.is_active)
 
         if search:
             search_filters = [
@@ -181,7 +187,7 @@ class CommonRepository(CommonRepositoryInterface):
 
         result = await self.session.execute(query)
         return result.scalar_one()
-    
+
     async def get_model(
         self,
         cursor: int | None,
@@ -191,16 +197,17 @@ class CommonRepository(CommonRepositoryInterface):
         sort_by: str | None = None,
         sort_order: str | None = None,
     ) -> Sequence[Mapping[str, Any]]:
-        stmt = (select(
-            mstmodel.c.id,
-            mstmodel.c.make_id,
-            mstmodel.c.model,
-            mstmodel.c.created_at,
-            mstmodel.c.created_by,
-            mstmake.c.make,
-        )
-        .join(mstmake, mstmodel.c.make_id == mstmake.c.id)
-        .where(mstmodel.c.is_active)
+        stmt = (
+            select(
+                mstmodel.c.id,
+                mstmodel.c.make_id,
+                mstmodel.c.model,
+                mstmodel.c.created_at,
+                mstmodel.c.created_by,
+                mstmake.c.make,
+            )
+            .join(mstmake, mstmodel.c.make_id == mstmake.c.id)
+            .where(mstmodel.c.is_active)
         )
 
         if make_id is not None:
@@ -226,10 +233,14 @@ class CommonRepository(CommonRepositoryInterface):
         rows = result.mappings().all()
         return rows
 
-    async def get_total_model(self, make_id:int | None = None, search: str | None = None) -> int:
-        query = select(func.count()).select_from(
-            mstmodel.join(mstmake, mstmodel.c.make_id == mstmake.c.id)
-        ).where(mstmodel.c.is_active)
+    async def get_total_model(
+        self, make_id: int | None = None, search: str | None = None
+    ) -> int:
+        query = (
+            select(func.count())
+            .select_from(mstmodel.join(mstmake, mstmodel.c.make_id == mstmake.c.id))
+            .where(mstmodel.c.is_active)
+        )
 
         if make_id is not None:
             query = query.where(mstmodel.c.make_id == make_id)
@@ -242,7 +253,7 @@ class CommonRepository(CommonRepositoryInterface):
 
         result = await self.session.execute(query)
         return result.scalar_one()
-    
+
     async def get_branch(
         self,
         cursor: int | None,
@@ -279,9 +290,7 @@ class CommonRepository(CommonRepositoryInterface):
         return rows
 
     async def get_total_branch(self, search: str | None = None) -> int:
-        query = select(func.count()).select_from(
-            mstbranch
-        ).where(mstbranch.c.is_active)
+        query = select(func.count()).select_from(mstbranch).where(mstbranch.c.is_active)
 
         if search:
             search_filters = [
@@ -291,7 +300,6 @@ class CommonRepository(CommonRepositoryInterface):
 
         result = await self.session.execute(query)
         return result.scalar_one()
-    
 
     async def get_broker(
         self,
@@ -307,7 +315,7 @@ class CommonRepository(CommonRepositoryInterface):
             mstbroker.c.created_at,
             mstbroker.c.created_by,
         ).where(mstbroker.c.is_active)
-        
+
         if search:
             search_filters = [
                 col.ilike(f"%{search}%") for col in BROKER_SEARCHABLE_COLUMNS.values()
@@ -325,14 +333,12 @@ class CommonRepository(CommonRepositoryInterface):
 
         stmt = stmt.limit(limit)
         result = await self.session.execute(stmt)
-        
+
         rows = result.mappings().all()
         return rows
 
     async def get_total_broker(self, search: str | None = None) -> int:
-        query = select(func.count()).select_from(
-            mstbroker
-        ).where(mstbroker.c.is_active)
+        query = select(func.count()).select_from(mstbroker).where(mstbroker.c.is_active)
 
         if search:
             search_filters = [
@@ -342,7 +348,6 @@ class CommonRepository(CommonRepositoryInterface):
 
         result = await self.session.execute(query)
         return result.scalar_one()
-    
 
     async def get_year(
         self,
@@ -369,9 +374,7 @@ class CommonRepository(CommonRepositoryInterface):
         return rows
 
     async def get_total_year(self, search: str | None = None) -> int:
-        query = select(func.count()).select_from(
-            mstyear
-        )
+        query = select(func.count()).select_from(mstyear)
 
         if search:
             search_filters = [
@@ -381,7 +384,7 @@ class CommonRepository(CommonRepositoryInterface):
 
         result = await self.session.execute(query)
         return result.scalar_one()
-    
+
     async def get_state(
         self,
         cursor: int | None,
@@ -418,9 +421,7 @@ class CommonRepository(CommonRepositoryInterface):
         return rows
 
     async def get_total_state(self, search: str | None = None) -> int:
-        query = select(func.count()).select_from(
-            mststate
-        ).where(mststate.c.is_active)
+        query = select(func.count()).select_from(mststate).where(mststate.c.is_active)
 
         if search:
             search_filters = [
@@ -430,7 +431,7 @@ class CommonRepository(CommonRepositoryInterface):
 
         result = await self.session.execute(query)
         return result.scalar_one()
-    
+
     async def get_city(
         self,
         cursor: int | None,
@@ -440,16 +441,17 @@ class CommonRepository(CommonRepositoryInterface):
         sort_by: str | None = None,
         sort_order: str | None = None,
     ) -> Sequence[Mapping[str, Any]]:
-        stmt = (select(
-            mstcity.c.id,
-            mstcity.c.state_id,
-            mstcity.c.city,
-            mstcity.c.created_at,
-            mstcity.c.created_by,
-            mststate.c.state,
-        )
-        .join(mststate, mstcity.c.state_id == mststate.c.id)
-        .where(mstcity.c.is_active)
+        stmt = (
+            select(
+                mstcity.c.id,
+                mstcity.c.state_id,
+                mstcity.c.city,
+                mstcity.c.created_at,
+                mstcity.c.created_by,
+                mststate.c.state,
+            )
+            .join(mststate, mstcity.c.state_id == mststate.c.id)
+            .where(mstcity.c.is_active)
         )
 
         if state_id is not None:
@@ -475,10 +477,14 @@ class CommonRepository(CommonRepositoryInterface):
         rows = result.mappings().all()
         return rows
 
-    async def get_total_city(self, state_id:int | None = None, search: str | None = None) -> int:
-        query = select(func.count()).select_from(
-            mstcity.join(mststate, mstcity.c.state_id == mststate.c.id)
-        ).where(mstcity.c.is_active)
+    async def get_total_city(
+        self, state_id: int | None = None, search: str | None = None
+    ) -> int:
+        query = (
+            select(func.count())
+            .select_from(mstcity.join(mststate, mstcity.c.state_id == mststate.c.id))
+            .where(mstcity.c.is_active)
+        )
 
         if state_id is not None:
             query = query.where(mstcity.c.state_id == state_id)

@@ -1,11 +1,20 @@
 from datetime import datetime
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Identity, Index,
-                        Integer, String, Table, UniqueConstraint)
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Identity,
+    Index,
+    Integer,
+    String,
+    Table,
+    UniqueConstraint,
+)
 
 from common.db import mapper_registry
 from model.common import common as CommonModel
-
 
 mstmake = Table(
     "mstmake",
@@ -119,6 +128,7 @@ mstcity = Table(
     Column("is_deleted", Boolean, default=False, nullable=False),
     Index("idx_mstcity_city", "city"),
 )
+
 
 def start_mappers() -> None:
     mapper_registry.map_imperatively(CommonModel.Make, mstmake)

@@ -7,7 +7,6 @@ from api.exception_handlers import EXCEPTION_HANDLERS
 from app.core.logging import setup_logging
 from common.logging_middleware import LoggingMiddleware
 
-
 setup_logging()
 app = FastAPI(
     title="POC Cars API",
@@ -38,4 +37,3 @@ app.include_router(api_auth_router, prefix="")
 @app.get("/")
 def health_check():
     return {"status": "API running"}
-

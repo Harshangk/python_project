@@ -3,7 +3,6 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
 from api.deps import get_authenticated_user, get_trace_id
-from common.schema_types import SortOrder
 from api.user import deps
 from app import constant
 from app.core.logging import logger
@@ -11,8 +10,8 @@ from auth.dto import AuthenticatedUser
 from auth.exceptions import CreationError
 from common.csv_utils import stream_csv
 from common.cursor_pagination import build_next_page_url, normalize_limit
-from schema.user.user import (CreateUser, Response, UserItem, UserList,
-                              UserSortBy)
+from common.schema_types import SortOrder
+from schema.user.user import CreateUser, Response, UserItem, UserList, UserSortBy
 from services.user.user_service_interface import UserServiceInterface
 
 router = APIRouter(prefix="/user", tags=["user"])
@@ -94,7 +93,9 @@ async def export_user(
     user_service: UserServiceInterface = Depends(deps.user_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
 ):
-    users = user_service.get_user_export(role_id, search, sort_by.value, sort_order.value)
+    users = user_service.get_user_export(
+        role_id, search, sort_by.value, sort_order.value
+    )
     return stream_csv(rows=users, filename="users_export.csv")
 
 

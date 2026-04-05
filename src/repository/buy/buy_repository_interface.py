@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Any, Mapping, Optional, Sequence
+
 from common.schema_types import BuyStatus
-from model.buy.buy import BuyLead as BuyLeadModel, AllocateLeadsRequest,BuyLeadFollowupDetail, BuyLeadFollowup
+from model.buy.buy import AllocateLeadsRequest
+from model.buy.buy import BuyLead as BuyLeadModel
+from model.buy.buy import BuyLeadFollowup, BuyLeadFollowupDetail
 
 
 class BuyRepositoryInterface(ABC):
@@ -11,7 +14,9 @@ class BuyRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    async def update_lead(self, lead_id: int, lead: BuyLeadModel, created_by: str) -> int:
+    async def update_lead(
+        self, lead_id: int, lead: BuyLeadModel, created_by: str
+    ) -> int:
         pass
 
     @abstractmethod
@@ -27,7 +32,9 @@ class BuyRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_total_lead(self, search: str | None = None, buy_status: BuyStatus | None = None) -> int:
+    async def get_total_lead(
+        self, search: str | None = None, buy_status: BuyStatus | None = None
+    ) -> int:
         pass
 
     @abstractmethod
@@ -48,25 +55,25 @@ class BuyRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    async def remove_lead(
-        self,
-        lead_id: int,
-        created_by: str
-    ) -> bool:
-        pass
-
-
-    @abstractmethod
-    async def allocate_leads(self, allocate: AllocateLeadsRequest, created_by: str) -> int:
+    async def remove_lead(self, lead_id: int, created_by: str) -> bool:
         pass
 
     @abstractmethod
-    async def reallocate_leads(self, reallocate: AllocateLeadsRequest, created_by: str) -> int:
+    async def allocate_leads(
+        self, allocate: AllocateLeadsRequest, created_by: str
+    ) -> int:
         pass
-    
 
     @abstractmethod
-    async def create_lead_followup(self, lead_id: int, lead: BuyLeadFollowup, created_by: str) -> int:
+    async def reallocate_leads(
+        self, reallocate: AllocateLeadsRequest, created_by: str
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def create_lead_followup(
+        self, lead_id: int, lead: BuyLeadFollowup, created_by: str
+    ) -> int:
         pass
 
     @abstractmethod
