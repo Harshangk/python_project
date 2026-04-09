@@ -1,17 +1,5 @@
-from datetime import datetime
-
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    ForeignKey,
-    Identity,
-    Index,
-    Integer,
-    String,
-    Table,
-    UniqueConstraint,
-)
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Identity, Index,
+                        Integer, String, Table, UniqueConstraint, func)
 
 from common.db import mapper_registry
 from model.user import user as UserModel
@@ -21,7 +9,7 @@ mstrole = Table(
     mapper_registry.metadata,
     Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
     Column("role", String(length=15), nullable=False),
-    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
     Column("modified_at", DateTime, nullable=True),
     Column("modified_by", String(length=50), nullable=True),
@@ -39,7 +27,7 @@ mstlogin = Table(
     Column("password", String(), nullable=False),
     Column("last_login", DateTime, nullable=True),
     Column("login_at", DateTime, nullable=True),
-    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
     Column("modified_at", DateTime, nullable=True),
     Column("modified_by", String(length=50), nullable=True),

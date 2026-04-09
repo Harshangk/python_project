@@ -1,21 +1,13 @@
 from datetime import datetime
 from enum import Enum
 from typing import Annotated, List, Optional
+from uuid import UUID
 
-from pydantic import (
-    BeforeValidator,
-    Field,
-    StringConstraints,
-    field_validator,
-    model_validator,
-)
+from pydantic import (BeforeValidator, Field, StringConstraints,
+                      field_validator, model_validator)
 
-from api.buy.example import (
-    BUY_LEAD,
-    BUY_LEAD_ALLOCATION,
-    BUY_LEAD_FOLLOWUP,
-    UPDATE_LEAD,
-)
+from api.buy.example import (BUY_LEAD, BUY_LEAD_ALLOCATION, BUY_LEAD_FOLLOWUP,
+                             UPDATE_LEAD)
 from common.schema_types import BuyMode, CamelBaseModel, Color, FuelType
 from model.buy import buy as BuyModel
 
@@ -25,7 +17,7 @@ def empty_to_none(v):
 
 
 class Response(CamelBaseModel):
-    id: int
+    id: int | UUID
     message: str
 
 

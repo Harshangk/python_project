@@ -1,17 +1,5 @@
-from datetime import datetime
-
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    ForeignKey,
-    Identity,
-    Index,
-    Integer,
-    String,
-    Table,
-    UniqueConstraint,
-)
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Identity, Index,
+                        Integer, String, Table, UniqueConstraint, func)
 
 from common.db import mapper_registry
 from model.common import common as CommonModel
@@ -22,7 +10,7 @@ mstmake = Table(
     Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
     Column("make", String(50), nullable=False),
     Column("is_premium", Boolean, default=False, nullable=False),
-    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
     Column("modified_at", DateTime, nullable=True),
     Column("modified_by", String(length=50), nullable=True),
@@ -38,7 +26,7 @@ mstmodel = Table(
     Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
     Column("make_id", Integer(), ForeignKey("mstmake.id"), nullable=False),
     Column("model", String(50), nullable=False),
-    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
     Column("modified_at", DateTime, nullable=True),
     Column("modified_by", String(length=50), nullable=True),
@@ -53,7 +41,7 @@ mstbranch = Table(
     mapper_registry.metadata,
     Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
     Column("branch", String(50), nullable=False),
-    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
     Column("modified_at", DateTime, nullable=True),
     Column("modified_by", String(length=50), nullable=True),
@@ -68,7 +56,7 @@ mstsource = Table(
     mapper_registry.metadata,
     Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
     Column("source", String(50), nullable=False),
-    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
     Column("modified_at", DateTime, nullable=True),
     Column("modified_by", String(length=50), nullable=True),
@@ -89,7 +77,7 @@ mstbroker = Table(
     mapper_registry.metadata,
     Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
     Column("broker", String(255), nullable=False),
-    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
     Column("modified_at", DateTime, nullable=True),
     Column("modified_by", String(length=50), nullable=True),
@@ -104,7 +92,7 @@ mststate = Table(
     mapper_registry.metadata,
     Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
     Column("state", String(25), nullable=False),
-    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
     Column("modified_at", DateTime, nullable=True),
     Column("modified_by", String(length=50), nullable=True),
@@ -120,7 +108,7 @@ mstcity = Table(
     Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
     Column("state_id", Integer(), ForeignKey("mststate.id"), nullable=False),
     Column("city", String(25), nullable=False),
-    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
     Column("modified_at", DateTime, nullable=True),
     Column("modified_by", String(length=50), nullable=True),

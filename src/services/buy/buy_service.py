@@ -1,23 +1,28 @@
-from typing import List
+import csv
+import io
+from typing import IO, List
+from uuid import UUID
 
-from common.schema_types import BuyStatus
+from app import constant
+from common.file_storage import AbstractFileStorage
+from common.schema_types import BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
 from model.buy.buy import BuyLeadFollowup
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
-from schema.buy.buy import (
-    BuyLeadFollowupDetail,
-    BuyLeadFollowupItem,
-    BuyLeadItem,
-    LeadAddress,
-    LeadFollowup,
-)
+from schema.buy.buy import (BuyLeadFollowupDetail, BuyLeadFollowupItem,
+                            BuyLeadItem, LeadAddress, LeadFollowup)
 from services.buy.buy_service_interface import BuyServiceInterface
 
 
 class BuyService(BuyServiceInterface):
-    def __init__(self, buy_repository: BuyRepositoryInterface) -> None:
+    def __init__(
+        self,
+        buy_repository: BuyRepositoryInterface,
+        file_storage: AbstractFileStorage,
+    ) -> None:
         self.buy_repository = buy_repository
+        self.file_storage = file_storage
 
     async def create_lead(self, lead: BuyLeadModel, created_by: str) -> int:
         return await self.buy_repository.create_lead(lead, created_by=created_by)
@@ -207,3 +212,61 @@ class BuyService(BuyServiceInterface):
         item_data["lead_address"] = lead_address
         item_data["lead_followup"] = lead_followup
         return BuyLeadFollowupDetail(**item_data)
+
+    async def buy_lead_file_upload(
+        self,
+        filename: str,
+        file_path: str | None = None,
+        file_obj: IO[bytes] | None = None,
+        content_type: str | None = None,
+    ) -> int:
+        s3_key = await self.file_storage.upload_file(
+            filename=filename, file_obj=file_obj, content_type=content_type
+        )
+        return s3_key
+
+    async def create_lead_file_id(
+        self, file_uuid: UUID, s3_key: str, status: FileStatus, created_by: str
+    ) -> int:
+        return await self.buy_repository.create_lead_file_id(
+            file_uuid=file_uuid, s3_key=s3_key, status=status, created_by=created_by
+        )
+
+    async def process_file(self, file_uuid):
+
+        record = await self.buy_repository.get_lead_file_id(file_uuid)
+
+        file_obj = io.BytesIO()
+        self.file_storage.download_file(record.s3_key, file_obj)
+        file_obj.seek(0)
+
+        text_stream = io.TextIOWrapper(file_obj, encoding="utf-8")
+
+        reader = csv.DictReader(text_stream)
+
+        batch = []
+        BATCH_SIZE = constant.BATCHSIZE
+
+        total = 0
+        await self.buy_repository.patch_file_status(
+            file_uuid, FileStatus.Processing.value, total
+        )
+
+        for row in reader:
+            transformed = self.transform(row)
+
+            if transformed:
+                batch.append(transformed)
+
+            if len(batch) >= BATCH_SIZE:
+                await self.buy_repository.bulk_insert_lead(batch)
+                total += len(batch)
+                batch = []
+
+        if batch:
+            await self.buy_repository.bulk_insert_lead(batch)
+            total += len(batch)
+
+        await self.buy_repository.patch_file_status(
+            file_uuid, FileStatus.Complete.value, total
+        )

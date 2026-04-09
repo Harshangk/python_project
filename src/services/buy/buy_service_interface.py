@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import IO, List, Optional
+from uuid import UUID
 
-from common.schema_types import BuyStatus
+from common.schema_types import BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
 from model.buy.buy import BuyLeadFollowup
-from schema.buy.buy import BuyLeadFollowupDetail, BuyLeadFollowupItem, BuyLeadItem
+from schema.buy.buy import (BuyLeadFollowupDetail, BuyLeadFollowupItem,
+                            BuyLeadItem)
 
 
 class BuyServiceInterface(ABC):
@@ -110,4 +112,27 @@ class BuyServiceInterface(ABC):
         created_by: str,
         role_id: int,
     ) -> BuyLeadFollowupDetail:
+        pass
+
+    @abstractmethod
+    async def buy_lead_file_upload(
+        self,
+        filename: str,
+        file_path: str | None = None,
+        file_obj: IO[bytes] | None = None,
+        content_type: str | None = None,
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def create_lead_file_id(
+        self, file_uuid: UUID, s3_key: str, status: FileStatus, created_by: str
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def process_file(
+        self,
+        file_uuid: UUID,
+    ) -> int:
         pass

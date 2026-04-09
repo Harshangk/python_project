@@ -1,6 +1,4 @@
-from datetime import datetime
-
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from orm.user.user import mstlogin, mstrole
@@ -44,7 +42,7 @@ class AuthRepository(AuthRepositoryInterface):
         await self.session.execute(
             update(mstlogin)
             .where(mstlogin.c.user_name == username)
-            .values(last_login=mstlogin.c.login_at, login_at=datetime.now())
+            .values(last_login=mstlogin.c.login_at, login_at=func.now())
         )
         await self.session.commit()
         result = await self.session.execute(self._base_user_query(username))

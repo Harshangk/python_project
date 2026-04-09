@@ -5,7 +5,8 @@ from abc import ABC, abstractmethod
 from datetime import date
 from typing import IO, Iterator
 
-from botocore.exceptions import ClientError, ParamValidationError, ValidationError
+from botocore.exceptions import (ClientError, ParamValidationError,
+                                 ValidationError)
 from mypy_boto3_s3 import S3ServiceResource
 
 from app.core.config import settings
@@ -77,20 +78,26 @@ class S3FileStorage(AbstractFileStorage):
         self,
         filename: str,
         file_path: str | None = None,
-        file_obj: bytes | None = None,
+        file_obj: IO[bytes] | None = None,
         content_type: str | None = None,
     ) -> str:
         file_key = f"{date.today()}/{filename}"
         if file_path is not None:
             self.bucket.upload_file(file_path, file_key)
             os.remove(file_path)
+        # elif file_obj is not None:
+        #     if content_type:
+        #         self.bucket.put_object(
+        #             Key=filename, Body=file_obj, ContentType=content_type
+        #         )
+        #     else:
+        #         self.bucket.put_object(Key=file_key, Body=file_obj)
         elif file_obj is not None:
+            extra_args = {}
             if content_type:
-                self.bucket.put_object(
-                    Key=filename, Body=file_obj, ContentType=content_type
-                )
-            else:
-                self.bucket.put_object(Key=file_key, Body=file_obj)
+                extra_args["ContentType"] = content_type
+
+            self.bucket.upload_fileobj(file_obj, file_key, ExtraArgs=extra_args)
         return file_key
 
     def generate_file_url(self, file_key: str) -> str:

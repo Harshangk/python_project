@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Mapping, Optional, Sequence
+from uuid import UUID
 
-from common.schema_types import BuyStatus
+from common.schema_types import BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
 from model.buy.buy import BuyLeadFollowup, BuyLeadFollowupDetail
@@ -112,4 +113,30 @@ class BuyRepositoryInterface(ABC):
         created_by: str,
         role_id: int,
     ) -> BuyLeadFollowupDetail:
+        pass
+
+    @abstractmethod
+    async def create_lead_file_id(
+        self, file_uuid: UUID, s3_key: str, status: FileStatus, created_by: str
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def get_lead_file_id(
+        self,
+        file_uuid: UUID,
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def patch_file_status(
+        self,
+        file_uuid: UUID,
+        status: FileStatus,
+        process_records: int,
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def bulk_insert_lead(self, data):
         pass

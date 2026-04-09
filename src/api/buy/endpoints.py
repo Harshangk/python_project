@@ -1,28 +1,23 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
+from fastapi import (APIRouter, BackgroundTasks, Body, Depends, File, Form,
+                     HTTPException, Query, Request, UploadFile, status)
 
 from api.buy import deps, example
 from api.deps import get_authenticated_user, get_trace_id
 from app import constant
+from app.core.config import settings
 from app.core.logging import logger
 from auth.dto import AuthenticatedUser
 from auth.exceptions import CreationError, NotFound
 from common.csv_utils import stream_csv
 from common.cursor_pagination import build_next_page_url, normalize_limit
-from common.schema_types import BuyStatus, SortOrder
-from schema.buy.buy import (
-    AllocateLeadsRequest,
-    BuyLeadFollowupDetail,
-    BuyLeadFollowupList,
-    BuyLeadItem,
-    BuyLeadList,
-    BuyLeadSortBy,
-    CreateBuyLead,
-    CreateBuyLeadFollowup,
-    Response,
-    UpdateBuyLead,
-)
+from common.schema_types import (BuyStatus, FileStatus, SortOrder,
+                                 validate_file_extension, validate_file_size)
+from schema.buy.buy import (AllocateLeadsRequest, BuyLeadFollowupDetail,
+                            BuyLeadFollowupList, BuyLeadItem, BuyLeadList,
+                            BuyLeadSortBy, CreateBuyLead,
+                            CreateBuyLeadFollowup, Response, UpdateBuyLead)
 from services.buy.buy_service_interface import BuyServiceInterface
 
 router = APIRouter(prefix="/buy", tags=["buy"])
@@ -382,3 +377,49 @@ async def get_buy_followup_lead_by_id(
     except Exception as ex:
         logger.error(f"Exception error: {ex}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
+@router.post("/import", response_model=Response, status_code=201)
+async def import_buy_lead(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    source: str = Form(...),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> Response:
+    logger.info(f"request: {request}, user: {current_user}, filename: {file.filename}")
+    try:
+
+        file_uuid = uuid4()
+        filename = file.filename.strip()
+
+        await validate_file_extension(file, settings.allowed_extensions)
+
+        await validate_file_size(file)
+
+        s3_filename = f"leads/{source}/{file_uuid}/{filename}"
+        s3_key = await buy_service.buy_lead_file_upload(
+            filename=s3_filename,
+            file_obj=file.file,
+            content_type=file.content_type,
+        )
+
+        buy_file_id = await buy_service.create_lead_file_id(
+            file_uuid=file_uuid, s3_key=s3_key, status=FileStatus.Pending.value
+        )
+
+        background_tasks.add_task(buy_service.process_file, file_uuid)
+    except HTTPException:
+        raise
+    except CreationError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.FAILED)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"[{trace_id}] create_lead failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+    return Response(id=buy_file_id, message=constant.REQUEST)

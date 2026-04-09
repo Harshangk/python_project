@@ -1,9 +1,14 @@
+from typing import Set
+
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     database_url: str
+    allowed_extensions: Set[str]
+    max_file_size: int
     application_env: str
+    s3_bucket_name: str
     s3_access_key_id: str
     s3_region_name: str
     s3_secret_access_key: str

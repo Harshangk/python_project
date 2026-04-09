@@ -65,6 +65,7 @@ def upgrade() -> None:
         sa.Column(
             "is_deleted", sa.Boolean(), server_default=sa.text("false"), nullable=False
         ),
+        sa.Column("import_id", sa.UUID(as_uuid=True), nullable=True),
         sa.ForeignKeyConstraint(
             ["make_id"],
             ["mstmake.id"],

@@ -1,17 +1,5 @@
-from datetime import datetime
-
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    ForeignKey,
-    Identity,
-    Index,
-    Integer,
-    String,
-    Table,
-    UniqueConstraint,
-)
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Identity, Index,
+                        Integer, String, Table, UniqueConstraint, func)
 
 from common.db import mapper_registry
 from model.menu import menu as MenuModel
@@ -26,7 +14,7 @@ mstmenu = Table(
     Column("parent_id", Integer(), ForeignKey("mstmenu.id"), nullable=True),
     Column("order_no", Integer(), nullable=False),
     Column("badge_count", Integer(), default=0, server_default="0", nullable=False),
-    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
     Column("is_active", Boolean, default=True, nullable=False),
     Column("is_deleted", Boolean, default=False, nullable=False),
 )
@@ -37,7 +25,7 @@ maprolemenu = Table(
     Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
     Column("role_id", Integer(), ForeignKey("mstrole.id"), nullable=False),
     Column("menu_id", Integer(), ForeignKey("mstmenu.id"), nullable=False),
-    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
     Column("modified_at", DateTime, nullable=True),
     Column("modified_by", String(length=50), nullable=True),

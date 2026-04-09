@@ -1,4 +1,5 @@
 from typing import Any, Mapping, Sequence
+from uuid import UUID
 
 from sqlalchemy import String, asc, cast, desc, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
@@ -7,11 +8,12 @@ from sqlalchemy.orm import Session
 
 from app import constant
 from auth.exceptions import AllocationError, CreationError, NotFound
-from common.schema_types import BuyDisposition, BuyStage, BuyStatus
+from common.schema_types import BuyDisposition, BuyStage, BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
-from model.buy.buy import BuyLeadFollowup, BuyLeadFollowupDetail
-from orm.buy.buy import tblbuylead, tblbuylead_address, tblbuylead_followup
+from model.buy.buy import BuyLeadFile, BuyLeadFollowup, BuyLeadFollowupDetail
+from orm.buy.buy import (tblbuylead, tblbuylead_address, tblbuylead_file,
+                         tblbuylead_followup)
 from orm.common.common import mstmake, mstmodel
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 
@@ -725,3 +727,74 @@ class BuyRepository(BuyRepositoryInterface):
         stmt = stmt.where(tblbuylead.c.id == lead_id)
         result = await self.session.execute(stmt)
         return result.mappings().one_or_none()
+
+    async def create_lead_file_id(
+        self, file_uuid: UUID, s3_key: str, status: FileStatus, created_by: str
+    ) -> int:
+        try:
+            stmt = (
+                insert(tblbuylead_file)
+                .values(
+                    s3_key=s3_key,
+                    file_status=status,
+                    file_uuid=file_uuid,
+                    processed_records=0,
+                    error_records=0,
+                    created_by=created_by,
+                )
+                .returning(tblbuylead_file.c.id)
+            )
+            result = await self.session.execute(stmt)
+            buylead_file_id = result.scalar_one()
+
+            await self.session.commit()
+            return buylead_file_id
+        except IntegrityError:
+            await self.session.rollback()
+            raise CreationError(constant.FAILED)
+
+    async def get_lead_file_id(
+        self,
+        file_uuid: UUID,
+    ) -> BuyLeadFile:
+        stmt = select(tblbuylead_file)
+        stmt = stmt.where(tblbuylead_file.c.file_uuid == file_uuid)
+        result = await self.session.execute(stmt)
+        return result.mappings().one_or_none()
+
+    async def patch_file_status(
+        self,
+        file_uuid: UUID,
+        status: FileStatus,
+        process_records: int,
+    ) -> int:
+        try:
+            existing_stmt = select(
+                tblbuylead_file.c.id,
+            ).where(tblbuylead_file.c.file_uuid == file_uuid)
+
+            result = await self.session.execute(existing_stmt)
+            existing = result.fetchone()
+
+            if not existing:
+                raise NotFound(constant.NOTFOUND)
+
+            stmt = (
+                update(tblbuylead_file)
+                .where(tblbuylead_file.c.file_uuid == file_uuid)
+                .values(
+                    file_status=status,
+                    processed_records=process_records,
+                )
+            )
+            await self.session.execute(stmt)
+
+            await self.session.commit()
+            return file_uuid
+        except IntegrityError:
+            await self.session.rollback()
+            raise CreationError(constant.FAILED)
+
+    async def bulk_insert_lead(self, data):
+        await self.session.execute(insert(tblbuylead), data)
+        await self.session.commit()

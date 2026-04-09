@@ -11,7 +11,8 @@ from app.s3 import get_s3_client
 from auth.dto import AuthenticatedActor, AuthenticatedUser
 from auth.factory import make_auth_service_factory
 from auth.services import AbstractAuthService, FakeAuthService
-from common.file_storage import AbstractFileStorage, LocalFileStorage, S3FileStorage
+from common.file_storage import (AbstractFileStorage, LocalFileStorage,
+                                 S3FileStorage)
 from common.utils import trace_id_var
 
 
@@ -59,7 +60,7 @@ def get_file_storage_object(bucket: str | None) -> Callable[[], AbstractFileStor
         # storage: AbstractFileStorage
         if settings.application_env == "local":
             return LocalFileStorage("static")
-        elif settings.application_env == "prod" or settings.s3_acess_key_id:
+        elif settings.application_env == "prod" or settings.s3_access_key_id:
             if not bucket:
                 raise RuntimeError("No S3 Bucket provided")
             return S3FileStorage(client=get_s3_client(), bucket_name=bucket)

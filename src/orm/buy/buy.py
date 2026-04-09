@@ -1,17 +1,6 @@
-from datetime import datetime
-
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    ForeignKey,
-    Identity,
-    Index,
-    Integer,
-    String,
-    Table,
-    UniqueConstraint,
-)
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Identity, Index,
+                        Integer, String, Table, Text, UniqueConstraint, func)
+from sqlalchemy.dialects.postgresql import UUID
 
 from common.db import mapper_registry
 from model.buy import buy as BuyModel
@@ -43,12 +32,13 @@ tblbuylead = Table(
     Column("remarks", String(500), nullable=False),
     Column("allocated_at", DateTime, nullable=True),
     Column("allocated_by", String(length=50), nullable=True),
-    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
     Column("modified_at", DateTime, nullable=True),
     Column("modified_by", String(length=50), nullable=True),
     Column("is_active", Boolean, default=True, nullable=False),
     Column("is_deleted", Boolean, default=False, nullable=False),
+    Column("import_id", UUID(as_uuid=True), nullable=True),
     Index("idx_tblbuylead_branch", "branch"),
     Index("idx_tblbuylead_mobile", "mobile"),
     Index("idx_tblbuylead_status", "status"),
@@ -66,7 +56,7 @@ tblbuylead_address = Table(
     Column("city", String(25), nullable=False),
     Column("area", String(25), nullable=False),
     Column("pincode", Integer(), nullable=True),
-    UniqueConstraint("buylead_id"),
+    UniqueConstraint("buylead_id", name="uq_tblbuylead_address_buylead_id"),
 )
 
 tblbuylead_followup = Table(
@@ -79,9 +69,25 @@ tblbuylead_followup = Table(
     Column("calldate", DateTime, nullable=False),
     Column("preferred_time", String(20), nullable=True),
     Column("notes", String(500), nullable=False),
-    Column("created_at", DateTime, default=datetime.now, nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
     Column("created_by", String(length=50), nullable=False),
-    UniqueConstraint("buylead_id"),
+    UniqueConstraint("buylead_id", name="uq_tblbuylead_followup_buylead_id"),
+)
+
+tblbuylead_file = Table(
+    "tblbuylead_file",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("s3_key", Text(), nullable=False),
+    Column("file_status", String(10), nullable=False),
+    Column("file_uuid", UUID(as_uuid=True), nullable=False),
+    Column("processed_records", Integer, default=0, server_default="0", nullable=False),
+    Column("error_records", Integer, default=0, server_default="0", nullable=False),
+    Column("created_at", DateTime, default=func.now, nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+    UniqueConstraint("file_uuid", name="uq_tblbuylead_file_file_uuid"),
+    Index("idx_tblbuylead_file_file_type", "file_type"),
+    Index("idx_tblbuylead_file_file_uuid", "file_uuid"),
 )
 
 
@@ -89,6 +95,7 @@ def start_mappers() -> None:
     mapper_registry.map_imperatively(BuyModel.BuyLead, tblbuylead)
     mapper_registry.map_imperatively(BuyModel.BuyLeadAddress, tblbuylead_address)
     mapper_registry.map_imperatively(BuyModel._BuyLeadFollowup, tblbuylead_followup)
+    mapper_registry.map_imperatively(BuyModel.BuyLeadFile, tblbuylead_file)
 
 
 def stop_mappers() -> None:
