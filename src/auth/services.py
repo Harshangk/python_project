@@ -4,14 +4,8 @@ from jose import JWTError, jwt
 from pydantic import ValidationError
 
 from app.core.config import settings
-from auth.dto import (
-    Actor,
-    AuthenticatedActor,
-    AuthenticatedUser,
-    BaseUser,
-    Service,
-    User,
-)
+from auth.dto import (Actor, AuthenticatedActor, AuthenticatedUser, BaseUser,
+                      Service, User)
 from auth.exceptions import Unauthorized
 
 

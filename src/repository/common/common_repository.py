@@ -3,17 +3,10 @@ from typing import Any, Mapping, Sequence
 from sqlalchemy import asc, desc, func, or_, select
 from sqlalchemy.orm import Session
 
-from orm.common.common import (
-    mstbranch,
-    mstbroker,
-    mstcity,
-    mstmake,
-    mstmodel,
-    mstsource,
-    mststate,
-    mstyear,
-)
-from repository.common.common_repository_interface import CommonRepositoryInterface
+from orm.common.common import (mstbranch, mstbroker, mstcity, mstmake,
+                               mstmodel, mstsource, mststate, mstyear)
+from repository.common.common_repository_interface import \
+    CommonRepositoryInterface
 
 MAKE_SEARCHABLE_COLUMNS = {
     "make": mstmake.c.make,

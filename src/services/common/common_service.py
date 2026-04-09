@@ -1,16 +1,10 @@
 from typing import List
 
-from repository.common.common_repository_interface import CommonRepositoryInterface
-from schema.common.common import (
-    BranchItem,
-    BrokerItem,
-    CityItem,
-    LeadSourceItem,
-    MakeItem,
-    ModelItem,
-    StateItem,
-    YearItem,
-)
+from repository.common.common_repository_interface import \
+    CommonRepositoryInterface
+from schema.common.common import (BranchItem, BrokerItem, CityItem,
+                                  LeadSourceItem, MakeItem, ModelItem,
+                                  StateItem, YearItem)
 from services.common.common_service_interface import CommonServiceInterface
 
 

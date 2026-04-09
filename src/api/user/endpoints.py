@@ -11,7 +11,8 @@ from auth.exceptions import CreationError
 from common.csv_utils import stream_csv
 from common.cursor_pagination import build_next_page_url, normalize_limit
 from common.schema_types import SortOrder
-from schema.user.user import CreateUser, Response, UserItem, UserList, UserSortBy
+from schema.user.user import (CreateUser, Response, UserItem, UserList,
+                              UserSortBy)
 from services.user.user_service_interface import UserServiceInterface
 
 router = APIRouter(prefix="/user", tags=["user"])
