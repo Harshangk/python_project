@@ -1,11 +1,11 @@
-from typing import Set
+from typing import List
 
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     database_url: str
-    allowed_extensions: Set[str]
+    allowed_extensions: List[str]
     max_file_size: int
     application_env: str
     s3_bucket_name: str

@@ -9,7 +9,7 @@ Create Date: 2026-04-06 22:06:51.830983
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from sqlalchemy import func
+from sqlalchemy import text
 
 from alembic import op
 
@@ -34,22 +34,19 @@ def upgrade() -> None:
         sa.Column("file_status", sa.String(length=10), nullable=False),
         sa.Column("file_uuid", sa.UUID(as_uuid=True), nullable=False),
         sa.Column(
-            "processed_records", sa.Integer(), server_default="0", nullable=False
+            "processed_records", sa.Integer(), server_default=text("0"), nullable=False
         ),
-        sa.Column("error_records", sa.Integer(), server_default="0", nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "error_records", sa.Integer(), server_default=text("0"), nullable=False
+        ),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_tblbuylead_file")),
         sa.UniqueConstraint("file_uuid", name=op.f("uq_tblbuylead_file_file_uuid")),
     )
 
-    op.create_index(
-        "idx_tblbuylead_file_file_type",
-        "tblbuylead_file",
-        ["file_type"],
-    )
     op.create_index(
         "idx_tblbuylead_file_file_uuid",
         "tblbuylead_file",

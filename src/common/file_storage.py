@@ -27,7 +27,7 @@ class AbstractFileStorage(ABC):
         self,
         filename: str,
         file_path: str | None = None,
-        file_obj: bytes | None = None,
+        file_obj: IO[bytes] | None = None,
         content_type: str | None = None,
     ) -> str: ...
 
@@ -85,18 +85,11 @@ class S3FileStorage(AbstractFileStorage):
         if file_path is not None:
             self.bucket.upload_file(file_path, file_key)
             os.remove(file_path)
-        # elif file_obj is not None:
-        #     if content_type:
-        #         self.bucket.put_object(
-        #             Key=filename, Body=file_obj, ContentType=content_type
-        #         )
-        #     else:
-        #         self.bucket.put_object(Key=file_key, Body=file_obj)
         elif file_obj is not None:
             extra_args = {}
             if content_type:
                 extra_args["ContentType"] = content_type
-
+            file_obj.seek(0)
             self.bucket.upload_fileobj(file_obj, file_key, ExtraArgs=extra_args)
         return file_key
 

@@ -6,11 +6,10 @@ Create Date: 2026-03-14 10:24:02.947058
 
 """
 
-from datetime import datetime
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from sqlalchemy import func
+from sqlalchemy import text
 
 from alembic import op
 
@@ -33,7 +32,7 @@ def upgrade() -> None:
         ),
         sa.Column("role", sa.String(length=15), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.Column("modified_at", sa.DateTime(), nullable=True),
@@ -49,7 +48,10 @@ def upgrade() -> None:
     )
 
     op.execute(
-        """INSERT INTO mstrole(role,created_by) VALUES('Super Admin','harshang'),('Telecaller','harshang'), ('Executive','harshang')"""
+        """INSERT INTO mstrole(role,created_by) 
+        VALUES('Super Admin','harshang'),
+        ('Telecaller','harshang'),
+        ('Executive','harshang')"""
     )
 
 

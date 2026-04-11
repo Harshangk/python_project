@@ -10,7 +10,7 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from passlib.hash import bcrypt
-from sqlalchemy import func
+from sqlalchemy import text
 
 from alembic import op
 
@@ -37,7 +37,7 @@ def upgrade() -> None:
         sa.Column("last_login", sa.DateTime(), nullable=True),
         sa.Column("login_at", sa.DateTime(), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.Column("modified_at", sa.DateTime(), nullable=True),
@@ -66,7 +66,8 @@ def upgrade() -> None:
 
     hashed_password = bcrypt.hash("0310")
 
-    op.execute(f"""
+    op.execute(
+        f"""
         INSERT INTO mstlogin (role_id,
         user_name,
         password,
@@ -81,9 +82,11 @@ def upgrade() -> None:
         now(),
         'harshang',
         now() + INTERVAL '5 years')
-    """)
+    """
+    )
 
-    op.execute(f"""
+    op.execute(
+        f"""
         INSERT INTO mstlogin (role_id,
         user_name,
         password,
@@ -98,9 +101,11 @@ def upgrade() -> None:
         now(),
         'harshang',
         now() + INTERVAL '5 years')
-    """)
+    """
+    )
 
-    op.execute(f"""
+    op.execute(
+        f"""
         INSERT INTO mstlogin (role_id,
         user_name,
         password,
@@ -115,7 +120,8 @@ def upgrade() -> None:
         now(),
         'harshang',
         now() + INTERVAL '5 years')
-    """)
+    """
+    )
 
 
 def downgrade() -> None:

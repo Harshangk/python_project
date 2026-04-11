@@ -9,7 +9,7 @@ Create Date: 2026-03-21 11:30:04.404832
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from sqlalchemy import func
+from sqlalchemy import text
 
 from alembic import op
 
@@ -45,8 +45,10 @@ def upgrade() -> None:
         sa.Column("year", sa.String(4), nullable=False),
         sa.Column("kms", sa.Integer(), nullable=False),
         sa.Column("owner", sa.String(1), nullable=False),
-        sa.Column("client_offer", sa.Integer(), server_default="0", nullable=False),
-        sa.Column("our_offer", sa.Integer(), server_default="0", nullable=False),
+        sa.Column(
+            "client_offer", sa.Integer(), server_default=text("0"), nullable=False
+        ),
+        sa.Column("our_offer", sa.Integer(), server_default=text("0"), nullable=False),
         sa.Column("status", sa.String(25), nullable=False),
         sa.Column("telecaller", sa.String(50), nullable=True),
         sa.Column("executive", sa.String(50), nullable=True),
@@ -54,7 +56,7 @@ def upgrade() -> None:
         sa.Column("allocated_at", sa.DateTime(), nullable=True),
         sa.Column("allocated_by", sa.String(50), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.Column("modified_at", sa.DateTime(), nullable=True),
@@ -125,7 +127,7 @@ def upgrade() -> None:
         sa.Column("preferred_time", sa.String(20), nullable=True),
         sa.Column("notes", sa.String(500), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.ForeignKeyConstraint(

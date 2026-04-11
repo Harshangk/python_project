@@ -9,7 +9,7 @@ Create Date: 2026-03-21 10:22:17.786411
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from sqlalchemy import func
+from sqlalchemy import text
 
 from alembic import op
 
@@ -35,7 +35,7 @@ def upgrade() -> None:
             "is_premium", sa.Boolean(), server_default=sa.text("false"), nullable=False
         ),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.Column("modified_at", sa.DateTime(), nullable=True),
@@ -63,7 +63,7 @@ def upgrade() -> None:
         sa.Column("make_id", sa.Integer(), nullable=False),
         sa.Column("model", sa.String(50), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.Column("modified_at", sa.DateTime(), nullable=True),
@@ -95,7 +95,7 @@ def upgrade() -> None:
         ),
         sa.Column("branch", sa.String(50), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.Column("modified_at", sa.DateTime(), nullable=True),
@@ -122,7 +122,7 @@ def upgrade() -> None:
         ),
         sa.Column("source", sa.String(50), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.Column("modified_at", sa.DateTime(), nullable=True),
@@ -155,7 +155,7 @@ def upgrade() -> None:
         ),
         sa.Column("broker", sa.String(255), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.Column("modified_at", sa.DateTime(), nullable=True),
@@ -182,7 +182,7 @@ def upgrade() -> None:
         ),
         sa.Column("state", sa.String(25), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.Column("modified_at", sa.DateTime(), nullable=True),
@@ -210,7 +210,7 @@ def upgrade() -> None:
         sa.Column("state_id", sa.Integer(), nullable=False),
         sa.Column("city", sa.String(25), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.Column("modified_at", sa.DateTime(), nullable=True),

@@ -729,7 +729,11 @@ class BuyRepository(BuyRepositoryInterface):
         return result.mappings().one_or_none()
 
     async def create_lead_file_id(
-        self, file_uuid: UUID, s3_key: str, status: FileStatus, created_by: str
+        self,
+        file_uuid: UUID,
+        s3_key: str,
+        status: FileStatus,
+        created_by: str,
     ) -> int:
         try:
             stmt = (
@@ -740,6 +744,7 @@ class BuyRepository(BuyRepositoryInterface):
                     file_uuid=file_uuid,
                     processed_records=0,
                     error_records=0,
+                    created_at=func.now(),
                     created_by=created_by,
                 )
                 .returning(tblbuylead_file.c.id)
@@ -796,5 +801,8 @@ class BuyRepository(BuyRepositoryInterface):
             raise CreationError(constant.FAILED)
 
     async def bulk_insert_lead(self, data):
+        import pdb
+
+        pdb.set_trace()
         await self.session.execute(insert(tblbuylead), data)
         await self.session.commit()

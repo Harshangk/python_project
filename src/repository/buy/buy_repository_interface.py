@@ -117,7 +117,11 @@ class BuyRepositoryInterface(ABC):
 
     @abstractmethod
     async def create_lead_file_id(
-        self, file_uuid: UUID, s3_key: str, status: FileStatus, created_by: str
+        self,
+        file_uuid: UUID,
+        s3_key: str,
+        status: FileStatus,
+        created_by: str,
     ) -> int:
         pass
 

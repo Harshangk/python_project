@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import IO, List, Optional
+from typing import List, Optional
 from uuid import UUID
 
 from common.schema_types import BuyStatus, FileStatus
@@ -119,14 +119,18 @@ class BuyServiceInterface(ABC):
         self,
         filename: str,
         file_path: str | None = None,
-        file_obj: IO[bytes] | None = None,
+        file_bytes: bytes | None = None,
         content_type: str | None = None,
-    ) -> int:
+    ) -> str:
         pass
 
     @abstractmethod
     async def create_lead_file_id(
-        self, file_uuid: UUID, s3_key: str, status: FileStatus, created_by: str
+        self,
+        file_uuid: UUID,
+        s3_key: str,
+        status: FileStatus,
+        created_by: str,
     ) -> int:
         pass
 

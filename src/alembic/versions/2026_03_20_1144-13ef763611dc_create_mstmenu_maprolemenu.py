@@ -6,11 +6,10 @@ Create Date: 2026-03-20 11:44:43.480491
 
 """
 
-from datetime import datetime
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from sqlalchemy import func
+from sqlalchemy import text
 
 from alembic import op
 
@@ -36,9 +35,11 @@ def upgrade() -> None:
         sa.Column("menu_path", sa.String(length=255), nullable=True),
         sa.Column("parent_id", sa.Integer(), nullable=True),
         sa.Column("order_no", sa.Integer(), nullable=False),
-        sa.Column("badge_count", sa.Integer(), server_default="0", nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "badge_count", sa.Integer(), server_default=sa.text("0"), nullable=False
+        ),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column(
             "is_active", sa.Boolean(), server_default=sa.text("true"), nullable=False
@@ -65,7 +66,7 @@ def upgrade() -> None:
         sa.Column("role_id", sa.Integer(), nullable=False),
         sa.Column("menu_id", sa.Integer(), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=func.now(), nullable=False
+            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.Column("modified_at", sa.DateTime(), nullable=True),

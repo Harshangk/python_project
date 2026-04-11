@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import TypeVar
 
-from fastapi import HTTPException, UploadFile, status
+from fastapi import HTTPException, status
 from pydantic import BaseModel as PydanticBaseModel
 
 from app.constant import EXTENSION, FILELARGE, FILENAME
@@ -33,23 +33,18 @@ class HumanReadableBaseModel(PydanticBaseModel):
 T = TypeVar("T")
 
 
-async def validate_file_extension(file: UploadFile, allowed_extensions: set[str]):
-    filename = file.filename
-
+async def validate_file_extension(filename: str, allowed_extensions: set[str]):
     if not filename:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=FILENAME)
 
-    ext = filename.rsplit(".", 1)[-1].lower()
+    ext = filename.split(".")[-1].lower()
 
     if ext not in allowed_extensions:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=EXTENSION)
 
 
-async def validate_file_size(file: UploadFile):
-    file.file.seek(0, 2)
-    size = file.file.tell()
-    file.file.seek(0)
-
+async def validate_file_size(file_bytes: bytes):
+    size = len(file_bytes)
     if size > settings.max_file_size:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, FILELARGE)
 

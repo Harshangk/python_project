@@ -1,6 +1,7 @@
+import asyncio
 import csv
 import io
-from typing import IO, List
+from typing import List
 from uuid import UUID
 
 from app import constant
@@ -217,27 +218,85 @@ class BuyService(BuyServiceInterface):
         self,
         filename: str,
         file_path: str | None = None,
-        file_obj: IO[bytes] | None = None,
+        file_bytes: bytes | None = None,
         content_type: str | None = None,
-    ) -> int:
-        s3_key = await self.file_storage.upload_file(
-            filename=filename, file_obj=file_obj, content_type=content_type
+    ) -> str:
+        file_obj = io.BytesIO(file_bytes)
+        file_obj.seek(0)
+
+        s3_key = await asyncio.to_thread(
+            self.file_storage.upload_file,
+            filename=filename,
+            file_obj=file_obj,
+            content_type=content_type,
         )
         return s3_key
 
     async def create_lead_file_id(
-        self, file_uuid: UUID, s3_key: str, status: FileStatus, created_by: str
+        self,
+        file_uuid: UUID,
+        s3_key: str,
+        status: FileStatus,
+        created_by: str,
     ) -> int:
         return await self.buy_repository.create_lead_file_id(
-            file_uuid=file_uuid, s3_key=s3_key, status=status, created_by=created_by
+            file_uuid=file_uuid,
+            s3_key=s3_key,
+            status=status,
+            created_by=created_by,
         )
 
-    async def process_file(self, file_uuid):
+    def to_int(self, value):
+        try:
+            if not value:
+                return None
+            value = str(value).replace(",", "")
+            return int(float(value))
+        except Exception:
+            return None
 
+    def to_float(self, value):
+        try:
+            if not value:
+                return None
+            value = str(value).replace(",", "")
+            return float(value)
+        except Exception:
+            return None
+
+    def transform(self, row: dict, import_id) -> dict | None:
+        try:
+            return {
+                "branch": row.get("branch"),
+                "mobile": row.get("mobile"),
+                "mode": row.get("mode"),
+                "customer_name": row.get("customer_name"),
+                # "make": row.get("make"),
+                # "model": row.get("model"),
+                "make_id": 1,
+                "model_id": 2,
+                "fuel_type": row.get("fuel_type"),
+                "year": row.get("year"),
+                "kms": self.to_int(row.get("kms")),
+                "owner": row.get("owner"),
+                "client_offer": self.to_int(row.get("client_offer")),
+                "our_offer": self.to_int(row.get("our_offer")),
+                "remarks": "Imported from CSV",
+                "import_id": import_id,
+                "source": "asdad",
+                "status": "asdsad",
+                "created_by": "hasdhjksad",
+            }
+        except Exception:
+            return None
+
+    async def process_file(self, file_uuid):
         record = await self.buy_repository.get_lead_file_id(file_uuid)
 
         file_obj = io.BytesIO()
-        self.file_storage.download_file(record.s3_key, file_obj)
+        await asyncio.to_thread(
+            self.file_storage.download_file, record.s3_key, file_obj
+        )
         file_obj.seek(0)
 
         text_stream = io.TextIOWrapper(file_obj, encoding="utf-8")
@@ -251,9 +310,8 @@ class BuyService(BuyServiceInterface):
         await self.buy_repository.patch_file_status(
             file_uuid, FileStatus.Processing.value, total
         )
-
         for row in reader:
-            transformed = self.transform(row)
+            transformed = self.transform(row, file_uuid)
 
             if transformed:
                 batch.append(transformed)

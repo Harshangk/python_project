@@ -1,5 +1,5 @@
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Identity, Index,
-                        Integer, String, Table, Text, UniqueConstraint, func)
+                        Integer, String, Table, Text, UniqueConstraint, text)
 from sqlalchemy.dialects.postgresql import UUID
 
 from common.db import mapper_registry
@@ -24,20 +24,20 @@ tblbuylead = Table(
     Column("year", String(4), nullable=False),
     Column("kms", Integer, nullable=False),
     Column("owner", String(1), nullable=False),
-    Column("client_offer", Integer, default=0, nullable=False),
-    Column("our_offer", Integer, default=0, nullable=False),
+    Column("client_offer", Integer, server_default=text("0"), nullable=False),
+    Column("our_offer", Integer, server_default=text("0"), nullable=False),
     Column("status", String(25), nullable=False),
     Column("telecaller", String(50), nullable=True),
     Column("executive", String(50), nullable=True),
     Column("remarks", String(500), nullable=False),
     Column("allocated_at", DateTime, nullable=True),
     Column("allocated_by", String(length=50), nullable=True),
-    Column("created_at", DateTime, default=func.now, nullable=False),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
     Column("created_by", String(length=50), nullable=False),
     Column("modified_at", DateTime, nullable=True),
     Column("modified_by", String(length=50), nullable=True),
-    Column("is_active", Boolean, default=True, nullable=False),
-    Column("is_deleted", Boolean, default=False, nullable=False),
+    Column("is_active", Boolean, server_default=text("true"), nullable=False),
+    Column("is_deleted", Boolean, server_default=text("false"), nullable=False),
     Column("import_id", UUID(as_uuid=True), nullable=True),
     Index("idx_tblbuylead_branch", "branch"),
     Index("idx_tblbuylead_mobile", "mobile"),
@@ -69,7 +69,7 @@ tblbuylead_followup = Table(
     Column("calldate", DateTime, nullable=False),
     Column("preferred_time", String(20), nullable=True),
     Column("notes", String(500), nullable=False),
-    Column("created_at", DateTime, default=func.now, nullable=False),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
     Column("created_by", String(length=50), nullable=False),
     UniqueConstraint("buylead_id", name="uq_tblbuylead_followup_buylead_id"),
 )
@@ -81,12 +81,11 @@ tblbuylead_file = Table(
     Column("s3_key", Text(), nullable=False),
     Column("file_status", String(10), nullable=False),
     Column("file_uuid", UUID(as_uuid=True), nullable=False),
-    Column("processed_records", Integer, default=0, server_default="0", nullable=False),
-    Column("error_records", Integer, default=0, server_default="0", nullable=False),
-    Column("created_at", DateTime, default=func.now, nullable=False),
+    Column("processed_records", Integer, server_default=text("0"), nullable=False),
+    Column("error_records", Integer, server_default=text("0"), nullable=False),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
     Column("created_by", String(length=50), nullable=False),
     UniqueConstraint("file_uuid", name="uq_tblbuylead_file_file_uuid"),
-    Index("idx_tblbuylead_file_file_type", "file_type"),
     Index("idx_tblbuylead_file_file_uuid", "file_uuid"),
 )
 

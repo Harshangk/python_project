@@ -391,25 +391,27 @@ async def import_buy_lead(
 ) -> Response:
     logger.info(f"request: {request}, user: {current_user}, filename: {file.filename}")
     try:
-
         file_uuid = uuid4()
         filename = file.filename.strip()
+        file_bytes = await file.read()
 
-        await validate_file_extension(file, settings.allowed_extensions)
+        await validate_file_extension(filename, settings.allowed_extensions)
 
-        await validate_file_size(file)
+        await validate_file_size(file_bytes)
 
-        s3_filename = f"leads/{source}/{file_uuid}/{filename}"
+        s3_filename = f"{file_uuid}_{filename}"
         s3_key = await buy_service.buy_lead_file_upload(
             filename=s3_filename,
-            file_obj=file.file,
+            file_bytes=file_bytes,
             content_type=file.content_type,
         )
 
         buy_file_id = await buy_service.create_lead_file_id(
-            file_uuid=file_uuid, s3_key=s3_key, status=FileStatus.Pending.value
+            file_uuid=file_uuid,
+            s3_key=s3_key,
+            status=FileStatus.Pending.value,
+            created_by=current_user.user_name,
         )
-
         background_tasks.add_task(buy_service.process_file, file_uuid)
     except HTTPException:
         raise
