@@ -12,8 +12,12 @@ from common.schema_types import BuyDisposition, BuyStage, BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
 from model.buy.buy import BuyLeadFile, BuyLeadFollowup, BuyLeadFollowupDetail
-from orm.buy.buy import (tblbuylead, tblbuylead_address, tblbuylead_file,
-                         tblbuylead_followup)
+from orm.buy.buy import (
+    tblbuylead,
+    tblbuylead_address,
+    tblbuylead_file,
+    tblbuylead_followup,
+)
 from orm.common.common import mstmake, mstmodel
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 

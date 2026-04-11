@@ -11,8 +11,13 @@ from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
 from model.buy.buy import BuyLeadFollowup
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
-from schema.buy.buy import (BuyLeadFollowupDetail, BuyLeadFollowupItem,
-                            BuyLeadItem, LeadAddress, LeadFollowup)
+from schema.buy.buy import (
+    BuyLeadFollowupDetail,
+    BuyLeadFollowupItem,
+    BuyLeadItem,
+    LeadAddress,
+    LeadFollowup,
+)
 from services.buy.buy_service_interface import BuyServiceInterface
 from services.buy.buy_transform import transform
 

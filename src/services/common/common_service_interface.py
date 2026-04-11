@@ -1,9 +1,16 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from schema.common.common import (BranchItem, BrokerItem, CityItem,
-                                  LeadSourceItem, MakeItem, ModelItem,
-                                  StateItem, YearItem)
+from schema.common.common import (
+    BranchItem,
+    BrokerItem,
+    CityItem,
+    LeadSourceItem,
+    MakeItem,
+    ModelItem,
+    StateItem,
+    YearItem,
+)
 
 
 class CommonServiceInterface(ABC):

@@ -3,8 +3,7 @@ from sqlalchemy.orm import Session
 
 from api.deps import get_db_session
 from repository.common.common_repository import CommonRepository
-from repository.common.common_repository_interface import \
-    CommonRepositoryInterface
+from repository.common.common_repository_interface import CommonRepositoryInterface
 from services.common.common_service import CommonService
 from services.common.common_service_interface import CommonServiceInterface
 

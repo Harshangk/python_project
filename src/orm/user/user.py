@@ -1,5 +1,16 @@
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Identity, Index,
-                        Integer, String, Table, UniqueConstraint, text)
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Identity,
+    Index,
+    Integer,
+    String,
+    Table,
+    UniqueConstraint,
+    text,
+)
 
 from common.db import mapper_registry
 from model.user import user as UserModel

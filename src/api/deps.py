@@ -11,8 +11,7 @@ from app.s3 import get_s3_client
 from auth.dto import AuthenticatedActor, AuthenticatedUser
 from auth.factory import make_auth_service_factory
 from auth.services import AbstractAuthService, FakeAuthService
-from common.file_storage import (AbstractFileStorage, LocalFileStorage,
-                                 S3FileStorage)
+from common.file_storage import AbstractFileStorage, LocalFileStorage, S3FileStorage
 from common.utils import trace_id_var
 
 

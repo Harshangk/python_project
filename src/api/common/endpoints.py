@@ -7,15 +7,34 @@ from api.deps import get_authenticated_user, get_trace_id
 from app.core.logging import logger
 from auth.dto import AuthenticatedUser
 from common.cursor_pagination import build_next_page_url, normalize_limit
-from common.schema_types import (STAGE_DISPOSITION_MAP, BuyMode, BuyStage,
-                                 Color, FuelType, Owner, SortOrder,
-                                 generate_time_slots)
+from common.schema_types import (
+    STAGE_DISPOSITION_MAP,
+    BuyMode,
+    BuyStage,
+    Color,
+    FuelType,
+    Owner,
+    SortOrder,
+    generate_time_slots,
+)
 from common.utils import enum_to_dict_list
-from schema.common.common import (BranchList, BranchSortBy, BrokerList,
-                                  BrokerSortBy, CityList, CitySortBy,
-                                  LeadSourceList, LeadSourceSortBy, MakeList,
-                                  MakeSortBy, ModelList, ModelSortBy,
-                                  StateList, StateSortBy, YearList)
+from schema.common.common import (
+    BranchList,
+    BranchSortBy,
+    BrokerList,
+    BrokerSortBy,
+    CityList,
+    CitySortBy,
+    LeadSourceList,
+    LeadSourceSortBy,
+    MakeList,
+    MakeSortBy,
+    ModelList,
+    ModelSortBy,
+    StateList,
+    StateSortBy,
+    YearList,
+)
 from services.common.common_service_interface import CommonServiceInterface
 
 router = APIRouter(prefix="/common", tags=["common"])

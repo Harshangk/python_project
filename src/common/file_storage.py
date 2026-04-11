@@ -5,8 +5,7 @@ from abc import ABC, abstractmethod
 from datetime import date
 from typing import IO, Iterator
 
-from botocore.exceptions import (ClientError, ParamValidationError,
-                                 ValidationError)
+from botocore.exceptions import ClientError, ParamValidationError, ValidationError
 from mypy_boto3_s3 import S3ServiceResource
 
 from app.core.config import settings

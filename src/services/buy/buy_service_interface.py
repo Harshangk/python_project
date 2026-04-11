@@ -6,8 +6,7 @@ from common.schema_types import BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
 from model.buy.buy import BuyLeadFollowup
-from schema.buy.buy import (BuyLeadFollowupDetail, BuyLeadFollowupItem,
-                            BuyLeadItem)
+from schema.buy.buy import BuyLeadFollowupDetail, BuyLeadFollowupItem, BuyLeadItem
 
 
 class BuyServiceInterface(ABC):

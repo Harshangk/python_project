@@ -1,7 +1,18 @@
 from uuid import UUID, uuid4
 
-from fastapi import (APIRouter, BackgroundTasks, Body, Depends, File, Form,
-                     HTTPException, Query, Request, UploadFile, status)
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Body,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+    status,
+)
 
 from api.buy import deps, example
 from api.deps import get_authenticated_user, get_trace_id
@@ -12,12 +23,25 @@ from auth.dto import AuthenticatedUser
 from auth.exceptions import CreationError, NotFound
 from common.csv_utils import stream_csv
 from common.cursor_pagination import build_next_page_url, normalize_limit
-from common.schema_types import (BuyStatus, FileStatus, SortOrder,
-                                 validate_file_extension, validate_file_size)
-from schema.buy.buy import (AllocateLeadsRequest, BuyLeadFollowupDetail,
-                            BuyLeadFollowupList, BuyLeadItem, BuyLeadList,
-                            BuyLeadSortBy, CreateBuyLead,
-                            CreateBuyLeadFollowup, Response, UpdateBuyLead)
+from common.schema_types import (
+    BuyStatus,
+    FileStatus,
+    SortOrder,
+    validate_file_extension,
+    validate_file_size,
+)
+from schema.buy.buy import (
+    AllocateLeadsRequest,
+    BuyLeadFollowupDetail,
+    BuyLeadFollowupList,
+    BuyLeadItem,
+    BuyLeadList,
+    BuyLeadSortBy,
+    CreateBuyLead,
+    CreateBuyLeadFollowup,
+    Response,
+    UpdateBuyLead,
+)
 from services.buy.buy_service_interface import BuyServiceInterface
 
 router = APIRouter(prefix="/buy", tags=["buy"])

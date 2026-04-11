@@ -2,8 +2,7 @@ from fastapi import HTTPException
 from jose import JWTError, jwt
 
 from app.core.config import settings
-from app.core.security import (create_access_token, create_refresh_token,
-                               verify_password)
+from app.core.security import create_access_token, create_refresh_token, verify_password
 from auth.dto import AuthenticatedUser, BaseUser
 from repository.auth.auth_repository_interface import AuthRepositoryInterface
 from services.auth.auth_service_interface import AuthServiceInterface
