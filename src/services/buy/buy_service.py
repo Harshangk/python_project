@@ -14,6 +14,7 @@ from repository.buy.buy_repository_interface import BuyRepositoryInterface
 from schema.buy.buy import (BuyLeadFollowupDetail, BuyLeadFollowupItem,
                             BuyLeadItem, LeadAddress, LeadFollowup)
 from services.buy.buy_service_interface import BuyServiceInterface
+from services.buy.buy_transform import transform
 
 
 class BuyService(BuyServiceInterface):
@@ -246,51 +247,12 @@ class BuyService(BuyServiceInterface):
             created_by=created_by,
         )
 
-    def to_int(self, value):
-        try:
-            if not value:
-                return None
-            value = str(value).replace(",", "")
-            return int(float(value))
-        except Exception:
-            return None
-
-    def to_float(self, value):
-        try:
-            if not value:
-                return None
-            value = str(value).replace(",", "")
-            return float(value)
-        except Exception:
-            return None
-
-    def transform(self, row: dict, import_id) -> dict | None:
-        try:
-            return {
-                "branch": row.get("branch"),
-                "mobile": row.get("mobile"),
-                "mode": row.get("mode"),
-                "customer_name": row.get("customer_name"),
-                # "make": row.get("make"),
-                # "model": row.get("model"),
-                "make_id": 1,
-                "model_id": 2,
-                "fuel_type": row.get("fuel_type"),
-                "year": row.get("year"),
-                "kms": self.to_int(row.get("kms")),
-                "owner": row.get("owner"),
-                "client_offer": self.to_int(row.get("client_offer")),
-                "our_offer": self.to_int(row.get("our_offer")),
-                "remarks": "Imported from CSV",
-                "import_id": import_id,
-                "source": "asdad",
-                "status": "asdsad",
-                "created_by": "hasdhjksad",
-            }
-        except Exception:
-            return None
-
-    async def process_file(self, file_uuid):
+    async def process_file(
+        self,
+        file_uuid,
+        source:str,
+        created_by: str,
+    ):
         record = await self.buy_repository.get_lead_file_id(file_uuid)
 
         file_obj = io.BytesIO()
@@ -311,7 +273,12 @@ class BuyService(BuyServiceInterface):
             file_uuid, FileStatus.Processing.value, total
         )
         for row in reader:
-            transformed = self.transform(row, file_uuid)
+            transformed = transform(
+                row,
+                file_uuid,
+                source,
+                created_by
+            )
 
             if transformed:
                 batch.append(transformed)

@@ -48,7 +48,24 @@ async def validate_file_size(file_bytes: bytes):
     if size > settings.max_file_size:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, FILELARGE)
 
+def to_int(value):
+        try:
+            if not value:
+                return None
+            value = str(value).replace(",", "")
+            return int(float(value))
+        except Exception:
+            return None
 
+def to_float(value):
+    try:
+        if not value:
+            return None
+        value = str(value).replace(",", "")
+        return float(value)
+    except Exception:
+        return None
+        
 def generate_time_slots(start_hour=9, end_hour=20):
     slots = []
 

@@ -1,5 +1,6 @@
 DEFAULT_LIMIT = 10
 MAX_LIMIT = 100
+REMARKS = "Imported from CSV"
 
 REQUEST = "received request."
 CREATED = "created successfully."

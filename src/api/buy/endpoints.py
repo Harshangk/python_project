@@ -412,7 +412,12 @@ async def import_buy_lead(
             status=FileStatus.Pending.value,
             created_by=current_user.user_name,
         )
-        background_tasks.add_task(buy_service.process_file, file_uuid)
+        background_tasks.add_task(
+            buy_service.process_file,
+            file_uuid,
+            source,
+            current_user.user_name,
+        )
     except HTTPException:
         raise
     except CreationError as ex:

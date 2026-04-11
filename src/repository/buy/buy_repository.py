@@ -801,8 +801,5 @@ class BuyRepository(BuyRepositoryInterface):
             raise CreationError(constant.FAILED)
 
     async def bulk_insert_lead(self, data):
-        import pdb
-
-        pdb.set_trace()
         await self.session.execute(insert(tblbuylead), data)
         await self.session.commit()
