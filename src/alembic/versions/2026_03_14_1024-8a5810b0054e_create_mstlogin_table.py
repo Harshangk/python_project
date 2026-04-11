@@ -66,8 +66,7 @@ def upgrade() -> None:
 
     hashed_password = bcrypt.hash("0310")
 
-    op.execute(
-        f"""
+    op.execute(f"""
         INSERT INTO mstlogin (role_id,
         user_name,
         password,
@@ -82,11 +81,9 @@ def upgrade() -> None:
         now(),
         'harshang',
         now() + INTERVAL '5 years')
-    """
-    )
+    """)
 
-    op.execute(
-        f"""
+    op.execute(f"""
         INSERT INTO mstlogin (role_id,
         user_name,
         password,
@@ -101,11 +98,9 @@ def upgrade() -> None:
         now(),
         'harshang',
         now() + INTERVAL '5 years')
-    """
-    )
+    """)
 
-    op.execute(
-        f"""
+    op.execute(f"""
         INSERT INTO mstlogin (role_id,
         user_name,
         password,
@@ -120,8 +115,7 @@ def upgrade() -> None:
         now(),
         'harshang',
         now() + INTERVAL '5 years')
-    """
-    )
+    """)
 
 
 def downgrade() -> None:

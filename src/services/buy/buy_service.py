@@ -255,9 +255,7 @@ class BuyService(BuyServiceInterface):
         created_by: str,
     ):
         file_obj = io.BytesIO()
-        await asyncio.to_thread(
-            self.file_storage.download_file, s3_key, file_obj
-        )
+        await asyncio.to_thread(self.file_storage.download_file, s3_key, file_obj)
         file_obj.seek(0)
 
         text_stream = io.TextIOWrapper(file_obj, encoding="utf-8")
