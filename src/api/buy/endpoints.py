@@ -415,6 +415,7 @@ async def import_buy_lead(
         background_tasks.add_task(
             buy_service.process_file,
             file_uuid,
+            s3_key,
             source,
             current_user.user_name,
         )

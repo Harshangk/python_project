@@ -250,14 +250,13 @@ class BuyService(BuyServiceInterface):
     async def process_file(
         self,
         file_uuid,
+        s3_key: str,
         source: str,
         created_by: str,
     ):
-        record = await self.buy_repository.get_lead_file_id(file_uuid)
-
         file_obj = io.BytesIO()
         await asyncio.to_thread(
-            self.file_storage.download_file, record.s3_key, file_obj
+            self.file_storage.download_file, s3_key, file_obj
         )
         file_obj.seek(0)
 
@@ -269,9 +268,6 @@ class BuyService(BuyServiceInterface):
         BATCH_SIZE = constant.BATCHSIZE
 
         total = 0
-        await self.buy_repository.patch_file_status(
-            file_uuid, FileStatus.Processing.value, total
-        )
         for row in reader:
             transformed = transform(row, file_uuid, source, created_by)
 
