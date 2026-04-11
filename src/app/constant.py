@@ -17,3 +17,20 @@ EXTENSION = "only csv allowed."
 
 VALUEERROR = "validation error."
 EXCEPTION = "server error."
+
+BUYREQUIREDCOLUMS = {
+    "branch",
+    "mobile",
+    "mode",
+    "customer_name",
+    "make",
+    "model",
+    "fuel_type",
+    "year",
+    "kms",
+    "owner",
+    "client_offer",
+    "our_offer",
+}  # noqa
+INVALIDCSV = "Invalid CSV file or missing header."
+MISSINGCOLUMNS = "Missing required columns."

@@ -370,7 +370,7 @@ class BuyLeadFollowupDetail(CamelBaseModel):
     make_id: int
     model_id: int
     fuel_type: FuelType
-    year: int
+    year: str
     kms: int
     owner: str
     client_offer: int

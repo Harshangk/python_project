@@ -805,5 +805,8 @@ class BuyRepository(BuyRepositoryInterface):
             raise CreationError(constant.FAILED)
 
     async def bulk_insert_lead(self, data):
-        await self.session.execute(insert(tblbuylead), data)
+        payload = [
+            {k: v for k, v in vars(d).items() if not k.startswith("_")} for d in data
+        ]
+        await self.session.execute(insert(tblbuylead), payload)
         await self.session.commit()

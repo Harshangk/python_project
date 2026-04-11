@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic.dataclasses import dataclass
 
-from common.schema_types import BuyMode, Color, FileStatus, FuelType
+from common.schema_types import BuyMode, BuyStatus, Color, FileStatus, FuelType
 
 
 @dataclass
@@ -20,19 +20,20 @@ class BuyLeadAddress:
 class BuyLead:
     branch: str
     mobile: str
-    alternate_mobile: Optional[str]
     source: str
     mode: BuyMode
     customer_name: str
     make_id: int
     model_id: int
     fuel_type: FuelType
-    year: int
+    year: str
     kms: int
     owner: str
     client_offer: int
     our_offer: int
     remarks: str
+    status: BuyStatus
+    alternate_mobile: str | None = None
     broker_name: str | None = None
     variant: str | None = None
     color: Color | None = None
@@ -40,6 +41,7 @@ class BuyLead:
     executive: str | None = None
     lead_address: BuyLeadAddress | None = None
     created_by: str | None = None
+    import_id: UUID | None = None
 
 
 @dataclass
@@ -51,7 +53,7 @@ class UpdateLead:
     make_id: int
     model_id: int
     fuel_type: FuelType
-    year: int
+    year: str
     kms: int
     owner: str
     client_offer: int
@@ -83,7 +85,7 @@ class BuyLeadFollowup:
     make_id: int
     model_id: int
     fuel_type: FuelType
-    year: int
+    year: str
     kms: int
     owner: str
     client_offer: int
@@ -111,7 +113,7 @@ class BuyLeadFollowupDetail:
     make_id: int
     model_id: int
     fuel_type: FuelType
-    year: int
+    year: str
     kms: int
     owner: str
     client_offer: int

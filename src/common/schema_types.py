@@ -1,3 +1,5 @@
+import csv
+import io
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import TypeVar
@@ -5,7 +7,7 @@ from typing import TypeVar
 from fastapi import HTTPException, status
 from pydantic import BaseModel as PydanticBaseModel
 
-from app.constant import EXTENSION, FILELARGE, FILENAME
+from app.constant import EXTENSION, FILELARGE, FILENAME, INVALIDCSV, MISSINGCOLUMNS
 from app.core.config import settings
 
 
@@ -47,6 +49,27 @@ async def validate_file_size(file_bytes: bytes):
     size = len(file_bytes)
     if size > settings.max_file_size:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, FILELARGE)
+
+
+async def validate_csv_headers(file_bytes: bytes, required_columns: set):
+    file_obj = io.BytesIO(file_bytes)
+    text_stream = io.TextIOWrapper(file_obj, encoding="utf-8")
+
+    reader = csv.DictReader(text_stream)
+
+    if not reader.fieldnames:
+        raise ValueError(status.HTTP_400_BAD_REQUEST, INVALIDCSV)
+
+    missing_columns = required_columns - set(reader.fieldnames)
+
+    if missing_columns:
+        raise ValueError(status.HTTP_400_BAD_REQUEST, MISSINGCOLUMNS)
+
+
+def clean_str(value: str | None) -> str | None:
+    if value and value.strip():
+        return value.strip()
+    return None
 
 
 def to_int(value):

@@ -27,6 +27,7 @@ from common.schema_types import (
     BuyStatus,
     FileStatus,
     SortOrder,
+    validate_csv_headers,
     validate_file_extension,
     validate_file_size,
 )
@@ -422,6 +423,8 @@ async def import_buy_lead(
         await validate_file_extension(filename, settings.allowed_extensions)
 
         await validate_file_size(file_bytes)
+
+        await validate_csv_headers(file_bytes, constant.BUYREQUIREDCOLUMS)
 
         s3_filename = f"{file_uuid}_{filename}"
         s3_key = await buy_service.buy_lead_file_upload(
