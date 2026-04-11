@@ -250,7 +250,7 @@ class BuyService(BuyServiceInterface):
     async def process_file(
         self,
         file_uuid,
-        source:str,
+        source: str,
         created_by: str,
     ):
         record = await self.buy_repository.get_lead_file_id(file_uuid)
@@ -273,12 +273,7 @@ class BuyService(BuyServiceInterface):
             file_uuid, FileStatus.Processing.value, total
         )
         for row in reader:
-            transformed = transform(
-                row,
-                file_uuid,
-                source,
-                created_by
-            )
+            transformed = transform(row, file_uuid, source, created_by)
 
             if transformed:
                 batch.append(transformed)
