@@ -14,6 +14,7 @@ from repository.buy.buy_repository_interface import BuyRepositoryInterface
 from schema.buy.buy import (
     BuyLeadFollowupDetail,
     BuyLeadFollowupItem,
+    BuyLeadImportItem,
     BuyLeadItem,
     LeadAddress,
     LeadFollowup,
@@ -289,3 +290,51 @@ class BuyService(BuyServiceInterface):
         await self.buy_repository.patch_file_status(
             file_uuid, FileStatus.Complete.value, total
         )
+
+    async def get_import_lead(
+        self,
+        cursor: int | None,
+        limit: int,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> List[BuyLeadImportItem]:
+        rows = await self.buy_repository.get_import_lead(
+            cursor, limit, created_by, role_id, search
+        )
+        leads = [BuyLeadImportItem(**row) for row in rows]
+        return leads
+
+    async def get_total_import_lead(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> int:
+        return await self.buy_repository.get_total_import_lead(
+            created_by, role_id, search
+        )
+
+    async def get_import_lead_export(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ):
+        async for row in self.buy_repository.get_import_lead_export(
+            created_by, role_id, search
+        ):
+            yield BuyLeadImportItem(**row)
+
+    async def get_import_lead_by_id(
+        self,
+        import_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> BuyLeadImportItem:
+        row = await self.buy_repository.get_import_lead_by_id(
+            import_id, created_by, role_id
+        )
+        if not row:
+            return None
+        return BuyLeadImportItem(**row)

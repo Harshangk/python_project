@@ -17,7 +17,7 @@ from api.buy.example import (
     BUY_LEAD_FOLLOWUP,
     UPDATE_LEAD,
 )
-from common.schema_types import BuyMode, CamelBaseModel, Color, FuelType
+from common.schema_types import BuyMode, CamelBaseModel, Color, FileStatus, FuelType
 from model.buy import buy as BuyModel
 
 
@@ -389,3 +389,21 @@ class BuyLeadFollowupDetail(CamelBaseModel):
     alternate_mobile: str | None = None
     broker_name: str | None = None
     lead_address: LeadAddress | None = None
+
+
+class BuyLeadImportItem(CamelBaseModel):
+    id: int
+    s3_key: str
+    file_status: FileStatus
+    file_uuid: UUID
+    processed_records: int
+    error_records: int
+    created_at: datetime
+    created_by: str
+
+
+class BuyLeadImportList(CamelBaseModel):
+    total: int
+    limit: int
+    next: Optional[str]
+    items: List[BuyLeadImportItem]

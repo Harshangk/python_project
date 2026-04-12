@@ -6,7 +6,12 @@ from common.schema_types import BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
 from model.buy.buy import BuyLeadFollowup
-from schema.buy.buy import BuyLeadFollowupDetail, BuyLeadFollowupItem, BuyLeadItem
+from schema.buy.buy import (
+    BuyLeadFollowupDetail,
+    BuyLeadFollowupItem,
+    BuyLeadImportItem,
+    BuyLeadItem,
+)
 
 
 class BuyServiceInterface(ABC):
@@ -140,4 +145,39 @@ class BuyServiceInterface(ABC):
         source: str,
         created_by: str,
     ) -> int:
+        pass
+
+    @abstractmethod
+    async def get_import_lead(
+        self,
+        cursor: Optional[int],
+        limit: int,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> List[BuyLeadImportItem]:
+        pass
+
+    @abstractmethod
+    async def get_total_import_lead(
+        self, created_by: str, role_id: int, search: str | None = None
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def get_import_lead_export(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ):
+        pass
+
+    @abstractmethod
+    async def get_import_lead_by_id(
+        self,
+        import_id: UUID,
+        created_by: str,
+        role_id: int,
+    ) -> BuyLeadImportItem:
         pass

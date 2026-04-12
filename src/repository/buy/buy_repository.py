@@ -147,6 +147,23 @@ FOLLOWUP_LEAD_COLUMNS = [
     tblbuylead_followup.c.created_by.label("followupCreatedBy"),
 ]
 
+IMPORT_LEAD_COLUMNS = [
+    tblbuylead_file.c.id,
+    tblbuylead_file.c.s3_key,
+    tblbuylead_file.c.file_status,
+    tblbuylead_file.c.file_uuid,
+    tblbuylead_file.c.processed_records,
+    tblbuylead_file.c.error_records,
+    tblbuylead_file.c.created_at,
+    tblbuylead_file.c.created_by,
+]
+
+IMPORT_LEAD_SEARCHABLE_COLUMNS = {
+    "s3_key": tblbuylead.c.branch,
+    "file_status": tblbuylead.c.mobile,
+    "file_uuid": tblbuylead.c.source,
+}
+
 
 class BuyRepository(BuyRepositoryInterface):
     def __init__(self, session: Session):
@@ -732,6 +749,30 @@ class BuyRepository(BuyRepositoryInterface):
         result = await self.session.execute(stmt)
         return result.mappings().one_or_none()
 
+    def _base_import_lead_query(self, created_by: str, role_id: int):
+        stmt = select(*IMPORT_LEAD_COLUMNS)
+        if role_id != 1:
+            stmt = stmt.where(or_(tblbuylead_file.c.created_by == created_by))
+        return stmt
+
+    def _apply_import_search(self, stmt, search: str | None):
+        if search:
+            filters = []
+
+            for col in IMPORT_LEAD_SEARCHABLE_COLUMNS.values():
+                if col is None:
+                    continue
+
+                if hasattr(col.type, "python_type") and col.type.python_type is str:
+                    filters.append(col.ilike(f"%{search}%"))
+
+                else:
+                    filters.append(cast(col, String).ilike(f"%{search}%"))
+
+            stmt = stmt.where(or_(*filters))
+
+        return stmt
+
     async def create_lead_file_id(
         self,
         file_uuid: UUID,
@@ -761,15 +802,6 @@ class BuyRepository(BuyRepositoryInterface):
         except IntegrityError:
             await self.session.rollback()
             raise CreationError(constant.FAILED)
-
-    async def get_lead_file_id(
-        self,
-        file_uuid: UUID,
-    ) -> BuyLeadFile:
-        stmt = select(tblbuylead_file)
-        stmt = stmt.where(tblbuylead_file.c.file_uuid == file_uuid)
-        result = await self.session.execute(stmt)
-        return result.mappings().one_or_none()
 
     async def patch_file_status(
         self,
@@ -810,3 +842,63 @@ class BuyRepository(BuyRepositoryInterface):
         ]
         await self.session.execute(insert(tblbuylead), payload)
         await self.session.commit()
+
+    async def get_import_lead(
+        self,
+        cursor: int | None,
+        limit: int,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> Sequence[Mapping[str, Any]]:
+        stmt = self._base_import_lead_query(created_by, role_id)
+
+        stmt = self._apply_import_search(stmt, search)
+
+        if cursor:
+            stmt = stmt.where(tblbuylead_file.c.id < cursor)
+
+        stmt = stmt.limit(limit)
+        result = await self.session.execute(stmt)
+        return result.mappings().all()
+
+    async def get_total_import_lead(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> int:
+        stmt = select(func.count()).select_from(tblbuylead_file)
+        if role_id != 1:
+            stmt = stmt.where(or_(tblbuylead.c.created_by == created_by))
+
+        stmt = self._apply_import_search(stmt, search)
+        result = await self.session.execute(stmt)
+        return result.scalar_one()
+
+    async def get_import_lead_export(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ):
+        stmt = self._base_import_lead_query(created_by, role_id)
+        stmt = self._apply_import_search(stmt, search)
+        stmt = stmt.execution_options(stream_results=True)
+
+        stream = await self.session.stream(stmt)
+        async for row in stream:
+            yield dict(row._mapping)
+
+    async def get_import_lead_by_id(
+        self,
+        import_id: UUID,
+        created_by: str,
+        role_id: int,
+    ) -> BuyLeadFile:
+        stmt = select(tblbuylead_file)
+        stmt = stmt.where(tblbuylead_file.c.file_uuid == import_id)
+        if role_id != 1:
+            stmt = stmt.where(or_(tblbuylead_file.c.created_by == created_by))
+        result = await self.session.execute(stmt)
+        return result.mappings().one_or_none()

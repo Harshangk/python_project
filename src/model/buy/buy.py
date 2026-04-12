@@ -148,3 +148,5 @@ class BuyLeadFile:
     file_uuid: UUID
     processed_records: int
     error_records: int
+    created_at: datetime
+    created_by: str

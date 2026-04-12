@@ -35,6 +35,8 @@ from schema.buy.buy import (
     AllocateLeadsRequest,
     BuyLeadFollowupDetail,
     BuyLeadFollowupList,
+    BuyLeadImportItem,
+    BuyLeadImportList,
     BuyLeadItem,
     BuyLeadList,
     BuyLeadSortBy,
@@ -458,3 +460,90 @@ async def import_buy_lead(
         logger.error(f"[{trace_id}] create_lead failed: {str(ex)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
     return Response(id=buy_file_id, message=constant.REQUEST)
+
+
+@router.get(
+    "/import",
+    response_model=BuyLeadImportList,
+    status_code=status.HTTP_200_OK,
+)
+async def get_buy_import_lead(
+    request: Request,
+    cursor: int | None = None,
+    limit: int | None = None,
+    search: str | None = None,
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> BuyLeadImportList:
+
+    logger.info(f"request: {request}, user: {current_user}")
+    try:
+        limit = normalize_limit(limit)
+        leads = await buy_service.get_import_lead(
+            cursor, limit, current_user.user_name, current_user.role_id, search
+        )
+        total = await buy_service.get_total_import_lead(
+            current_user.user_name, current_user.role_id, search
+        )
+
+        next_url = None
+        if len(leads) == limit:
+            last_id = leads[-1].id
+            next_url = build_next_page_url(request, last_id, limit)
+
+        return BuyLeadImportList(total=total, limit=limit, next=next_url, items=leads)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
+@router.get(
+    "/import/export",
+    status_code=status.HTTP_200_OK,
+)
+async def export_import_lead(
+    request: Request,
+    search: str | None = None,
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+):
+    leads = buy_service.get_import_lead_export(
+        current_user.user_name, current_user.role_id, search
+    )
+    return stream_csv(rows=leads, filename="buy_import_export.csv")
+
+
+@router.get(
+    "/import/{import_id}",
+    response_model=BuyLeadImportItem,
+    status_code=status.HTTP_200_OK,
+)
+async def get_buy_import_lead_by_id(
+    request: Request,
+    import_id: UUID,
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> BuyLeadImportItem:
+    logger.info(f"request: {request}, user: {current_user}, id:{import_id}")
+    try:
+        lead = await buy_service.get_import_lead_by_id(
+            import_id, current_user.user_name, current_user.role_id
+        )
+        if not lead:
+            logger.info(f"Not Found: {import_id}")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
+        return lead
+    except HTTPException:
+        raise
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)

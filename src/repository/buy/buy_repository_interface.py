@@ -5,7 +5,7 @@ from uuid import UUID
 from common.schema_types import BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
-from model.buy.buy import BuyLeadFollowup, BuyLeadFollowupDetail
+from model.buy.buy import BuyLeadFile, BuyLeadFollowup, BuyLeadFollowupDetail
 
 
 class BuyRepositoryInterface(ABC):
@@ -126,13 +126,6 @@ class BuyRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_lead_file_id(
-        self,
-        file_uuid: UUID,
-    ) -> int:
-        pass
-
-    @abstractmethod
     async def patch_file_status(
         self,
         file_uuid: UUID,
@@ -143,4 +136,39 @@ class BuyRepositoryInterface(ABC):
 
     @abstractmethod
     async def bulk_insert_lead(self, data):
+        pass
+
+    @abstractmethod
+    async def get_import_lead(
+        self,
+        cursor: Optional[int],
+        limit: int,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> Sequence[Mapping[str, Any]]:
+        pass
+
+    @abstractmethod
+    async def get_total_import_lead(
+        self, created_by: str, role_id: int, search: str | None = None
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def get_import_lead_export(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ):
+        pass
+
+    @abstractmethod
+    async def get_import_lead_by_id(
+        self,
+        import_id: UUID,
+        created_by: str,
+        role_id: int,
+    ) -> BuyLeadFile:
         pass
