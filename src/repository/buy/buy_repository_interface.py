@@ -130,7 +130,8 @@ class BuyRepositoryInterface(ABC):
         self,
         file_uuid: UUID,
         status: FileStatus,
-        process_records: int,
+        processed_records: int,
+        error_records: int,
     ) -> int:
         pass
 

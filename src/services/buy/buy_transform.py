@@ -9,17 +9,31 @@ def transform(
     import_id,
     source: str,
     created_by: str,
+    make_map: dict,
+    model_map: dict,
 ) -> dict | None:
     try:
+        make_name = clean_str(row.get("make"))
+        model_name = clean_str(row.get("model"))
+
+        if not make_name or not model_name:
+            raise ValueError("Make or Model missing")
+
+        make_id = make_map.get(make_name.lower())
+        if not make_id:
+            raise ValueError(f"Invalid make: {make_name}")
+
+        model_id = model_map.get((model_name.lower(), make_id))
+        if not model_id:
+            raise ValueError(f"Invalid model '{model_name}' for make '{make_name}'")
+
         return BuyLead(
             branch=clean_str(row.get("branch")),
             mobile=clean_str(row.get("mobile")),
             mode=clean_str(row.get("mode")),
             customer_name=clean_str(row.get("customer_name")),
-            # "make": clean_str(row.get("make")),
-            # "model": clean_str(row.get("model")),
-            make_id=1,
-            model_id=2,
+            make_id=make_id,
+            model_id=model_id,
             fuel_type=clean_str(row.get("fuel_type")),
             year=clean_str(row.get("year")),
             kms=to_int(row.get("kms")),

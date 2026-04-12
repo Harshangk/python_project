@@ -11,6 +11,7 @@ from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
 from model.buy.buy import BuyLeadFollowup
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
+from repository.common.common_repository_interface import CommonRepositoryInterface
 from schema.buy.buy import (
     BuyLeadFollowupDetail,
     BuyLeadFollowupItem,
@@ -28,9 +29,11 @@ class BuyService(BuyServiceInterface):
         self,
         buy_repository: BuyRepositoryInterface,
         file_storage: AbstractFileStorage,
+        common_repository: CommonRepositoryInterface,
     ) -> None:
         self.buy_repository = buy_repository
         self.file_storage = file_storage
+        self.common_repository = common_repository
 
     async def create_lead(self, lead: BuyLeadModel, created_by: str) -> int:
         return await self.buy_repository.create_lead(lead, created_by=created_by)
@@ -271,24 +274,35 @@ class BuyService(BuyServiceInterface):
         batch = []
         BATCH_SIZE = constant.BATCHSIZE
 
-        total = 0
+        processed_records = 0
+        error_records = 0
+
+        make_map = await self.common_repository.get_make_map()
+        model_map = await self.common_repository.get_model_map()
+
         for row in reader:
-            transformed = transform(row, file_uuid, source, created_by)
+            transformed = transform(
+                row, file_uuid, source, created_by, make_map, model_map
+            )
 
             if transformed:
                 batch.append(transformed)
+                processed_records += 1
+            else:
+                error_records += 1
 
             if len(batch) >= BATCH_SIZE:
                 await self.buy_repository.bulk_insert_lead(batch)
-                total += len(batch)
                 batch = []
 
         if batch:
             await self.buy_repository.bulk_insert_lead(batch)
-            total += len(batch)
 
         await self.buy_repository.patch_file_status(
-            file_uuid, FileStatus.Complete.value, total
+            file_uuid,
+            FileStatus.Complete.value,
+            processed_records,
+            error_records,
         )
 
     async def get_import_lead(

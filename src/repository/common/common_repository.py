@@ -176,6 +176,19 @@ class CommonRepository(CommonRepositoryInterface):
         rows = result.mappings().all()
         return rows
 
+    async def get_make_map(self) -> dict:
+        stmt = select(
+            mstmake.c.id,
+            mstmake.c.make,
+            mstmake.c.is_premium,
+            mstmake.c.created_at,
+            mstmake.c.created_by,
+        ).where(mstmake.c.is_active)
+
+        result = await self.session.execute(stmt)
+        rows = result.mappings().all()
+        return {r["make"].strip().lower(): r["id"] for r in rows}
+
     async def get_total_make(self, search: str | None = None) -> int:
         query = select(func.count()).select_from(mstmake).where(mstmake.c.is_active)
 
@@ -232,6 +245,23 @@ class CommonRepository(CommonRepositoryInterface):
         result = await self.session.execute(stmt)
         rows = result.mappings().all()
         return rows
+
+    async def get_model_map(self) -> dict:
+        stmt = (
+            select(
+                mstmodel.c.id,
+                mstmodel.c.make_id,
+                mstmodel.c.model,
+                mstmodel.c.created_at,
+                mstmodel.c.created_by,
+                mstmake.c.make,
+            )
+            .join(mstmake, mstmodel.c.make_id == mstmake.c.id)
+            .where(mstmodel.c.is_active)
+        )
+        result = await self.session.execute(stmt)
+        rows = result.mappings().all()
+        return {(r["model"].strip().lower(), r["make_id"]): r["id"] for r in rows}
 
     async def get_total_model(
         self, make_id: int | None = None, search: str | None = None

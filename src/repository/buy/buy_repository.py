@@ -807,7 +807,8 @@ class BuyRepository(BuyRepositoryInterface):
         self,
         file_uuid: UUID,
         status: FileStatus,
-        process_records: int,
+        processed_records: int,
+        error_records: int,
     ) -> int:
         try:
             existing_stmt = select(
@@ -825,7 +826,8 @@ class BuyRepository(BuyRepositoryInterface):
                 .where(tblbuylead_file.c.file_uuid == file_uuid)
                 .values(
                     file_status=status,
-                    processed_records=process_records,
+                    processed_records=processed_records,
+                    error_records=error_records,
                 )
             )
             await self.session.execute(stmt)

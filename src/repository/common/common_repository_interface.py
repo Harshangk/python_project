@@ -31,6 +31,12 @@ class CommonRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def get_make_map(
+        self,
+    ) -> dict:
+        pass
+
+    @abstractmethod
     async def get_total_make(self, search: str | None = None) -> int:
         pass
 
@@ -44,6 +50,10 @@ class CommonRepositoryInterface(ABC):
         sort_by: str | None = None,
         sort_order: str | None = None,
     ) -> Sequence[Mapping[str, Any]]:
+        pass
+
+    @abstractmethod
+    async def get_model_map(self) -> dict:
         pass
 
     @abstractmethod

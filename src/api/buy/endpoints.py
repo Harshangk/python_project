@@ -168,7 +168,7 @@ async def export_lead(
 
 
 @router.get(
-    "/{lead_id}",
+    "/lead/{lead_id}",
     response_model=BuyLeadItem,
     status_code=status.HTTP_200_OK,
 )
