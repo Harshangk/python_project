@@ -168,7 +168,7 @@ async def export_lead(
 
 
 @router.get(
-    "/lead/{lead_id}",
+    "/{lead_id}",
     response_model=BuyLeadItem,
     status_code=status.HTTP_200_OK,
 )
@@ -448,8 +448,10 @@ async def import_buy_lead(
             source,
             current_user.user_name,
         )
-    except HTTPException:
-        raise
+    except HTTPException as ex:
+        logger.error(f"General HTTP exception [{trace_id}] \
+                     import_buy_lead failed: {str(ex)}")
+        raise ex
     except CreationError as ex:
         logger.error(f"ValueError error: {ex}")
         raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.FAILED)
@@ -457,7 +459,7 @@ async def import_buy_lead(
         logger.error(f"ValueError error: {ex}")
         raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
     except Exception as ex:
-        logger.error(f"[{trace_id}] create_lead failed: {str(ex)}")
+        logger.error(f"[{trace_id}] import_buy_lead failed: {str(ex)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
     return Response(id=buy_file_id, message=constant.REQUEST)
 
