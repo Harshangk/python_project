@@ -17,15 +17,18 @@ def transform(
         model_name = clean_str(row.get("model"))
 
         if not make_name or not model_name:
-            raise ValueError("Make or Model missing")
+            # raise ValueError("Make or Model missing")
+            raise ValueError(constant.MISSINGVALUES)
 
         make_id = make_map.get(make_name.lower())
         if not make_id:
-            raise ValueError(f"Invalid make: {make_name}")
+            # raise ValueError(f"Invalid make: {make_name}")
+            raise ValueError(constant.MISSINGVALUES)
 
         model_id = model_map.get((model_name.lower(), make_id))
         if not model_id:
-            raise ValueError(f"Invalid model '{model_name}' for make '{make_name}'")
+            # raise ValueError(f"Invalid model '{model_name}' for make '{make_name}'")
+            raise ValueError(constant.MISSINGVALUES)
 
         return BuyLead(
             branch=clean_str(row.get("branch")),

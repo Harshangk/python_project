@@ -34,3 +34,4 @@ BUYREQUIREDCOLUMS = {
 }  # noqa
 INVALIDCSV = "Invalid CSV file or missing header."
 MISSINGCOLUMNS = "Missing required columns."
+MISSINGVALUES = "Missing required columns value."
