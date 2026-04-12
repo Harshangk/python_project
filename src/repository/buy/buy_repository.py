@@ -860,6 +860,7 @@ class BuyRepository(BuyRepositoryInterface):
         if cursor:
             stmt = stmt.where(tblbuylead_file.c.id < cursor)
 
+        stmt = stmt.order_by(tblbuylead_file.c.id.desc())
         stmt = stmt.limit(limit)
         result = await self.session.execute(stmt)
         return result.mappings().all()
