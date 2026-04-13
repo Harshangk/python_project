@@ -11,38 +11,44 @@ def transform(
     created_by: str,
     make_map: dict,
     model_map: dict,
-) -> dict | None:
+) -> BuyLead | None:
+    # dict | None:
     try:
-        make_name = clean_str(row.get("make"))
-        model_name = clean_str(row.get("model"))
+        cleaned = {}
+        for field in constant.BUYREQUIREDCOLUMS:
+            raw_value = row.get(field)
+            if field in constant.BUYREQUIREDINTCOLUMS:
+                value = to_int(raw_value)
+            else:
+                value = clean_str(raw_value)
+            if value is None:
+                raise ValueError(f"{constant.MISSINGVALUES} : {field}")
+            cleaned[field] = value
 
-        if not make_name or not model_name:
-            # raise ValueError("Make or Model missing")
-            raise ValueError(constant.MISSINGVALUES)
+        make_name = cleaned["make"]
+        model_name = cleaned["model"]
 
         make_id = make_map.get(make_name.lower())
         if not make_id:
-            # raise ValueError(f"Invalid make: {make_name}")
-            raise ValueError(constant.MISSINGVALUES)
+            raise ValueError(f"{constant.WRONGVALUES} : {make_name}")
 
         model_id = model_map.get((model_name.lower(), make_id))
         if not model_id:
-            # raise ValueError(f"Invalid model '{model_name}' for make '{make_name}'")
-            raise ValueError(constant.MISSINGVALUES)
+            raise ValueError(f"{constant.WRONGVALUES} : {model_name} - {make_name}")
 
         return BuyLead(
-            branch=clean_str(row.get("branch")),
-            mobile=clean_str(row.get("mobile")),
-            mode=clean_str(row.get("mode")),
-            customer_name=clean_str(row.get("customer_name")),
+            branch=cleaned["branch"],
+            mobile=cleaned["mobile"],
+            mode=cleaned["mode"],
+            customer_name=cleaned["customer_name"],
             make_id=make_id,
             model_id=model_id,
-            fuel_type=clean_str(row.get("fuel_type")),
-            year=clean_str(row.get("year")),
-            kms=to_int(row.get("kms")),
-            owner=clean_str(row.get("owner")),
-            client_offer=to_int(row.get("client_offer")),
-            our_offer=to_int(row.get("our_offer")),
+            fuel_type=cleaned["fuel_type"],
+            year=cleaned["year"],
+            kms=cleaned["kms"],
+            owner=cleaned["owner"],
+            client_offer=cleaned["client_offer"],
+            our_offer=cleaned["our_offer"],
             remarks=constant.REMARKS,
             import_id=import_id,
             source=source,

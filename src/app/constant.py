@@ -32,6 +32,14 @@ BUYREQUIREDCOLUMS = {
     "client_offer",
     "our_offer",
 }  # noqa
+
+BUYREQUIREDINTCOLUMS = {
+    "kms",
+    "client_offer",
+    "our_offer",
+}  # noqa
+
 INVALIDCSV = "Invalid CSV file or missing header."
 MISSINGCOLUMNS = "Missing required columns."
 MISSINGVALUES = "Missing required columns value."
+WRONGVALUES = "Wrong data."
