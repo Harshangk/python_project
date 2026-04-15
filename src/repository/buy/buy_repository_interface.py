@@ -132,6 +132,7 @@ class BuyRepositoryInterface(ABC):
         status: FileStatus,
         processed_records: int,
         error_records: int,
+        error_file_key: str | None = None,
     ) -> int:
         pass
 

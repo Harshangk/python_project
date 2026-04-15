@@ -11,7 +11,7 @@ def transform(
     created_by: str,
     make_map: dict,
     model_map: dict,
-) -> BuyLead | None:
+) -> tuple[BuyLead | None, str | None]:
     # dict | None:
     try:
         cleaned = {}
@@ -36,26 +36,29 @@ def transform(
         if not model_id:
             raise ValueError(f"{constant.WRONGVALUES} : {model_name} - {make_name}")
 
-        return BuyLead(
-            branch=cleaned["branch"],
-            mobile=cleaned["mobile"],
-            mode=cleaned["mode"],
-            customer_name=cleaned["customer_name"],
-            make_id=make_id,
-            model_id=model_id,
-            fuel_type=cleaned["fuel_type"],
-            year=cleaned["year"],
-            kms=cleaned["kms"],
-            owner=cleaned["owner"],
-            client_offer=cleaned["client_offer"],
-            our_offer=cleaned["our_offer"],
-            remarks=constant.REMARKS,
-            import_id=import_id,
-            source=source,
-            status=BuyStatus.NotAllocated.value,
-            created_by=created_by,
+        return (
+            BuyLead(
+                branch=cleaned["branch"],
+                mobile=cleaned["mobile"],
+                mode=cleaned["mode"],
+                customer_name=cleaned["customer_name"],
+                make_id=make_id,
+                model_id=model_id,
+                fuel_type=cleaned["fuel_type"],
+                year=cleaned["year"],
+                kms=cleaned["kms"],
+                owner=cleaned["owner"],
+                client_offer=cleaned["client_offer"],
+                our_offer=cleaned["our_offer"],
+                remarks=constant.REMARKS,
+                import_id=import_id,
+                source=source,
+                status=BuyStatus.NotAllocated.value,
+                created_by=created_by,
+            ),
+            None,
         )
     except Exception as e:
         logger.error(f"Transform error: {str(e)}")
         logger.error(f"Transform error: {row}")
-        return None
+        return None, str(e)

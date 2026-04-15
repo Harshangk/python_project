@@ -95,6 +95,7 @@ tblbuylead_file = Table(
     Column("file_uuid", UUID(as_uuid=True), nullable=False),
     Column("processed_records", Integer, server_default=text("0"), nullable=False),
     Column("error_records", Integer, server_default=text("0"), nullable=False),
+    Column("error_s3_key", Text(), nullable=True),
     Column("created_at", DateTime, server_default=text("now()"), nullable=False),
     Column("created_by", String(length=50), nullable=False),
     UniqueConstraint("file_uuid", name="uq_tblbuylead_file_file_uuid"),

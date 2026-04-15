@@ -29,10 +29,12 @@ class BuyService(BuyServiceInterface):
         self,
         buy_repository: BuyRepositoryInterface,
         file_storage: AbstractFileStorage,
+        error_file_storage: AbstractFileStorage,
         common_repository: CommonRepositoryInterface,
     ) -> None:
         self.buy_repository = buy_repository
         self.file_storage = file_storage
+        self.error_file_storage = error_file_storage
         self.common_repository = common_repository
 
     async def create_lead(self, lead: BuyLeadModel, created_by: str) -> int:
@@ -263,25 +265,69 @@ class BuyService(BuyServiceInterface):
         source: str,
         created_by: str,
     ):
+        try:
+            reader = await self._get_csv_reader(s3_key)
+
+            make_map, model_map = await self._load_mappings()
+
+            processed_records, error_records, error_rows = await self._process_rows(
+                reader, file_uuid, source, created_by, make_map, model_map
+            )
+
+            error_file_key = await self._upload_error_file(file_uuid, error_rows)
+
+            await self._update_status(
+                file_uuid,
+                FileStatus.Complete.value,
+                processed_records,
+                error_records,
+                error_file_key,
+            )
+
+        except Exception:
+            await self._update_status(
+                file_uuid,
+                FileStatus.Failed.value,
+                0,
+                0,
+                None,
+            )
+
+    async def _get_csv_reader(self, s3_key: str):
         file_obj = io.BytesIO()
+
         await asyncio.to_thread(self.file_storage.download_file, s3_key, file_obj)
+
         file_obj.seek(0)
 
         text_stream = io.TextIOWrapper(file_obj, encoding="utf-8")
 
-        reader = csv.DictReader(text_stream)
+        return csv.DictReader(text_stream)
 
+    async def _load_mappings(self):
+        make_map = await self.common_repository.get_make_map()
+        model_map = await self.common_repository.get_model_map()
+        return make_map, model_map
+
+    async def _process_rows(
+        self,
+        reader,
+        file_uuid,
+        source,
+        created_by,
+        make_map,
+        model_map,
+    ):
         batch = []
-        BATCH_SIZE = constant.BATCHSIZE
+        error_rows = []
 
         processed_records = 0
         error_records = 0
 
-        make_map = await self.common_repository.get_make_map()
-        model_map = await self.common_repository.get_model_map()
+        batch_size = constant.BATCHSIZE
 
         for row in reader:
-            transformed = transform(
+            transformed, error = transform(
                 row, file_uuid, source, created_by, make_map, model_map
             )
 
@@ -290,19 +336,59 @@ class BuyService(BuyServiceInterface):
                 processed_records += 1
             else:
                 error_records += 1
+                error_rows.append(self._build_error_row(row, error))
 
-            if len(batch) >= BATCH_SIZE:
+            if len(batch) >= batch_size:
                 await self.buy_repository.bulk_insert_lead(batch)
-                batch = []
+                batch.clear()
 
         if batch:
             await self.buy_repository.bulk_insert_lead(batch)
 
+        return processed_records, error_records, error_rows
+
+    def _build_error_row(self, row: dict, error: str) -> dict:
+        error_row = dict(row)
+        error_row["error"] = error
+        return error_row
+
+    async def _upload_error_file(self, file_uuid, error_rows):
+        if not error_rows:
+            return None
+
+        output = io.StringIO()
+
+        fieldnames = list(error_rows[0].keys())
+
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(error_rows)
+
+        error_bytes = io.BytesIO(output.getvalue().encode("utf-8"))
+
+        error_filename = f"{file_uuid}_error.csv"
+
+        return await asyncio.to_thread(
+            self.error_file_storage.upload_file,
+            filename=error_filename,
+            file_obj=error_bytes,
+            content_type="text/csv",
+        )
+
+    async def _update_status(
+        self,
+        file_uuid,
+        status,
+        processed_records,
+        error_records,
+        error_file_key,
+    ):
         await self.buy_repository.patch_file_status(
             file_uuid,
-            FileStatus.Complete.value,
+            status,
             processed_records,
             error_records,
+            error_file_key,
         )
 
     async def get_import_lead(

@@ -25,11 +25,15 @@ def get_common_repository(
 
 
 buy_lead_file_storage = get_file_storage_object(settings.s3_bucket_name)
+buy_lead_file_storage_error = get_file_storage_object(settings.error_s3_bucket_name)
 
 
 async def buy_service(
     buy_repository: BuyRepositoryInterface = Depends(get_buy_repository),
     file_storage: AbstractFileStorage = Depends(buy_lead_file_storage),
+    error_file_storage: AbstractFileStorage = Depends(buy_lead_file_storage_error),
     common_repository: CommonRepositoryInterface = Depends(get_common_repository),
 ) -> BuyServiceInterface:
-    return BuyService(buy_repository, file_storage, common_repository)
+    return BuyService(
+        buy_repository, file_storage, error_file_storage, common_repository
+    )

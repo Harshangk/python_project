@@ -154,6 +154,7 @@ IMPORT_LEAD_COLUMNS = [
     tblbuylead_file.c.file_uuid,
     tblbuylead_file.c.processed_records,
     tblbuylead_file.c.error_records,
+    tblbuylead_file.c.error_s3_key,
     tblbuylead_file.c.created_at,
     tblbuylead_file.c.created_by,
 ]
@@ -162,6 +163,7 @@ IMPORT_LEAD_SEARCHABLE_COLUMNS = {
     "s3_key": tblbuylead.c.branch,
     "file_status": tblbuylead.c.mobile,
     "file_uuid": tblbuylead.c.source,
+    "error_s3_key": tblbuylead_file.c.error_s3_key,
 }
 
 
@@ -809,6 +811,7 @@ class BuyRepository(BuyRepositoryInterface):
         status: FileStatus,
         processed_records: int,
         error_records: int,
+        error_file_key: str | None = None,
     ) -> int:
         try:
             existing_stmt = select(
@@ -828,6 +831,7 @@ class BuyRepository(BuyRepositoryInterface):
                     file_status=status,
                     processed_records=processed_records,
                     error_records=error_records,
+                    error_s3_key=error_file_key,
                 )
             )
             await self.session.execute(stmt)

@@ -400,6 +400,7 @@ class BuyLeadImportItem(CamelBaseModel):
     error_records: int
     created_at: datetime
     created_by: str
+    error_s3_key: str | None = None
 
 
 class BuyLeadImportList(CamelBaseModel):

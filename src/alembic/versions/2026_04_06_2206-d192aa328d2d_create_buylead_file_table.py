@@ -39,6 +39,7 @@ def upgrade() -> None:
         sa.Column(
             "error_records", sa.Integer(), server_default=text("0"), nullable=False
         ),
+        sa.Column("error_s3_key", sa.Text(), nullable=True),
         sa.Column(
             "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
         ),

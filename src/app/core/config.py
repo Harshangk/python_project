@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     max_file_size: int
     application_env: str
     s3_bucket_name: str
+    error_s3_bucket_name: str
     s3_access_key_id: str
     s3_region_name: str
     s3_secret_access_key: str

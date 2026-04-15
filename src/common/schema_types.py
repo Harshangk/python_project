@@ -181,3 +181,4 @@ class FileStatus(str, Enum):
     Processing = "Processing"
     Complete = "Complete"
     Partial = "Partial"
+    Failed = "Failed"
