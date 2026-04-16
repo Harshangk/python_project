@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
+from common.schema_types import Bucket
 from schema.common.common import (
     BranchItem,
     BrokerItem,
@@ -133,4 +134,12 @@ class CommonServiceInterface(ABC):
 
     @abstractmethod
     async def get_total_city(self, state_id: int, search: str | None = None) -> int:
+        pass
+
+    @abstractmethod
+    async def download_s3_file(
+        self,
+        s3_key: str,
+        bukcet: Bucket,
+    ) -> int:
         pass

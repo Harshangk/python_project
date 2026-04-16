@@ -182,3 +182,8 @@ class FileStatus(str, Enum):
     Complete = "Complete"
     Partial = "Partial"
     Failed = "Failed"
+
+
+class Bucket(str, Enum):
+    BuyFile = settings.s3_bucket_name
+    BuyFileError = settings.error_s3_bucket_name

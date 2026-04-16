@@ -1,5 +1,12 @@
+import asyncio
+import io
 from typing import List
 
+from botocore.exceptions import ClientError
+
+from app import constant
+from common.file_storage import AbstractFileStorage
+from common.schema_types import Bucket
 from repository.common.common_repository_interface import CommonRepositoryInterface
 from schema.common.common import (
     BranchItem,
@@ -15,8 +22,15 @@ from services.common.common_service_interface import CommonServiceInterface
 
 
 class CommonService(CommonServiceInterface):
-    def __init__(self, common_repository: CommonRepositoryInterface) -> None:
+    def __init__(
+        self,
+        common_repository: CommonRepositoryInterface,
+        file_storage: AbstractFileStorage,
+        error_file_storage: AbstractFileStorage,
+    ) -> None:
         self.common_repository = common_repository
+        self.file_storage = file_storage
+        self.error_file_storage = error_file_storage
 
     async def get_source(
         self,
@@ -169,3 +183,24 @@ class CommonService(CommonServiceInterface):
         return await self.common_repository.get_total_city(
             state_id=state_id, search=search
         )
+
+    async def download_s3_file(
+        self,
+        s3_key: str,
+        bucket: Bucket,
+    ) -> int:
+        try:
+            file_obj = io.BytesIO()
+
+            if bucket == Bucket.BuyFile.value:
+                await asyncio.to_thread(
+                    self.file_storage.download_file, s3_key, file_obj
+                )
+            else:
+                await asyncio.to_thread(
+                    self.error_file_storage.download_file, s3_key, file_obj
+                )
+            file_obj.seek(0)
+            return file_obj, s3_key
+        except ClientError:
+            raise ValueError(constant.MISSINGFILES)

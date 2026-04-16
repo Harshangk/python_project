@@ -1,14 +1,17 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi.responses import StreamingResponse
 
 from api.common import deps
 from api.deps import get_authenticated_user, get_trace_id
+from app import constant
 from app.core.logging import logger
 from auth.dto import AuthenticatedUser
 from common.cursor_pagination import build_next_page_url, normalize_limit
 from common.schema_types import (
     STAGE_DISPOSITION_MAP,
+    Bucket,
     BuyMode,
     BuyStage,
     Color,
@@ -77,6 +80,11 @@ async def get_preferred_time(trace_id: UUID = Depends(get_trace_id)):
     return [{"value": t, "label": t} for t in generate_time_slots()]
 
 
+@router.get("/bucket")
+def get_bucket_name(trace_id: UUID = Depends(get_trace_id)):
+    return enum_to_dict_list(Bucket)
+
+
 # Optional: Single API for all enums
 @router.get("/all")
 def get_all_enums(trace_id: UUID = Depends(get_trace_id)):
@@ -86,6 +94,7 @@ def get_all_enums(trace_id: UUID = Depends(get_trace_id)):
         "fuelType": enum_to_dict_list(FuelType),
         "owner": enum_to_dict_list(Owner),
         "buyStage": enum_to_dict_list(BuyStage),
+        "bucket": enum_to_dict_list(Bucket),
     }
 
 
@@ -348,3 +357,33 @@ async def get_city(
         next_url = build_next_page_url(request, last_id, limit)
 
     return CityList(total=total, limit=limit, next=next_url, items=city)
+
+
+@router.get("/import/{s3_key:path}/download")
+async def download_import_file(
+    request: Request,
+    s3_key: str,
+    bucket: Bucket,
+    commmon_service: CommonServiceInterface = Depends(deps.common_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+):
+    try:
+        logger.info(
+            f"request:{request},current_user:{current_user},bucket:{bucket.value}"
+        )
+
+        file_obj, s3_key = await commmon_service.download_s3_file(s3_key, bucket.value)
+        filename = s3_key.split("/")[-1]
+
+        return StreamingResponse(
+            file_obj,
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except ValueError as ex:
+        logger.error(f"Validation error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
