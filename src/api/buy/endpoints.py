@@ -549,5 +549,5 @@ async def get_buy_import_lead_by_id(
         logger.error(f"ValueError error: {ex}")
         raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
     except Exception as ex:
-        logger.error(f"Exception error : {ex}")
+        logger.error(f"Exception error: {ex}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
