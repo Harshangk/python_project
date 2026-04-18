@@ -1,6 +1,6 @@
 from app import constant
 from app.core.logging import logger
-from common.schema_types import BuyStatus, clean_str, to_int
+from common.schema_types import BuyStatus, clean_str, to_int, validate_mobile
 from model.buy.buy import BuyLead
 
 
@@ -11,6 +11,7 @@ def transform(
     created_by: str,
     make_map: dict,
     model_map: dict,
+    branch_map: dict,
 ) -> tuple[BuyLead | None, str | None]:
     # dict | None:
     try:
@@ -27,6 +28,7 @@ def transform(
 
         make_name = cleaned["make"]
         model_name = cleaned["model"]
+        branch_name = cleaned["branch"]
 
         make_id = make_map.get(make_name.lower())
         if not make_id:
@@ -34,12 +36,16 @@ def transform(
 
         model_id = model_map.get((model_name.lower(), make_id))
         if not model_id:
-            raise ValueError(f"{constant.WRONGVALUES} : {model_name} - {make_name}")
+            raise ValueError(f"{constant.WRONGVALUES} : {make_name} - {model_name}")
+
+        branch_id = branch_map.get(branch_name.lower())
+        if not branch_id:
+            raise ValueError(f"{constant.WRONGVALUES} : {branch_name}")
 
         return (
             BuyLead(
-                branch=cleaned["branch"],
-                mobile=cleaned["mobile"],
+                branch=branch_name,
+                mobile=validate_mobile(cleaned["mobile"]),
                 mode=cleaned["mode"],
                 customer_name=cleaned["customer_name"],
                 make_id=make_id,

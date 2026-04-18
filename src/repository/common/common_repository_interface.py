@@ -74,6 +74,10 @@ class CommonRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def get_branch_map(self) -> dict:
+        pass
+
+    @abstractmethod
     async def get_total_branch(self, search: str | None = None) -> int:
         pass
 

@@ -17,7 +17,14 @@ from api.buy.example import (
     BUY_LEAD_FOLLOWUP,
     UPDATE_LEAD,
 )
-from common.schema_types import BuyMode, CamelBaseModel, Color, FileStatus, FuelType
+from common.schema_types import (
+    BuyMode,
+    CamelBaseModel,
+    Color,
+    FileStatus,
+    FuelType,
+    validate_mobile,
+)
 from model.buy import buy as BuyModel
 
 
@@ -63,11 +70,7 @@ class CreateBuyLead(CamelBaseModel):
 
     @field_validator("mobile")
     def validate_mobile(cls, v):
-        if not (10 <= len(v) <= 15):
-            raise ValueError("Mobile number must be between 10 and 15 digits")
-        if not v.isdigit():
-            raise ValueError("Mobile must contain only digits")
-        return v
+        return validate_mobile(v)
 
     class config:
         schema_extra = {"example": BUY_LEAD}

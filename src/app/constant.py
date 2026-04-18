@@ -15,6 +15,10 @@ FILENAME = "file name missing."
 FILELARGE = "file too large."
 EXTENSION = "only csv allowed."
 
+MOBILEERROR = (
+    "Mobile number must be between 10 and 15 digits, Mobile must contain only digits."
+)
+
 VALUEERROR = "validation error."
 EXCEPTION = "server error."
 

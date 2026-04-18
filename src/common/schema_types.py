@@ -7,7 +7,14 @@ from typing import TypeVar
 from fastapi import HTTPException, status
 from pydantic import BaseModel as PydanticBaseModel
 
-from app.constant import EXTENSION, FILELARGE, FILENAME, INVALIDCSV, MISSINGCOLUMNS
+from app.constant import (
+    EXTENSION,
+    FILELARGE,
+    FILENAME,
+    INVALIDCSV,
+    MISSINGCOLUMNS,
+    MOBILEERROR,
+)
 from app.core.config import settings
 
 
@@ -64,6 +71,14 @@ async def validate_csv_headers(file_bytes: bytes, required_columns: set):
 
     if missing_columns:
         raise ValueError(status.HTTP_400_BAD_REQUEST, MISSINGCOLUMNS)
+
+
+def validate_mobile(v: str) -> str:
+    if not (10 <= len(v) <= 15):
+        raise ValueError(MOBILEERROR)
+    if not v.isdigit():
+        raise ValueError(MOBILEERROR)
+    return v
 
 
 def clean_str(value: str | None) -> str | None:

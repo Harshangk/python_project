@@ -319,6 +319,18 @@ class CommonRepository(CommonRepositoryInterface):
         rows = result.mappings().all()
         return rows
 
+    async def get_branch_map(self) -> dict:
+        stmt = select(
+            mstbranch.c.id,
+            mstbranch.c.branch,
+            mstbranch.c.created_at,
+            mstbranch.c.created_by,
+        ).where(mstbranch.c.is_active)
+
+        result = await self.session.execute(stmt)
+        rows = result.mappings().all()
+        return {r["branch"].strip().lower(): r["id"] for r in rows}
+
     async def get_total_branch(self, search: str | None = None) -> int:
         query = select(func.count()).select_from(mstbranch).where(mstbranch.c.is_active)
 
