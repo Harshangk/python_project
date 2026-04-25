@@ -408,7 +408,7 @@ class ImportBuyLeadRequest(CamelBaseModel):
 
     @field_validator("broker_name")
     @classmethod
-    def validate_brokername(cls, v):
+    def validate_broker_name(cls, v):
         if v:
             return v.strip()
         return v
@@ -418,7 +418,7 @@ class ImportBuyLeadRequest(CamelBaseModel):
         if self.source.strip().lower() == "broker" and not self.broker_name:
             raise ValueError(BROKERINVALID)
         if self.source.strip().lower() != "broker":
-            self.brokername = None
+            self.broker_name = None
         return self
 
 

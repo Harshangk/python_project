@@ -120,11 +120,13 @@ def downgrade() -> None:
 # ('SLA & Escalation', NULL, '/sla', 6, 12),
 # ('Automation', NULL, '/automation', 6, 13),
 # ('Buy', 'ShoppingCart', NULL, NULL, 14),
-# ('Untouched', NULL, '/leads/untouchedlist', 14, 15),
-# ('Re-Allocation', NULL, '/leads/reallocationlist', 14, 16),
-# ('Followup', NULL, '/leads/buyleadfollowuplist', 14, 17),
-# ('Sale', 'TrendingUp', NULL, NULL, 18),
-# ('Untouched', NULL, '/leads/untouched', 18, 19);
+# ('Tracker', NULL, '/leads/buyleadtracker', 14, 15),
+# ('Buy Lead: Bulk', NULL, '/leads/buyleadimport', 14, 16),
+# ('Untouched', NULL, '/leads/untouchedlist', 14, 17),
+# ('Re-Allocation', NULL, '/leads/reallocationlist', 14, 18),
+# ('Followup', NULL, '/leads/buyleadfollowuplist', 14, 19),
+# ('Sale', 'TrendingUp', NULL, NULL, 20),
+# ('Untouched', NULL, '/leads/untouched', 20, 21);
 
 
 # insert into maprolemenu
