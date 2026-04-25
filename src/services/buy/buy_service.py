@@ -262,8 +262,9 @@ class BuyService(BuyServiceInterface):
         self,
         file_uuid,
         s3_key: str,
-        source: str,
         created_by: str,
+        source: str,
+        broker_name: str | None = None,
     ):
         try:
             reader = await self._get_csv_reader(s3_key)
@@ -271,7 +272,14 @@ class BuyService(BuyServiceInterface):
             make_map, model_map, branch_map = await self._load_mappings()
 
             processed_records, error_records, error_rows = await self._process_rows(
-                reader, file_uuid, source, created_by, make_map, model_map, branch_map
+                reader,
+                file_uuid,
+                source,
+                broker_name,
+                created_by,
+                make_map,
+                model_map,
+                branch_map,
             )
 
             error_file_key = await self._upload_error_file(file_uuid, error_rows)
@@ -315,6 +323,7 @@ class BuyService(BuyServiceInterface):
         reader,
         file_uuid,
         source,
+        broker_name,
         created_by,
         make_map,
         model_map,
@@ -331,7 +340,14 @@ class BuyService(BuyServiceInterface):
         for row in reader:
             try:
                 transformed, error = transform(
-                    row, file_uuid, source, created_by, make_map, model_map, branch_map
+                    row,
+                    file_uuid,
+                    created_by,
+                    make_map,
+                    model_map,
+                    branch_map,
+                    source,
+                    broker_name,
                 )
 
                 if transformed:

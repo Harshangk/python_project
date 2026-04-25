@@ -7,11 +7,12 @@ from model.buy.buy import BuyLead
 def transform(
     row: dict,
     import_id,
-    source: str,
     created_by: str,
     make_map: dict,
     model_map: dict,
     branch_map: dict,
+    source: str,
+    broker_name: str | None = None,
 ) -> tuple[BuyLead | None, str | None]:
     # dict | None:
     try:
@@ -59,6 +60,7 @@ def transform(
                 remarks=constant.REMARKS,
                 import_id=import_id,
                 source=source,
+                broker_name=broker_name,
                 status=BuyStatus.NotAllocated.value,
                 created_by=created_by,
             ),

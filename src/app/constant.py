@@ -43,6 +43,8 @@ BUYREQUIREDINTCOLUMS = {
     "our_offer",
 }  # noqa
 
+SOURCEINVALID = "Source required."
+BROKERINVALID = "Broker/Dealer required."
 INVALIDCSV = "Invalid CSV file or missing header."
 MISSINGCOLUMNS = "Missing required columns."
 MISSINGVALUES = "Missing required columns value."

@@ -15,6 +15,7 @@ from fastapi import (
 )
 
 from api.buy import deps, example
+from api.common.deps import common_service
 from api.deps import get_authenticated_user, get_trace_id
 from app import constant
 from app.core.config import settings
@@ -42,10 +43,12 @@ from schema.buy.buy import (
     BuyLeadSortBy,
     CreateBuyLead,
     CreateBuyLeadFollowup,
+    ImportBuyLeadRequest,
     Response,
     UpdateBuyLead,
 )
 from services.buy.buy_service_interface import BuyServiceInterface
+from services.common.common_service_interface import CommonServiceInterface
 
 router = APIRouter(prefix="/buy", tags=["buy"])
 
@@ -412,12 +415,23 @@ async def import_buy_lead(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     source: str = Form(...),
+    broker_name: str | None = Form(None),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    commmon_service: CommonServiceInterface = Depends(common_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ) -> Response:
     logger.info(f"request: {request}, user: {current_user}, filename: {file.filename}")
     try:
+        data = ImportBuyLeadRequest(source=source, broker_name=broker_name)
+
+        if not await commmon_service.validate_source(data.source):
+            raise HTTPException(status_code=400, detail="Invalid source")
+
+        if data.source.lower() == "broker":
+            if not await commmon_service.validate_broker(data.broker_name):
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.BROKERINVALID)
+
         file_uuid = uuid4()
         filename = file.filename.strip()
         file_bytes = await file.read()
@@ -445,8 +459,9 @@ async def import_buy_lead(
             buy_service.process_file,
             file_uuid,
             s3_key,
-            source,
             current_user.user_name,
+            data.source,
+            data.broker_name,
         )
     except HTTPException as ex:
         logger.error(

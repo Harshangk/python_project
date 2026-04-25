@@ -49,6 +49,9 @@ class CommonService(CommonServiceInterface):
     async def get_total_source(self, search: str | None = None) -> int:
         return await self.common_repository.get_total_source(search)
 
+    async def validate_source(self, source: str | None = None) -> bool:
+        return await self.common_repository.validate_source(source)
+
     async def get_make(
         self,
         cursor: int | None,
@@ -126,6 +129,9 @@ class CommonService(CommonServiceInterface):
 
     async def get_total_broker(self, search: str | None = None) -> int:
         return await self.common_repository.get_total_broker(search)
+
+    async def validate_broker(self, broker: str | None = None) -> bool:
+        return await self.common_repository.validate_broker(broker)
 
     async def get_year(
         self,

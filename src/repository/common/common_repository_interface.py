@@ -20,6 +20,10 @@ class CommonRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def validate_source(self, source: str | None = None) -> bool:
+        pass
+
+    @abstractmethod
     async def get_make(
         self,
         cursor: Optional[int],
@@ -94,6 +98,10 @@ class CommonRepositoryInterface(ABC):
 
     @abstractmethod
     async def get_total_broker(self, search: str | None = None) -> int:
+        pass
+
+    @abstractmethod
+    async def validate_broker(self, broker: str | None = None) -> bool:
         pass
 
     @abstractmethod

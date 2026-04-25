@@ -140,6 +140,11 @@ class CommonRepository(CommonRepositoryInterface):
         result = await self.session.execute(query)
         return result.scalar_one()
 
+    async def validate_source(self, source: str | None = None) -> bool:
+        query = select(mstsource.c.id).where(mstsource.c.source == source)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none() is not None
+
     async def get_make(
         self,
         cursor: int | None,
@@ -390,6 +395,11 @@ class CommonRepository(CommonRepositoryInterface):
 
         result = await self.session.execute(query)
         return result.scalar_one()
+
+    async def validate_broker(self, broker: str | None = None) -> bool:
+        query = select(mstbroker.c.id).where(mstbroker.c.broker == broker)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none() is not None
 
     async def get_year(
         self,

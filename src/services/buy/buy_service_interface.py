@@ -142,8 +142,9 @@ class BuyServiceInterface(ABC):
     async def process_file(
         self,
         file_uuid: UUID,
-        source: str,
         created_by: str,
+        source: str,
+        broker_name: str | None = None,
     ) -> int:
         pass
 

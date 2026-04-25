@@ -17,6 +17,7 @@ from api.buy.example import (
     BUY_LEAD_FOLLOWUP,
     UPDATE_LEAD,
 )
+from app.constant import BROKERINVALID, SOURCEINVALID
 from common.schema_types import (
     BuyMode,
     CamelBaseModel,
@@ -392,6 +393,33 @@ class BuyLeadFollowupDetail(CamelBaseModel):
     alternate_mobile: str | None = None
     broker_name: str | None = None
     lead_address: LeadAddress | None = None
+
+
+class ImportBuyLeadRequest(CamelBaseModel):
+    source: str = Field(..., max_length=50)
+    broker_name: str | None = Field(None, max_length=255)
+
+    @field_validator("source")
+    @classmethod
+    def validate_source_not_empty(cls, v: str):
+        if not v.strip():
+            raise ValueError(SOURCEINVALID)
+        return v.strip()
+
+    @field_validator("broker_name")
+    @classmethod
+    def validate_brokername(cls, v):
+        if v:
+            return v.strip()
+        return v
+
+    @model_validator(mode="after")
+    def validate_broker_requirement(self):
+        if self.source.strip().lower() == "broker" and not self.broker_name:
+            raise ValueError(BROKERINVALID)
+        if self.source.strip().lower() != "broker":
+            self.brokername = None
+        return self
 
 
 class BuyLeadImportItem(CamelBaseModel):
