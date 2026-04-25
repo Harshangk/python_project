@@ -487,6 +487,7 @@ class BuyRepository(BuyRepositoryInterface):
                     "disposition": BuyDisposition.Fresh.value,
                     "calldate": func.now(),
                     "notes": BuyStage.Fresh.value,
+                    "created_by": created_by,
                 }
                 for lead_id in allocate.lead_ids
             ]
