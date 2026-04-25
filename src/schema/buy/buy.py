@@ -244,12 +244,14 @@ class AllocateLeadsRequest(CamelBaseModel):
 class LeadFollowup(CamelBaseModel):
     stage: str = Field(..., min_length=1, max_length=25)
     disposition: str = Field(..., min_length=1, max_length=50)
-    calldate: datetime
+    calldate: datetime | None = None
     preferred_time: str | None = Field(None, max_length=20)
     notes: str = Field(..., min_length=1, max_length=500)
 
     @field_validator("calldate")
     def remove_timezone(cls, v):
+        if v is None:
+            return None
         return v.replace(tzinfo=None) if v.tzinfo else v
 
 

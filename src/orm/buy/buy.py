@@ -78,7 +78,7 @@ tblbuylead_followup = Table(
     Column("buylead_id", Integer, ForeignKey("tblbuylead.id"), nullable=False),
     Column("stage", String(25), nullable=False),
     Column("disposition", String(50), nullable=False),
-    Column("calldate", DateTime, nullable=False),
+    Column("calldate", DateTime, nullable=True),
     Column("preferred_time", String(20), nullable=True),
     Column("notes", String(500), nullable=False),
     Column("created_at", DateTime, server_default=text("now()"), nullable=False),

@@ -71,7 +71,7 @@ class _BuyLeadFollowup:
     stage: str
     disposition: str
     notes: str
-    calldate: datetime
+    calldate: datetime | None = None
     preferred_time: str | None = None
 
 

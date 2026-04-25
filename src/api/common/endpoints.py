@@ -66,7 +66,11 @@ def get_owner(trace_id: UUID = Depends(get_trace_id)):
 
 @router.get("/buy-stage")
 def get_buy_stage(trace_id: UUID = Depends(get_trace_id)):
-    return enum_to_dict_list(BuyStage)
+    return [
+        {"value": item.value, "label": item.value}
+        for item in BuyStage
+        if item != BuyStage.Fresh
+    ]
 
 
 @router.get("/buy-stage/{stage}/disposition")
