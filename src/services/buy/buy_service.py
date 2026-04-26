@@ -59,7 +59,27 @@ class BuyService(BuyServiceInterface):
         rows = await self.buy_repository.get_lead(
             cursor, limit, search, buy_status, sort_by, sort_order
         )
-        leads = [BuyLeadItem(**row) for row in rows]
+        leads = []
+
+        followup_fields = set(LeadFollowup.model_fields)
+
+        for row in rows:
+            # Extract followup data
+            lead_followup_data = {
+                k: row[k] for k in followup_fields if k in row and row[k] is not None
+            }
+
+            lead_followup = (
+                LeadFollowup(**lead_followup_data) if lead_followup_data else None
+            )
+
+            # Remaining fields
+            item_data = {k: v for k, v in row.items() if k not in followup_fields}
+
+            item_data["lead_followup"] = lead_followup
+
+            leads.append(BuyLeadItem(**item_data))
+
         return leads
 
     async def get_total_lead(

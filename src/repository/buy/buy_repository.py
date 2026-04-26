@@ -50,15 +50,23 @@ LEAD_SORTABLE_COLUMNS = {
 
 LEAD_COLUMNS = [
     tblbuylead.c.id,
-    tblbuylead.c.branch,
+    tblbuylead.c.status,
     tblbuylead.c.mobile,
     tblbuylead.c.alternate_mobile,
+    tblbuylead.c.customer_name,
+    tblbuylead_followup.c.stage,
+    tblbuylead_followup.c.disposition,
+    tblbuylead_followup.c.calldate,
+    tblbuylead_followup.c.preferred_time,
+    tblbuylead_followup.c.notes,
+    tblbuylead.c.branch,
     tblbuylead.c.source,
     tblbuylead.c.mode,
     tblbuylead.c.broker_name,
-    tblbuylead.c.customer_name,
     tblbuylead.c.make_id,
     tblbuylead.c.model_id,
+    mstmake.c.make,
+    mstmodel.c.model,
     tblbuylead.c.variant,
     tblbuylead.c.color,
     tblbuylead.c.fuel_type,
@@ -67,21 +75,20 @@ LEAD_COLUMNS = [
     tblbuylead.c.owner,
     tblbuylead.c.client_offer,
     tblbuylead.c.our_offer,
-    tblbuylead.c.status,
     tblbuylead.c.telecaller,
     tblbuylead.c.executive,
-    tblbuylead.c.remarks,
     tblbuylead.c.allocated_at,
     tblbuylead.c.allocated_by,
     tblbuylead.c.created_at,
     tblbuylead.c.created_by,
-    mstmake.c.make,
-    mstmodel.c.model,
+    tblbuylead.c.remarks,
     tblbuylead_address.c.address,
     tblbuylead_address.c.state,
     tblbuylead_address.c.city,
     tblbuylead_address.c.area,
     tblbuylead_address.c.pincode,
+    tblbuylead_followup.c.created_at.label("followupCreatedAt"),
+    tblbuylead_followup.c.created_by.label("followupCreatedBy"),
 ]
 
 FOLLOWUP_LEAD_SEARCHABLE_COLUMNS = {
@@ -324,6 +331,9 @@ class BuyRepository(BuyRepositoryInterface):
             .join(mstmake, tblbuylead.c.make_id == mstmake.c.id)
             .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
             .outerjoin(
+                tblbuylead_followup, tblbuylead.c.id == tblbuylead_followup.c.buylead_id
+            )
+            .outerjoin(
                 tblbuylead_address, tblbuylead.c.id == tblbuylead_address.c.buylead_id
             )
             .where(tblbuylead.c.is_active)
@@ -387,6 +397,9 @@ class BuyRepository(BuyRepositoryInterface):
             .select_from(tblbuylead)
             .join(mstmake, tblbuylead.c.make_id == mstmake.c.id)
             .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
+            .outerjoin(
+                tblbuylead_followup, tblbuylead.c.id == tblbuylead_followup.c.buylead_id
+            )
             .outerjoin(
                 tblbuylead_address, tblbuylead.c.id == tblbuylead_address.c.buylead_id
             )
@@ -651,6 +664,7 @@ class BuyRepository(BuyRepositoryInterface):
             .where(
                 tblbuylead.c.is_active,
                 tblbuylead.c.status != BuyStatus.NotAllocated.value,
+                tblbuylead.c.status != BuyStatus.Lost.value,
             )
         )
         if role_id != 1:
@@ -713,7 +727,13 @@ class BuyRepository(BuyRepositoryInterface):
             .join(
                 tblbuylead_followup, tblbuylead.c.id == tblbuylead_followup.c.buylead_id
             )
-            .where(tblbuylead.c.is_active)
+            .outerjoin(
+                tblbuylead_address, tblbuylead.c.id == tblbuylead_address.c.buylead_id
+            )
+            .where(
+                tblbuylead.c.is_active,
+                tblbuylead.c.status != BuyStatus.NotAllocated.value,
+            )
         )
         if role_id != 1:
             stmt = stmt.where(

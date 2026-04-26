@@ -168,17 +168,33 @@ class UpdateBuyLead(CamelBaseModel):
         )
 
 
+class LeadFollowup(CamelBaseModel):
+    stage: str = Field(..., min_length=1, max_length=25)
+    disposition: str = Field(..., min_length=1, max_length=50)
+    calldate: datetime | None = None
+    preferred_time: str | None = Field(None, max_length=20)
+    notes: str = Field(..., min_length=1, max_length=500)
+
+    @field_validator("calldate")
+    def remove_timezone(cls, v):
+        if v is None:
+            return None
+        return v.replace(tzinfo=None) if v.tzinfo else v
+
+
 class BuyLeadItem(CamelBaseModel):
     id: int
-    branch: str
+    status: str
     mobile: str
-    alternate_mobile: str | None = None
+    customer_name: str
+    lead_followup: LeadFollowup | None = None
+    branch: str
     source: str
     mode: BuyMode
-    broker_name: str | None = None
-    customer_name: str
     make_id: int
+    make: str
     model_id: int
+    model: str
     variant: str | None = None
     color: Color | None = None
     fuel_type: FuelType
@@ -187,16 +203,17 @@ class BuyLeadItem(CamelBaseModel):
     owner: str
     client_offer: int
     our_offer: int
-    status: str
-    telecaller: str | None = None
-    executive: str | None = None
-    remarks: str
-    allocated_at: datetime | None = None
-    allocated_by: str | None = None
     created_at: datetime
     created_by: str
-    make: str
-    model: str
+    remarks: str
+    telecaller: str | None = None
+    executive: str | None = None
+    alternate_mobile: str | None = None
+    broker_name: str | None = None
+    allocated_at: datetime | None = None
+    allocated_by: str | None = None
+    followup_created_at: datetime | None = None
+    followup_created_by: str | None = None
     lead_address: LeadAddress | None = None
 
 
@@ -239,20 +256,6 @@ class AllocateLeadsRequest(CamelBaseModel):
             telecaller=self.telecaller,
             executive=self.executive,
         )
-
-
-class LeadFollowup(CamelBaseModel):
-    stage: str = Field(..., min_length=1, max_length=25)
-    disposition: str = Field(..., min_length=1, max_length=50)
-    calldate: datetime | None = None
-    preferred_time: str | None = Field(None, max_length=20)
-    notes: str = Field(..., min_length=1, max_length=500)
-
-    @field_validator("calldate")
-    def remove_timezone(cls, v):
-        if v is None:
-            return None
-        return v.replace(tzinfo=None) if v.tzinfo else v
 
 
 class CreateBuyLeadFollowup(CamelBaseModel):
@@ -355,6 +358,7 @@ class BuyLeadFollowupItem(CamelBaseModel):
     created_by: str
     followup_created_at: datetime
     followup_created_by: str
+    lead_address: LeadAddress | None = None
 
 
 class BuyLeadFollowupList(CamelBaseModel):
