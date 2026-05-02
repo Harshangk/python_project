@@ -8,7 +8,13 @@ from sqlalchemy.orm import Session
 
 from app import constant
 from auth.exceptions import AllocationError, CreationError, NotFound
-from common.schema_types import BuyDisposition, BuyStage, BuyStatus, FileStatus
+from common.schema_types import (
+    BuyDisposition,
+    BuyStage,
+    BuyStatus,
+    Category,
+    FileStatus,
+)
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
 from model.buy.buy import BuyLeadFile, BuyLeadFollowup, BuyLeadFollowupDetail
@@ -63,6 +69,9 @@ LEAD_COLUMNS = [
     tblbuylead.c.source,
     tblbuylead.c.mode,
     tblbuylead.c.broker_name,
+    tblbuylead.c.category,
+    tblbuylead.c.owner_name,
+    tblbuylead.c.payment_name,
     tblbuylead.c.make_id,
     tblbuylead.c.model_id,
     mstmake.c.make,
@@ -197,7 +206,10 @@ class BuyRepository(BuyRepositoryInterface):
                     source=lead.source,
                     mode=lead.mode.value,
                     broker_name=lead.broker_name,
+                    category=Category.Individual.value,
                     customer_name=lead.customer_name,
+                    owner_name=lead.customer_name,
+                    payment_name=lead.customer_name,
                     make_id=lead.make_id,
                     model_id=lead.model_id,
                     variant=lead.variant,

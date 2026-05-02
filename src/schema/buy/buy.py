@@ -21,6 +21,7 @@ from app.constant import BROKERINVALID, SOURCEINVALID
 from common.schema_types import (
     BuyMode,
     CamelBaseModel,
+    Category,
     Color,
     FileStatus,
     FuelType,
@@ -187,10 +188,13 @@ class BuyLeadItem(CamelBaseModel):
     status: str
     mobile: str
     customer_name: str
+    owner_name: str
+    payment_name: str
     lead_followup: LeadFollowup | None = None
     branch: str
     source: str
     mode: BuyMode
+    category: Category
     make_id: int
     make: str
     model_id: int

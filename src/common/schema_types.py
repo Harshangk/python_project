@@ -165,6 +165,11 @@ class BuyMode(str, Enum):
     NotInspected = "NotInspected"
 
 
+class Category(str, Enum):
+    Individual = "Individual"
+    Corporate = "Corporate"
+
+
 class Color(str, Enum):
     Black = "Black"
     White = "White"

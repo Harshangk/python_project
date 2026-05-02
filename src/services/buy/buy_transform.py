@@ -1,6 +1,6 @@
 from app import constant
 from app.core.logging import logger
-from common.schema_types import BuyStatus, clean_str, to_int, validate_mobile
+from common.schema_types import BuyStatus, Category, clean_str, to_int, validate_mobile
 from model.buy.buy import BuyLead
 
 
@@ -48,7 +48,10 @@ def transform(
                 branch=branch_name,
                 mobile=validate_mobile(cleaned["mobile"]),
                 mode=cleaned["mode"],
+                category=Category.Individual.value,
                 customer_name=cleaned["customer_name"],
+                owner_name=cleaned["customer_name"],
+                payment_name=cleaned["customer_name"],
                 make_id=make_id,
                 model_id=model_id,
                 fuel_type=cleaned["fuel_type"],

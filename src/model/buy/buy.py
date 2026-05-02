@@ -4,7 +4,14 @@ from uuid import UUID
 
 from pydantic.dataclasses import dataclass
 
-from common.schema_types import BuyMode, BuyStatus, Color, FileStatus, FuelType
+from common.schema_types import (
+    BuyMode,
+    BuyStatus,
+    Category,
+    Color,
+    FileStatus,
+    FuelType,
+)
 
 
 @dataclass
@@ -22,7 +29,10 @@ class BuyLead:
     mobile: str
     source: str
     mode: BuyMode
+    category: Category
     customer_name: str
+    owner_name: str
+    payment_name: str
     make_id: int
     model_id: int
     fuel_type: FuelType
