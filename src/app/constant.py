@@ -30,7 +30,7 @@ BUYREQUIREDCOLUMS = {
     "make",
     "model",
     "fuel_type",
-    "year",
+    "mfg_year",
     "kms",
     "owner",
     "client_offer",

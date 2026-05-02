@@ -14,6 +14,7 @@ from common.schema_types import (
     Bucket,
     BuyMode,
     BuyStage,
+    Category,
     Color,
     FuelType,
     Owner,
@@ -64,6 +65,11 @@ def get_owner(trace_id: UUID = Depends(get_trace_id)):
     return enum_to_dict_list(Owner)
 
 
+@router.get("/category")
+def get_category(trace_id: UUID = Depends(get_trace_id)):
+    return enum_to_dict_list(Category)
+
+
 @router.get("/buy-stage")
 def get_buy_stage(trace_id: UUID = Depends(get_trace_id)):
     return [
@@ -99,6 +105,7 @@ def get_all_enums(trace_id: UUID = Depends(get_trace_id)):
         "owner": enum_to_dict_list(Owner),
         "buyStage": enum_to_dict_list(BuyStage),
         "bucket": enum_to_dict_list(Bucket),
+        "category": enum_to_dict_list(Category),
     }
 
 

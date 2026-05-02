@@ -36,7 +36,7 @@ class BuyLead:
     make_id: int
     model_id: int
     fuel_type: FuelType
-    year: str
+    mfg_year: str
     kms: int
     owner: str
     client_offer: int
@@ -63,7 +63,7 @@ class UpdateLead:
     make_id: int
     model_id: int
     fuel_type: FuelType
-    year: str
+    mfg_year: str
     kms: int
     owner: str
     client_offer: int
@@ -95,7 +95,7 @@ class BuyLeadFollowup:
     make_id: int
     model_id: int
     fuel_type: FuelType
-    year: str
+    mfg_year: str
     kms: int
     owner: str
     client_offer: int
@@ -123,7 +123,7 @@ class BuyLeadFollowupDetail:
     make_id: int
     model_id: int
     fuel_type: FuelType
-    year: str
+    mfg_year: str
     kms: int
     owner: str
     client_offer: int

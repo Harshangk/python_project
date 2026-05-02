@@ -45,7 +45,7 @@ def upgrade() -> None:
         sa.Column("variant", sa.String(255), nullable=True),
         sa.Column("color", sa.String(50), nullable=True),
         sa.Column("fuel_type", sa.String(50), nullable=False),
-        sa.Column("year", sa.String(4), nullable=False),
+        sa.Column("mfg_year", sa.String(4), nullable=False),
         sa.Column("kms", sa.Integer(), nullable=False),
         sa.Column("owner", sa.String(1), nullable=False),
         sa.Column(

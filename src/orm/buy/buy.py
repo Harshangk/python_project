@@ -36,7 +36,7 @@ tblbuylead = Table(
     Column("variant", String(255), nullable=True),
     Column("color", String(50), nullable=True),
     Column("fuel_type", String(50), nullable=False),
-    Column("year", String(4), nullable=False),
+    Column("mfg_year", String(4), nullable=False),
     Column("kms", Integer, nullable=False),
     Column("owner", String(1), nullable=False),
     Column("client_offer", Integer, server_default=text("0"), nullable=False),

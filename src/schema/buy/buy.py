@@ -61,7 +61,7 @@ class CreateBuyLead(CamelBaseModel):
     variant: str | None = Field(None, max_length=255)
     color: Annotated[Color | None, BeforeValidator(empty_to_none)] = None
     fuel_type: FuelType
-    year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+    mfg_year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
     kms: int
     owner: str = Field(..., min_length=1, max_length=1)
     client_offer: int
@@ -92,7 +92,7 @@ class CreateBuyLead(CamelBaseModel):
             variant=self.variant,
             color=self.color,
             fuel_type=self.fuel_type,
-            year=self.year,
+            mfg_year=self.mfg_year,
             kms=self.kms,
             owner=self.owner,
             client_offer=self.client_offer,
@@ -126,7 +126,7 @@ class UpdateBuyLead(CamelBaseModel):
     variant: str | None = Field(None, max_length=255)
     color: Annotated[Color | None, BeforeValidator(empty_to_none)] = None
     fuel_type: FuelType
-    year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+    mfg_year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
     kms: int
     owner: str = Field(..., min_length=1, max_length=1)
     client_offer: int
@@ -149,7 +149,7 @@ class UpdateBuyLead(CamelBaseModel):
             variant=self.variant,
             color=self.color,
             fuel_type=self.fuel_type,
-            year=self.year,
+            mfg_year=self.mfg_year,
             kms=self.kms,
             owner=self.owner,
             client_offer=self.client_offer,
@@ -202,7 +202,7 @@ class BuyLeadItem(CamelBaseModel):
     variant: str | None = None
     color: Color | None = None
     fuel_type: FuelType
-    year: str
+    mfg_year: str
     kms: int
     owner: str
     client_offer: int
@@ -235,7 +235,7 @@ class BuyLeadSortBy(str, Enum):
     mode = "mode"
     make_id = "make"
     model_id = "model"
-    year = "year"
+    mfg_year = "mfg_year"
     kms = "kms"
 
 
@@ -275,7 +275,7 @@ class CreateBuyLeadFollowup(CamelBaseModel):
     variant: str | None = Field(None, max_length=255)
     color: Annotated[Color | None, BeforeValidator(empty_to_none)] = None
     fuel_type: FuelType
-    year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+    mfg_year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
     kms: int
     owner: str = Field(..., min_length=1, max_length=1)
     client_offer: int
@@ -301,7 +301,7 @@ class CreateBuyLeadFollowup(CamelBaseModel):
             variant=self.variant,
             color=self.color,
             fuel_type=self.fuel_type,
-            year=self.year,
+            mfg_year=self.mfg_year,
             kms=self.kms,
             owner=self.owner,
             client_offer=self.client_offer,
@@ -347,7 +347,7 @@ class BuyLeadFollowupItem(CamelBaseModel):
     variant: str | None = None
     color: Color | None = None
     fuel_type: FuelType
-    year: str
+    mfg_year: str
     kms: int
     owner: str
     client_offer: int
@@ -384,7 +384,7 @@ class BuyLeadFollowupDetail(CamelBaseModel):
     make_id: int
     model_id: int
     fuel_type: FuelType
-    year: str
+    mfg_year: str
     kms: int
     owner: str
     client_offer: int

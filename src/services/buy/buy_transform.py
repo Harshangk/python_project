@@ -55,7 +55,7 @@ def transform(
                 make_id=make_id,
                 model_id=model_id,
                 fuel_type=cleaned["fuel_type"],
-                year=cleaned["year"],
+                mfg_year=cleaned["mfg_year"],
                 kms=cleaned["kms"],
                 owner=cleaned["owner"],
                 client_offer=cleaned["client_offer"],
