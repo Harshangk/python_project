@@ -25,6 +25,7 @@ from auth.exceptions import CreationError, NotFound
 from common.csv_utils import stream_csv
 from common.cursor_pagination import build_next_page_url, normalize_limit
 from common.schema_types import (
+    BuyStage,
     BuyStatus,
     FileStatus,
     SortOrder,
@@ -292,6 +293,37 @@ async def reallocate_leads(
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
 
 
+@router.patch(
+    "/reopen",
+    response_model=Response,
+    status_code=status.HTTP_200_OK,
+)
+async def reopen_leads(
+    request: Request,
+    reopen: AllocateLeadsRequest = Body(..., example=example.BUY_LEAD_ALLOCATION),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> Response:
+    logger.info(f"request: {request}, user: {current_user}, allocate:{reopen}")
+    try:
+        if len(reopen.lead_ids) > constant.MAX_LIMIT:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.MAXLIMITREACH)
+        reopen_count = await buy_service.reopen_leads(
+            reopen.to_model(), current_user.user_name
+        )
+        if reopen_count > 0:
+            return Response(id=reopen_count, message=constant.CREATED)
+        else:
+            return Response(id=reopen_count, message=constant.FAILED)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
 @router.post(
     "/{lead_id}/followup",
     response_model=Response,
@@ -332,6 +364,7 @@ async def get_buy_followup_lead(
     cursor: int | None = None,
     limit: int | None = None,
     search: str | None = None,
+    buy_stage: BuyStage | None = None,
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
@@ -341,10 +374,15 @@ async def get_buy_followup_lead(
     try:
         limit = normalize_limit(limit)
         leads = await buy_service.get_followup_lead(
-            cursor, limit, current_user.user_name, current_user.role_id, search
+            cursor,
+            limit,
+            current_user.user_name,
+            current_user.role_id,
+            search,
+            buy_stage,
         )
         total = await buy_service.get_total_followup_lead(
-            current_user.user_name, current_user.role_id, search
+            current_user.user_name, current_user.role_id, search, buy_stage
         )
 
         next_url = None
@@ -368,12 +406,13 @@ async def get_buy_followup_lead(
 async def export_followup_lead(
     request: Request,
     search: str | None = None,
+    buy_stage: BuyStage | None = None,
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ):
     leads = buy_service.get_followup_lead_export(
-        current_user.user_name, current_user.role_id, search
+        current_user.user_name, current_user.role_id, search, buy_stage
     )
     return stream_csv(rows=leads, filename="buy_followup_export.csv")
 

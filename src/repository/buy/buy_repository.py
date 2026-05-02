@@ -519,8 +519,11 @@ class BuyRepository(BuyRepositoryInterface):
     ) -> int:
         try:
             update_data = {}
-            update_data["telecaller"] = reallocate.telecaller
-            update_data["executive"] = reallocate.executive
+            if reallocate.telecaller:
+                update_data["telecaller"] = reallocate.telecaller
+
+            if reallocate.executive:
+                update_data["executive"] = reallocate.executive
 
             stmt = (
                 update(tblbuylead)
@@ -533,6 +536,49 @@ class BuyRepository(BuyRepositoryInterface):
                 .values(**update_data)
             )
             result = await self.session.execute(stmt)
+            await self.session.commit()
+            return result.rowcount
+        except IntegrityError:
+            await self.session.rollback()
+            raise AllocationError(constant.FAILED)
+
+    async def reopen_leads(self, reopen: AllocateLeadsRequest, created_by: str) -> int:
+        try:
+            update_data = {
+                "status": BuyStatus.Allocated.value,
+            }
+
+            if reopen.telecaller:
+                update_data["telecaller"] = reopen.telecaller
+
+            if reopen.executive:
+                update_data["executive"] = reopen.executive
+
+            update_stmt = (
+                update(tblbuylead)
+                .where(
+                    tblbuylead.c.id.in_(reopen.lead_ids),
+                    tblbuylead.c.is_active.is_(True),
+                    tblbuylead.c.is_deleted.is_(False),
+                    tblbuylead.c.status == BuyStatus.Lost.value,
+                )
+                .values(**update_data)
+            )
+            result = await self.session.execute(update_stmt)
+
+            update_stmt = (
+                update(tblbuylead_followup)
+                .where(tblbuylead_followup.c.buylead_id.in_(reopen.lead_ids))
+                .values(
+                    stage=BuyStage.Fresh.value,
+                    disposition=BuyDisposition.Fresh.value,
+                    calldate=func.now(),
+                    notes=BuyStage.Fresh.value,
+                    created_by=created_by,
+                )
+            )
+            await self.session.execute(update_stmt)
+
             await self.session.commit()
             return result.rowcount
         except IntegrityError:
@@ -665,6 +711,7 @@ class BuyRepository(BuyRepositoryInterface):
                 tblbuylead.c.is_active,
                 tblbuylead.c.status != BuyStatus.NotAllocated.value,
                 tblbuylead.c.status != BuyStatus.Lost.value,
+                tblbuylead.c.status != BuyStatus.DND.value,
             )
         )
         if role_id != 1:
@@ -701,10 +748,14 @@ class BuyRepository(BuyRepositoryInterface):
         created_by: str,
         role_id: int,
         search: str | None = None,
+        buy_stage: BuyStage | None = None,
     ) -> Sequence[Mapping[str, Any]]:
         stmt = self._base_followup_lead_query(created_by, role_id)
 
         stmt = self._apply_followup_search(stmt, search)
+
+        if buy_stage:
+            stmt = stmt.where(tblbuylead_followup.c.stage == buy_stage)
 
         if cursor:
             stmt = stmt.where(tblbuylead.c.id < cursor)
@@ -718,6 +769,7 @@ class BuyRepository(BuyRepositoryInterface):
         created_by: str,
         role_id: int,
         search: str | None = None,
+        buy_stage: BuyStage | None = None,
     ) -> int:
         stmt = (
             select(func.count())
@@ -733,6 +785,8 @@ class BuyRepository(BuyRepositoryInterface):
             .where(
                 tblbuylead.c.is_active,
                 tblbuylead.c.status != BuyStatus.NotAllocated.value,
+                tblbuylead.c.status != BuyStatus.Lost.value,
+                tblbuylead.c.status != BuyStatus.DND.value,
             )
         )
         if role_id != 1:
@@ -744,6 +798,8 @@ class BuyRepository(BuyRepositoryInterface):
             )
 
         stmt = self._apply_followup_search(stmt, search)
+        if buy_stage:
+            stmt = stmt.where(tblbuylead_followup.c.stage == buy_stage)
         result = await self.session.execute(stmt)
         return result.scalar_one()
 
@@ -752,9 +808,12 @@ class BuyRepository(BuyRepositoryInterface):
         created_by: str,
         role_id: int,
         search: str | None = None,
+        buy_stage: BuyStage | None = None,
     ):
         stmt = self._base_followup_lead_query(created_by, role_id)
         stmt = self._apply_followup_search(stmt, search)
+        if buy_stage:
+            stmt = stmt.where(tblbuylead_followup.c.stage == buy_stage)
         stmt = stmt.execution_options(stream_results=True)
 
         stream = await self.session.stream(stmt)

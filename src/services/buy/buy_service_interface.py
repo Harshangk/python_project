@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from uuid import UUID
 
-from common.schema_types import BuyStatus, FileStatus
+from common.schema_types import BuyStage, BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
 from model.buy.buy import BuyLeadFollowup
@@ -78,6 +78,10 @@ class BuyServiceInterface(ABC):
         pass
 
     @abstractmethod
+    async def reopen_leads(self, reopen: AllocateLeadsRequest, created_by: str) -> int:
+        pass
+
+    @abstractmethod
     async def create_lead_followup(
         self, lead_id: int, lead: BuyLeadFollowup, created_by: str
     ) -> int:
@@ -91,12 +95,17 @@ class BuyServiceInterface(ABC):
         created_by: str,
         role_id: int,
         search: str | None = None,
+        buy_stage: BuyStage | None = None,
     ) -> List[BuyLeadFollowupItem]:
         pass
 
     @abstractmethod
     async def get_total_followup_lead(
-        self, created_by: str, role_id: int, search: str | None = None
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+        buy_stage: BuyStage | None = None,
     ) -> int:
         pass
 
@@ -106,6 +115,7 @@ class BuyServiceInterface(ABC):
         created_by: str,
         role_id: int,
         search: str | None = None,
+        buy_stage: BuyStage | None = None,
     ):
         pass
 

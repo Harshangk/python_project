@@ -134,7 +134,7 @@ class BuyStatus(str, Enum):
 
 class BuyStage(str, Enum):
     Fresh = "Fresh"
-    UnderFollowup = "Under Followup"
+    UnderFollowup = "UnderFollowup"
     Appointment = "Appointment"
     Lost = "Lost"
     DND = "DND"

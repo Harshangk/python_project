@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Mapping, Optional, Sequence
 from uuid import UUID
 
-from common.schema_types import BuyStatus, FileStatus
+from common.schema_types import BuyStage, BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
 from model.buy.buy import BuyLeadFile, BuyLeadFollowup, BuyLeadFollowupDetail
@@ -72,6 +72,10 @@ class BuyRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def reopen_leads(self, reopen: AllocateLeadsRequest, created_by: str) -> int:
+        pass
+
+    @abstractmethod
     async def create_lead_followup(
         self, lead_id: int, lead: BuyLeadFollowup, created_by: str
     ) -> int:
@@ -85,6 +89,7 @@ class BuyRepositoryInterface(ABC):
         created_by: str,
         role_id: int,
         search: str | None = None,
+        buy_stage: BuyStage | None = None,
     ) -> Sequence[Mapping[str, Any]]:
         pass
 
@@ -94,6 +99,7 @@ class BuyRepositoryInterface(ABC):
         created_by: str,
         role_id: int,
         search: str | None = None,
+        buy_stage: BuyStage | None = None,
     ) -> int:
         pass
 
@@ -103,6 +109,7 @@ class BuyRepositoryInterface(ABC):
         created_by: str,
         role_id: int,
         search: str | None = None,
+        buy_stage: BuyStage | None = None,
     ):
         pass
 

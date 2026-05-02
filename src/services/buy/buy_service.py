@@ -6,7 +6,7 @@ from uuid import UUID
 
 from app import constant
 from common.file_storage import AbstractFileStorage
-from common.schema_types import BuyStatus, FileStatus
+from common.schema_types import BuyStage, BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
 from model.buy.buy import BuyLeadFollowup
@@ -132,6 +132,9 @@ class BuyService(BuyServiceInterface):
             reallocate, created_by=created_by
         )
 
+    async def reopen_leads(self, reopen: AllocateLeadsRequest, created_by: str) -> int:
+        return await self.buy_repository.reopen_leads(reopen, created_by=created_by)
+
     async def create_lead_followup(
         self, lead_id: int, lead: BuyLeadFollowup, created_by: str
     ) -> int:
@@ -146,9 +149,10 @@ class BuyService(BuyServiceInterface):
         created_by: str,
         role_id: int,
         search: str | None = None,
+        buy_stage: BuyStage | None = None,
     ) -> List[BuyLeadFollowupItem]:
         rows = await self.buy_repository.get_followup_lead(
-            cursor, limit, created_by, role_id, search
+            cursor, limit, created_by, role_id, search, buy_stage
         )
         leads = []
 
@@ -178,9 +182,10 @@ class BuyService(BuyServiceInterface):
         created_by: str,
         role_id: int,
         search: str | None = None,
+        buy_stage: BuyStage | None = None,
     ) -> int:
         return await self.buy_repository.get_total_followup_lead(
-            created_by, role_id, search
+            created_by, role_id, search, buy_stage
         )
 
     async def get_followup_lead_export(
@@ -188,9 +193,10 @@ class BuyService(BuyServiceInterface):
         created_by: str,
         role_id: int,
         search: str | None = None,
+        buy_stage: BuyStage | None = None,
     ):
         async for row in self.buy_repository.get_followup_lead_export(
-            created_by, role_id, search
+            created_by, role_id, search, buy_stage
         ):
             lead_followup_data = {
                 k: row[k]
