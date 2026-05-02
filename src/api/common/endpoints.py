@@ -16,10 +16,14 @@ from common.schema_types import (
     BuyStage,
     Category,
     Color,
+    CommonFieldStatus,
     FuelType,
+    InsuranceType,
+    MemoPaid,
     Months,
     Owner,
     SortOrder,
+    Transmission,
     generate_time_slots,
 )
 from common.utils import enum_to_dict_list
@@ -76,6 +80,26 @@ def get_months(trace_id: UUID = Depends(get_trace_id)):
     return enum_to_dict_list(Months)
 
 
+@router.get("/common-field-status")
+def get_common_field_status(trace_id: UUID = Depends(get_trace_id)):
+    return enum_to_dict_list(CommonFieldStatus)
+
+
+@router.get("/transmission")
+def get_transmission(trace_id: UUID = Depends(get_trace_id)):
+    return enum_to_dict_list(Transmission)
+
+
+@router.get("/insurance-type")
+def get_insurance_type(trace_id: UUID = Depends(get_trace_id)):
+    return enum_to_dict_list(InsuranceType)
+
+
+@router.get("/memo-paid")
+def get_memo_paid(trace_id: UUID = Depends(get_trace_id)):
+    return enum_to_dict_list(MemoPaid)
+
+
 @router.get("/buy-stage")
 def get_buy_stage(trace_id: UUID = Depends(get_trace_id)):
     return [
@@ -113,6 +137,10 @@ def get_all_enums(trace_id: UUID = Depends(get_trace_id)):
         "bucket": enum_to_dict_list(Bucket),
         "category": enum_to_dict_list(Category),
         "months": enum_to_dict_list(Months),
+        "transmission": enum_to_dict_list(Transmission),
+        "insuranceType": enum_to_dict_list(InsuranceType),
+        "memoPaid": enum_to_dict_list(MemoPaid),
+        "commonFieldStatus": enum_to_dict_list(CommonFieldStatus),
     }
 
 

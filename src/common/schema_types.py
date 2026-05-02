@@ -159,10 +159,44 @@ STAGE_DISPOSITION_MAP = {
 }
 
 
+class CommonFieldStatus(str, Enum):
+    Yes = "Yes"
+    No = "No"
+    NA = "NA"
+
+
 class BuyMode(str, Enum):
     Branch = "Branch"
     Home = "Home"
     NotInspected = "NotInspected"
+
+
+class Transmission(str, Enum):
+    Auto = "Auto"
+    Manual = "Manual"
+    DCT = "DCT"
+    AMT = "AMT"
+    IMT = "IMT"
+    CVT = "CVT"
+    IVT = "IVT"
+    DSG = "DSG"
+    SMT = "SMT"
+    MMT = "MMT"
+    ECVT = "ECVT"
+
+
+class InsuranceType(str, Enum):
+    Nil = "Nil"
+    CP = "CP"
+    TP = "TP"
+    ZD = "ZD"
+    CPTP = "CPTP"
+    ZDTP = "ZDTP"
+
+
+class MemoPaid(str, Enum):
+    US = "US"
+    Customer = "Customer"
 
 
 class Category(str, Enum):
