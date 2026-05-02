@@ -1,6 +1,13 @@
 from app import constant
 from app.core.logging import logger
-from common.schema_types import BuyStatus, Category, clean_str, to_int, validate_mobile
+from common.schema_types import (
+    BuyStatus,
+    Category,
+    Months,
+    clean_str,
+    to_int,
+    validate_mobile,
+)
 from model.buy.buy import BuyLead
 
 
@@ -55,6 +62,7 @@ def transform(
                 make_id=make_id,
                 model_id=model_id,
                 fuel_type=cleaned["fuel_type"],
+                mfg_month=Months.January.value,
                 mfg_year=cleaned["mfg_year"],
                 kms=cleaned["kms"],
                 owner=cleaned["owner"],

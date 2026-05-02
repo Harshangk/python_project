@@ -11,6 +11,7 @@ from common.schema_types import (
     Color,
     FileStatus,
     FuelType,
+    Months,
 )
 
 
@@ -36,6 +37,7 @@ class BuyLead:
     make_id: int
     model_id: int
     fuel_type: FuelType
+    mfg_month: Months
     mfg_year: str
     kms: int
     owner: str
@@ -63,6 +65,7 @@ class UpdateLead:
     make_id: int
     model_id: int
     fuel_type: FuelType
+    mfg_month: Months
     mfg_year: str
     kms: int
     owner: str
@@ -95,6 +98,7 @@ class BuyLeadFollowup:
     make_id: int
     model_id: int
     fuel_type: FuelType
+    mfg_month: Months
     mfg_year: str
     kms: int
     owner: str
@@ -123,6 +127,7 @@ class BuyLeadFollowupDetail:
     make_id: int
     model_id: int
     fuel_type: FuelType
+    mfg_month: Months
     mfg_year: str
     kms: int
     owner: str

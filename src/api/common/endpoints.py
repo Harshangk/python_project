@@ -17,6 +17,7 @@ from common.schema_types import (
     Category,
     Color,
     FuelType,
+    Months,
     Owner,
     SortOrder,
     generate_time_slots,
@@ -70,6 +71,11 @@ def get_category(trace_id: UUID = Depends(get_trace_id)):
     return enum_to_dict_list(Category)
 
 
+@router.get("/months")
+def get_months(trace_id: UUID = Depends(get_trace_id)):
+    return enum_to_dict_list(Months)
+
+
 @router.get("/buy-stage")
 def get_buy_stage(trace_id: UUID = Depends(get_trace_id)):
     return [
@@ -81,8 +87,8 @@ def get_buy_stage(trace_id: UUID = Depends(get_trace_id)):
 
 @router.get("/buy-stage/{stage}/disposition")
 def get_buy_stage_disposition(stage: BuyStage, trace_id: UUID = Depends(get_trace_id)):
-    dispositon = STAGE_DISPOSITION_MAP.get(stage, [])
-    return enum_to_dict_list(dispositon)
+    disposition = STAGE_DISPOSITION_MAP.get(stage, [])
+    return enum_to_dict_list(disposition)
 
 
 @router.get("/preferred-time")
@@ -106,6 +112,7 @@ def get_all_enums(trace_id: UUID = Depends(get_trace_id)):
         "buyStage": enum_to_dict_list(BuyStage),
         "bucket": enum_to_dict_list(Bucket),
         "category": enum_to_dict_list(Category),
+        "months": enum_to_dict_list(Months),
     }
 
 
@@ -126,16 +133,16 @@ async def get_lead_source(
         LeadSourceSortBy.id, description="Field to sort by"
     ),
     sort_order: SortOrder = Query(SortOrder.desc, description="Sort direction"),
-    commmon_service: CommonServiceInterface = Depends(deps.common_service),
+    common_service: CommonServiceInterface = Depends(deps.common_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ) -> LeadSourceList:
     logger.info(f"request:{request},current_user:{current_user}")
     limit = normalize_limit(limit)
-    source = await commmon_service.get_source(
+    source = await common_service.get_source(
         cursor, limit, search, sort_by.value, sort_order.value
     )
-    total = await commmon_service.get_total_source(search)
+    total = await common_service.get_total_source(search)
 
     next_url = None
     if len(source) == limit:
@@ -157,16 +164,16 @@ async def get_make(
     search: str | None = None,
     sort_by: MakeSortBy = Query(MakeSortBy.id, description="Field to sort by"),
     sort_order: SortOrder = Query(SortOrder.desc, description="Sort direction"),
-    commmon_service: CommonServiceInterface = Depends(deps.common_service),
+    common_service: CommonServiceInterface = Depends(deps.common_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ) -> MakeList:
     logger.info(f"request:{request},current_user:{current_user}")
     limit = normalize_limit(limit)
-    make = await commmon_service.get_make(
+    make = await common_service.get_make(
         cursor, limit, search, sort_by.value, sort_order.value
     )
-    total = await commmon_service.get_total_make(search)
+    total = await common_service.get_total_make(search)
 
     next_url = None
     if len(make) == limit:
@@ -189,13 +196,13 @@ async def get_model(
     search: str | None = None,
     sort_by: ModelSortBy = Query(ModelSortBy.id, description="Field to sort by"),
     sort_order: SortOrder = Query(SortOrder.desc, description="Sort direction"),
-    commmon_service: CommonServiceInterface = Depends(deps.common_service),
+    common_service: CommonServiceInterface = Depends(deps.common_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ) -> ModelList:
     logger.info(f"request:{request},current_user:{current_user}")
     limit = normalize_limit(limit)
-    model = await commmon_service.get_model(
+    model = await common_service.get_model(
         make_id=make_id,
         cursor=cursor,
         limit=limit,
@@ -203,7 +210,7 @@ async def get_model(
         sort_by=sort_by.value,
         sort_order=sort_order.value,
     )
-    total = await commmon_service.get_total_model(make_id=make_id, search=search)
+    total = await common_service.get_total_model(make_id=make_id, search=search)
 
     next_url = None
     if len(model) == limit:
@@ -225,16 +232,16 @@ async def get_branch(
     search: str | None = None,
     sort_by: BranchSortBy = Query(BranchSortBy.id, description="Field to sort by"),
     sort_order: SortOrder = Query(SortOrder.desc, description="Sort direction"),
-    commmon_service: CommonServiceInterface = Depends(deps.common_service),
+    common_service: CommonServiceInterface = Depends(deps.common_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ) -> BranchList:
     logger.info(f"request:{request},current_user:{current_user}")
     limit = normalize_limit(limit)
-    branch = await commmon_service.get_branch(
+    branch = await common_service.get_branch(
         cursor, limit, search, sort_by.value, sort_order.value
     )
-    total = await commmon_service.get_total_branch(search)
+    total = await common_service.get_total_branch(search)
 
     next_url = None
     if len(branch) == limit:
@@ -256,16 +263,16 @@ async def get_broker(
     search: str | None = None,
     sort_by: BrokerSortBy = Query(BrokerSortBy.id, description="Field to sort by"),
     sort_order: SortOrder = Query(SortOrder.desc, description="Sort direction"),
-    commmon_service: CommonServiceInterface = Depends(deps.common_service),
+    common_service: CommonServiceInterface = Depends(deps.common_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ) -> BrokerList:
     logger.info(f"request:{request},current_user:{current_user}")
     limit = normalize_limit(limit)
-    broker = await commmon_service.get_broker(
+    broker = await common_service.get_broker(
         cursor, limit, search, sort_by.value, sort_order.value
     )
-    total = await commmon_service.get_total_broker(search)
+    total = await common_service.get_total_broker(search)
 
     next_url = None
     if len(broker) == limit:
@@ -285,14 +292,14 @@ async def get_year(
     cursor: int | None = None,
     limit: int | None = None,
     search: str | None = None,
-    commmon_service: CommonServiceInterface = Depends(deps.common_service),
+    common_service: CommonServiceInterface = Depends(deps.common_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ) -> YearList:
     logger.info(f"request:{request},current_user:{current_user}")
     limit = normalize_limit(limit)
-    year = await commmon_service.get_year(cursor, limit, search)
-    total = await commmon_service.get_total_year(search)
+    year = await common_service.get_year(cursor, limit, search)
+    total = await common_service.get_total_year(search)
 
     next_url = None
     if len(year) == limit:
@@ -314,16 +321,16 @@ async def get_state(
     search: str | None = None,
     sort_by: StateSortBy = Query(StateSortBy.id, description="Field to sort by"),
     sort_order: SortOrder = Query(SortOrder.desc, description="Sort direction"),
-    commmon_service: CommonServiceInterface = Depends(deps.common_service),
+    common_service: CommonServiceInterface = Depends(deps.common_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ) -> StateList:
     logger.info(f"request:{request},current_user:{current_user}")
     limit = normalize_limit(limit)
-    state = await commmon_service.get_state(
+    state = await common_service.get_state(
         cursor, limit, search, sort_by.value, sort_order.value
     )
-    total = await commmon_service.get_total_state(search)
+    total = await common_service.get_total_state(search)
 
     next_url = None
     if len(state) == limit:
@@ -346,13 +353,13 @@ async def get_city(
     search: str | None = None,
     sort_by: CitySortBy = Query(CitySortBy.id, description="Field to sort by"),
     sort_order: SortOrder = Query(SortOrder.desc, description="Sort direction"),
-    commmon_service: CommonServiceInterface = Depends(deps.common_service),
+    common_service: CommonServiceInterface = Depends(deps.common_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ) -> CityList:
     logger.info(f"request:{request},current_user:{current_user}")
     limit = normalize_limit(limit)
-    city = await commmon_service.get_city(
+    city = await common_service.get_city(
         state_id=state_id,
         cursor=cursor,
         limit=limit,
@@ -360,7 +367,7 @@ async def get_city(
         sort_by=sort_by.value,
         sort_order=sort_order.value,
     )
-    total = await commmon_service.get_total_city(state_id=state_id, search=search)
+    total = await common_service.get_total_city(state_id=state_id, search=search)
 
     next_url = None
     if len(city) == limit:
@@ -375,7 +382,7 @@ async def download_import_file(
     request: Request,
     s3_key: str,
     bucket: Bucket,
-    commmon_service: CommonServiceInterface = Depends(deps.common_service),
+    common_service: CommonServiceInterface = Depends(deps.common_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ):
@@ -384,7 +391,7 @@ async def download_import_file(
             f"request:{request},current_user:{current_user},bucket:{bucket.value}"
         )
 
-        file_obj, s3_key = await commmon_service.download_s3_file(s3_key, bucket.value)
+        file_obj, s3_key = await common_service.download_s3_file(s3_key, bucket.value)
         filename = s3_key.split("/")[-1]
 
         return StreamingResponse(

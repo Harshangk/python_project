@@ -170,6 +170,21 @@ class Category(str, Enum):
     Corporate = "Corporate"
 
 
+class Months(str, Enum):
+    January = "January"
+    February = "February"
+    March = "March"
+    April = "April"
+    May = "May"
+    June = "June"
+    July = "July"
+    August = "August"
+    September = "September"
+    October = "October"
+    November = "November"
+    December = "December"
+
+
 class Color(str, Enum):
     Black = "Black"
     White = "White"
