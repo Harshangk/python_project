@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
 from typing import Annotated, List, Optional
 from uuid import UUID
@@ -15,6 +16,7 @@ from api.buy.example import (
     BUY_LEAD,
     BUY_LEAD_ALLOCATION,
     BUY_LEAD_FOLLOWUP,
+    BUY_LEAD_PAYMENT,
     UPDATE_LEAD,
 )
 from app.constant import BROKERINVALID, SOURCEINVALID
@@ -23,8 +25,13 @@ from common.schema_types import (
     CamelBaseModel,
     Category,
     Color,
+    CommonFieldStatus,
     FileStatus,
     FuelType,
+    InsuranceType,
+    MemoPaid,
+    Months,
+    Transmission,
     validate_mobile,
 )
 from model.buy import buy as BuyModel
@@ -449,3 +456,132 @@ class BuyLeadImportList(CamelBaseModel):
     limit: int
     next: Optional[str]
     items: List[BuyLeadImportItem]
+
+
+class LeadVehicle(CamelBaseModel):
+    registration_no: str = Field(..., min_length=1, max_length=12)
+    transmission: Transmission
+    cubic_capacity: int | None = 0
+    push_button: CommonFieldStatus | None = None
+    reg_month: Months | None = None
+    reg_year: int | None = None
+    euro: str = Field(None, min_length=1, max_length=4)
+    rc_book: CommonFieldStatus | None = None
+    second_key: CommonFieldStatus | None = None
+    hypo: CommonFieldStatus | None = None
+    hypo_bank: str = Field(None, min_length=1, max_length=255)
+    service_record: CommonFieldStatus | None = None
+    puc: CommonFieldStatus | None = None
+    memo: CommonFieldStatus | None = None
+    memo_amount: Decimal = Decimal("0.00")
+    memo_paid: MemoPaid | None = None
+    mv_tax: Decimal = Decimal("0.00")
+    rma: str = Field(None, min_length=1, max_length=8)
+    taxi_private: str = Field(None, min_length=1, max_length=8)
+    other_noc: str = Field(None, min_length=1, max_length=8)
+    blacklist: str = Field(None, min_length=1, max_length=8)
+    rto_status: str = Field(None, min_length=1, max_length=8)
+
+
+class LeadVehicleInsurance(CamelBaseModel):
+    online_insurance: CommonFieldStatus | None = None
+    insurance_type: InsuranceType | None = None
+    cp_zd_company: str = Field(None, min_length=1, max_length=255)
+    tp_company: str = Field(None, min_length=1, max_length=255)
+    cp_zd_date: datetime | None = None
+    tp_date: datetime | None = None
+    idv: Decimal = Decimal("0.00")
+    ncb: Decimal = Decimal("0.00")
+    premium: Decimal = Decimal("0.00")
+
+
+class CreateBuyLeadPayment(CamelBaseModel):
+    refurb_cost: Decimal = Decimal("0.00")
+    deal: Decimal = Decimal("0.00")
+    service_charge: Decimal = Decimal("0.00")
+    tcs: Decimal = Decimal("0.00")
+    gst: Decimal = Decimal("0.00")
+    tax: Decimal = Decimal("0.00")
+    rcd: Decimal = Decimal("0.00")
+    commission: Decimal = Decimal("0.00")
+    deal_with_commission: Decimal = Decimal("0.00")
+    deal_without_commission: Decimal = Decimal("0.00")
+    token: Decimal = Decimal("0.00")
+    cash: Decimal = Decimal("0.00")
+    loan: Decimal = Decimal("0.00")
+    less: Decimal = Decimal("0.00")
+    hold: Decimal = Decimal("0.00")
+    ch_rtgs: Decimal = Decimal("0.00")
+    total_payble: Decimal = Decimal("0.00")
+    remarks: str = Field(..., min_length=1, max_length=500)
+    lead_vehicle: LeadVehicle | None = None
+    lead_vehicle_insurance: LeadVehicleInsurance | None = None
+
+    class config:
+        schema_extra = {"example": BUY_LEAD_PAYMENT}
+        orm_mode = True
+
+    def to_model(self) -> BuyModel.BuyLeadPayment:
+        return BuyModel.BuyLeadPayment(
+            refurb_cost=self.refurb_cost,
+            deal=self.deal,
+            service_charge=self.service_charge,
+            tcs=self.tcs,
+            gst=self.gst,
+            tax=self.tax,
+            rcd=self.rcd,
+            commission=self.commission,
+            deal_with_commission=self.deal_with_commission,
+            deal_without_commission=self.deal_without_commission,
+            token=self.token,
+            cash=self.cash,
+            loan=self.loan,
+            less=self.less,
+            hold=self.hold,
+            ch_rtgs=self.ch_rtgs,
+            total_payble=self.total_payble,
+            remarks=self.remarks,
+            lead_vehicle=(
+                BuyModel.BuyLeadVehicle(
+                    registration_no=self.lead_vehicle.registration_no,
+                    transmission=self.lead_vehicle.transmission,
+                    cubic_capacity=self.lead_vehicle.cubic_capacity,
+                    push_button=self.lead_vehicle.push_button,
+                    reg_month=self.lead_vehicle.reg_month,
+                    reg_year=self.lead_vehicle.reg_year,
+                    euro=self.lead_vehicle.euro,
+                    rc_book=self.lead_vehicle.rc_book,
+                    second_key=self.lead_vehicle.second_key,
+                    hypo=self.lead_vehicle.hypo,
+                    hypo_bank=self.lead_vehicle.hypo_bank,
+                    service_record=self.lead_vehicle.service_record,
+                    puc=self.lead_vehicle.puc,
+                    memo=self.lead_vehicle.memo,
+                    memo_amount=self.lead_vehicle.memo_amount,
+                    memo_paid=self.lead_vehicle.memo_paid,
+                    mv_tax=self.lead_vehicle.mv_tax,
+                    rma=self.lead_vehicle.rma,
+                    taxi_private=self.lead_vehicle.taxi_private,
+                    other_noc=self.lead_vehicle.other_noc,
+                    blacklist=self.lead_vehicle.blacklist,
+                    rto_status=self.lead_vehicle.rto_status,
+                )
+                if self.lead_vehicle
+                else None
+            ),
+            lead_vehicle_insurance=(
+                BuyModel.BuyLeadVehicleInsurance(
+                    online_insurance=self.lead_vehicle_insurance.online_insurance,
+                    insurance_type=self.lead_vehicle_insurance.insurance_type,
+                    cp_zd_company=self.lead_vehicle_insurance.cp_zd_company,
+                    tp_company=self.lead_vehicle_insurance.tp_company,
+                    cp_zd_date=self.lead_vehicle_insurance.cp_zd_date,
+                    tp_date=self.lead_vehicle_insurance.tp_date,
+                    idv=self.lead_vehicle_insurance.idv,
+                    ncb=self.lead_vehicle_insurance.ncb,
+                    premium=self.lead_vehicle_insurance.premium,
+                )
+                if self.lead_vehicle_insurance
+                else None
+            ),
+        )

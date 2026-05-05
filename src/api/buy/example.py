@@ -97,3 +97,35 @@ BUY_LEAD_FOLLOWUP = {
         "notes": "Customer wants urgent deal",
     },
 }
+
+
+BUY_LEAD_PAYMENT = {
+    "branch": "YMCA",
+    "mobile": "9876543210",
+    "alternateMobile": "9123456780",
+    "source": "Website",
+    "mode": "Home",
+    "brokerName": "",
+    "customerName": "Rahul Sharma",
+    "leadAddress": {
+        "address": "test address",
+        "state": "Gujarat",
+        "city": "Ahmedabad",
+        "area": "test area",
+        "pincode": 123456,
+    },
+    "makeId": 1,
+    "modelId": 2,
+    "variant": "",
+    "color": "",
+    "fuelType": "Petrol",
+    "mfg_month": "January",
+    "mfg_year": "2022",
+    "kms": 35000,
+    "owner": "1",
+    "clientOffer": 500000,
+    "ourOffer": 480000,
+    "telecaller": "tele",
+    "executive": "exe",
+    "remarks": "Customer wants urgent deal",
+}

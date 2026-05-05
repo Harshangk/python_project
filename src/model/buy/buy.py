@@ -10,9 +10,13 @@ from common.schema_types import (
     BuyStatus,
     Category,
     Color,
+    CommonFieldStatus,
     FileStatus,
     FuelType,
+    InsuranceType,
+    MemoPaid,
     Months,
+    Transmission,
 )
 
 
@@ -170,6 +174,47 @@ class BuyLeadFile:
 
 
 @dataclass
+class BuyLeadVehicle:
+    buylead_id: int
+    registration_no: str
+    transmission: Transmission
+    cubic_capacity: int
+    push_button: CommonFieldStatus | None = None
+    reg_month: Months | None = None
+    reg_year: str | None = None
+    euro: str | None = None
+    rc_book: CommonFieldStatus | None = None
+    second_key: CommonFieldStatus | None = None
+    hypo: CommonFieldStatus | None = None
+    hypo_bank: str | None = None
+    service_record: CommonFieldStatus | None = None
+    puc: CommonFieldStatus | None = None
+    memo: CommonFieldStatus | None = None
+    memo_amount: Decimal = Decimal("0.00")
+    memo_paid: MemoPaid | None = None
+    mv_tax: Decimal = Decimal("0.00")
+    rma: str | None = None
+    taxi_private: str | None = None
+    other_noc: str | None = None
+    blacklist: str | None = None
+    rto_status: str | None = None
+
+
+@dataclass
+class BuyLeadVehicleInsurance:
+    buylead_id: int
+    online_insurance: CommonFieldStatus | None = None
+    insurance_type: InsuranceType | None = None
+    cp_zd_company: str | None = None
+    tp_company: str | None = None
+    cp_zd_date: datetime | None = None
+    tp_date: datetime | None = None
+    idv: Decimal = Decimal("0.00")
+    ncb: Decimal = Decimal("0.00")
+    premium: Decimal = Decimal("0.00")
+
+
+@dataclass
 class BuyLeadPayment:
     buylead_id: int
     remarks: str
@@ -191,44 +236,5 @@ class BuyLeadPayment:
     hold: Decimal = Decimal("0.00")
     ch_rtgs: Decimal = Decimal("0.00")
     total_payble: Decimal = Decimal("0.00")
-
-
-@dataclass
-class BuyLeadVehicle:
-    buylead_id: int
-    registration_no: str
-    transmission: str
-    cubic_capacity: int
-    push_button: str | None = None
-    reg_month: str | None = None
-    reg_year: str | None = None
-    euro: str | None = None
-    rc_book: str | None = None
-    second_key: str | None = None
-    hypo: str | None = None
-    hypo_bank: str | None = None
-    service_record: str | None = None
-    puc: str | None = None
-    memo: str | None = None
-    memo_amount: Decimal = Decimal("0.00")
-    memo_paid: str | None = None
-    mv_tax: Decimal = Decimal("0.00")
-    rma: str | None = None
-    taxi_private: str | None = None
-    other_noc: str | None = None
-    blacklist: str | None = None
-    rto_status: str | None = None
-
-
-@dataclass
-class BuyLeadVehicleInsurance:
-    buylead_id: int
-    online_insurance: str
-    insurance_type: str
-    cp_zd_company: str | None = None
-    tp_company: str | None = None
-    cp_zd_date: datetime | None = None
-    tp_date: datetime | None = None
-    idv: Decimal = Decimal("0.00")
-    ncb: Decimal = Decimal("0.00")
-    premium: Decimal = Decimal("0.00")
+    lead_vehicle: BuyLeadVehicle | None = None
+    lead_vehicle_insurance: BuyLeadVehicleInsurance | None = None

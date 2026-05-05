@@ -44,6 +44,7 @@ from schema.buy.buy import (
     BuyLeadSortBy,
     CreateBuyLead,
     CreateBuyLeadFollowup,
+    CreateBuyLeadPayment,
     ImportBuyLeadRequest,
     Response,
     UpdateBuyLead,
@@ -605,3 +606,35 @@ async def get_buy_import_lead_by_id(
     except Exception as ex:
         logger.error(f"Exception error: {ex}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
+@router.post(
+    "/{lead_id}/payment",
+    response_model=Response,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_lead_payment(
+    request: Request,
+    lead_id: int,
+    lead_payment: CreateBuyLeadPayment = Body(..., example=example.BUY_LEAD_PAYMENT),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> Response:
+    logger.info(f"request: {request}")
+    try:
+        payment_id = await buy_service.create_lead_payment(
+            lead_id=lead_id,
+            lead_payment=lead_payment.to_model(),
+            created_by=current_user.user_name,
+        )
+    except CreationError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.FAILED)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"[{trace_id}] create_lead failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+    return Response(id=payment_id, message=constant.CREATED)

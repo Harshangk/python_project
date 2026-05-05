@@ -9,7 +9,7 @@ from common.file_storage import AbstractFileStorage
 from common.schema_types import BuyStage, BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
-from model.buy.buy import BuyLeadFollowup
+from model.buy.buy import BuyLeadFollowup, BuyLeadPayment
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 from repository.common.common_repository_interface import CommonRepositoryInterface
 from schema.buy.buy import (
@@ -486,3 +486,10 @@ class BuyService(BuyServiceInterface):
         if not row:
             return None
         return BuyLeadImportItem(**row)
+
+    async def create_lead_payment(
+        self, lead_id: int, lead_payment: BuyLeadPayment, created_by: str
+    ) -> int:
+        return await self.buy_repository.create_lead_payment(
+            lead_id=lead_id, lead_payment=lead_payment, created_by=created_by
+        )

@@ -16,97 +16,27 @@ from orm.common.common import (
     tblinsurance_company,
 )
 from repository.common.common_repository_interface import CommonRepositoryInterface
-
-MAKE_SEARCHABLE_COLUMNS = {
-    "make": mstmake.c.make,
-    "is_premium": mstmake.c.is_premium,
-}
-
-MAKE_SORTABLE_COLUMNS = {
-    "id": mstmake.c.id,
-    "make": mstmake.c.make,
-    "is_premium": mstmake.c.is_premium,
-}
-
-MODEL_SEARCHABLE_COLUMNS = {
-    "make_id": mstmodel.c.make_id,
-    "model": mstmodel.c.model,
-}
-
-MODEL_SORTABLE_COLUMNS = {
-    "id": mstmodel.c.id,
-    "make_id": mstmodel.c.make_id,
-    "model": mstmodel.c.model,
-}
-
-BRANCH_SEARCHABLE_COLUMNS = {
-    "branch": mstbranch.c.branch,
-}
-
-BRANCH_SORTABLE_COLUMNS = {
-    "id": mstbranch.c.id,
-    "branch": mstbranch.c.branch,
-}
-
-SOURCE_SEARCHABLE_COLUMNS = {
-    "source": mstsource.c.source,
-}
-
-SOURCE_SORTABLE_COLUMNS = {
-    "id": mstsource.c.id,
-    "source": mstsource.c.source,
-}
-
-YEAR_SEARCHABLE_COLUMNS = {
-    "year": mstyear.c.year,
-}
-
-BROKER_SEARCHABLE_COLUMNS = {
-    "broker": mstbroker.c.broker,
-}
-
-BROKER_SORTABLE_COLUMNS = {
-    "id": mstbroker.c.id,
-    "broker": mstbroker.c.broker,
-}
-
-STATE_SEARCHABLE_COLUMNS = {
-    "state": mststate.c.state,
-}
-
-STATE_SORTABLE_COLUMNS = {
-    "id": mststate.c.id,
-    "state": mststate.c.state,
-}
-
-CITY_SEARCHABLE_COLUMNS = {
-    "city_id": mstcity.c.state_id,
-    "city": mstcity.c.city,
-}
-
-CITY_SORTABLE_COLUMNS = {
-    "id": mstcity.c.id,
-    "state_id": mstcity.c.state_id,
-    "city": mstcity.c.city,
-}
-
-BANK_SEARCHABLE_COLUMNS = {
-    "bank_name": tblbank.c.bank_name,
-}
-
-BANK_SORTABLE_COLUMNS = {
-    "id": tblbank.c.id,
-    "bank_name": tblbank.c.bank_name,
-}
-
-INSURANCE_COMPANY_SEARCHABLE_COLUMNS = {
-    "insurance_company_name": tblinsurance_company.c.insurance_company_name,
-}
-
-INSURANCE_COMPANY_SORTABLE_COLUMNS = {
-    "id": tblinsurance_company.c.id,
-    "insurance_company_name": tblinsurance_company.c.insurance_company_name,
-}
+from repository.common.common_serach_sort import (
+    BANK_SEARCHABLE_COLUMNS,
+    BANK_SORTABLE_COLUMNS,
+    BRANCH_SEARCHABLE_COLUMNS,
+    BRANCH_SORTABLE_COLUMNS,
+    BROKER_SEARCHABLE_COLUMNS,
+    BROKER_SORTABLE_COLUMNS,
+    CITY_SEARCHABLE_COLUMNS,
+    CITY_SORTABLE_COLUMNS,
+    INSURANCE_COMPANY_SEARCHABLE_COLUMNS,
+    INSURANCE_COMPANY_SORTABLE_COLUMNS,
+    MAKE_SEARCHABLE_COLUMNS,
+    MAKE_SORTABLE_COLUMNS,
+    MODEL_SEARCHABLE_COLUMNS,
+    MODEL_SORTABLE_COLUMNS,
+    SOURCE_SEARCHABLE_COLUMNS,
+    SOURCE_SORTABLE_COLUMNS,
+    STATE_SEARCHABLE_COLUMNS,
+    STATE_SORTABLE_COLUMNS,
+    YEAR_SEARCHABLE_COLUMNS,
+)
 
 
 class CommonRepository(CommonRepositoryInterface):
@@ -605,6 +535,18 @@ class CommonRepository(CommonRepositoryInterface):
         rows = result.mappings().all()
         return rows
 
+    async def get_total_bank(self, search: str | None = None) -> int:
+        query = select(func.count()).select_from(tblbank).where(tblbank.c.is_active)
+
+        if search:
+            search_filters = [
+                col.ilike(f"%{search}%") for col in BANK_SEARCHABLE_COLUMNS.values()
+            ]
+            query = query.where(or_(*search_filters))
+
+        result = await self.session.execute(query)
+        return result.scalar_one()
+
     async def get_insurance_company(
         self,
         cursor: int | None,
@@ -642,3 +584,20 @@ class CommonRepository(CommonRepositoryInterface):
         result = await self.session.execute(stmt)
         rows = result.mappings().all()
         return rows
+
+    async def get_total_insurance_company(self, search: str | None = None) -> int:
+        query = (
+            select(func.count())
+            .select_from(tblinsurance_company)
+            .where(tblinsurance_company.c.is_active)
+        )
+
+        if search:
+            search_filters = [
+                col.ilike(f"%{search}%")
+                for col in INSURANCE_COMPANY_SEARCHABLE_COLUMNS.values()
+            ]
+            query = query.where(or_(*search_filters))
+
+        result = await self.session.execute(query)
+        return result.scalar_one()

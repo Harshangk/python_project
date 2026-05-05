@@ -5,7 +5,12 @@ from uuid import UUID
 from common.schema_types import BuyStage, BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
-from model.buy.buy import BuyLeadFile, BuyLeadFollowup, BuyLeadFollowupDetail
+from model.buy.buy import (
+    BuyLeadFile,
+    BuyLeadFollowup,
+    BuyLeadFollowupDetail,
+    BuyLeadPayment,
+)
 
 
 class BuyRepositoryInterface(ABC):
@@ -180,4 +185,10 @@ class BuyRepositoryInterface(ABC):
         created_by: str,
         role_id: int,
     ) -> BuyLeadFile:
+        pass
+
+    @abstractmethod
+    async def create_lead_payment(
+        self, lead_id: int, lead_payment: BuyLeadPayment, created_by: str
+    ) -> int:
         pass
