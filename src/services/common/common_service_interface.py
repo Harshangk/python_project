@@ -3,9 +3,11 @@ from typing import List, Optional
 
 from common.schema_types import Bucket
 from schema.common.common import (
+    BankItem,
     BranchItem,
     BrokerItem,
     CityItem,
+    InsuranceCompanyItem,
     LeadSourceItem,
     MakeItem,
     ModelItem,
@@ -150,4 +152,34 @@ class CommonServiceInterface(ABC):
         s3_key: str,
         bukcet: Bucket,
     ) -> int:
+        pass
+
+    @abstractmethod
+    async def get_bank(
+        self,
+        cursor: Optional[int],
+        limit: int,
+        search: str | None = None,
+        sort_by: str | None = None,
+        sort_order: str | None = None,
+    ) -> List[BankItem]:
+        pass
+
+    @abstractmethod
+    async def get_total_bank(self, search: str | None = None) -> int:
+        pass
+
+    @abstractmethod
+    async def get_insurance_company(
+        self,
+        cursor: Optional[int],
+        limit: int,
+        search: str | None = None,
+        sort_by: str | None = None,
+        sort_order: str | None = None,
+    ) -> List[InsuranceCompanyItem]:
+        pass
+
+    @abstractmethod
+    async def get_total_insurance_company(self, search: str | None = None) -> int:
         pass

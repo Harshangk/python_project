@@ -12,6 +12,8 @@ from orm.common.common import (
     mstsource,
     mststate,
     mstyear,
+    tblbank,
+    tblinsurance_company,
 )
 from repository.common.common_repository_interface import CommonRepositoryInterface
 
@@ -86,6 +88,24 @@ CITY_SORTABLE_COLUMNS = {
     "id": mstcity.c.id,
     "state_id": mstcity.c.state_id,
     "city": mstcity.c.city,
+}
+
+BANK_SEARCHABLE_COLUMNS = {
+    "bank_name": tblbank.c.bank_name,
+}
+
+BANK_SORTABLE_COLUMNS = {
+    "id": tblbank.c.id,
+    "bank_name": tblbank.c.bank_name,
+}
+
+INSURANCE_COMPANY_SEARCHABLE_COLUMNS = {
+    "insurance_company_name": tblinsurance_company.c.insurance_company_name,
+}
+
+INSURANCE_COMPANY_SORTABLE_COLUMNS = {
+    "id": tblinsurance_company.c.id,
+    "insurance_company_name": tblinsurance_company.c.insurance_company_name,
 }
 
 
@@ -549,3 +569,76 @@ class CommonRepository(CommonRepositoryInterface):
 
         result = await self.session.execute(query)
         return result.scalar_one()
+
+    async def get_bank(
+        self,
+        cursor: int | None,
+        limit: int,
+        search: str | None = None,
+        sort_by: str | None = None,
+        sort_order: str | None = None,
+    ) -> Sequence[Mapping[str, Any]]:
+        stmt = select(
+            tblbank.c.id,
+            tblbank.c.bank_name,
+            tblbank.c.created_at,
+            tblbank.c.created_by,
+        ).where(tblbank.c.is_active)
+
+        if search:
+            search_filters = [
+                col.ilike(f"%{search}%") for col in BANK_SEARCHABLE_COLUMNS.values()
+            ]
+            stmt = stmt.where(or_(*search_filters))
+
+        if cursor:
+            stmt = stmt.where(tblbank.c.id > cursor)
+
+        sort_column = BANK_SORTABLE_COLUMNS.get(sort_by, tblbank.c.id)
+        if sort_order.lower() == "asc":
+            stmt = stmt.order_by(asc(sort_column))
+        else:
+            stmt = stmt.order_by(desc(sort_column))
+
+        stmt = stmt.limit(limit)
+        result = await self.session.execute(stmt)
+        rows = result.mappings().all()
+        return rows
+
+    async def get_insurance_company(
+        self,
+        cursor: int | None,
+        limit: int,
+        search: str | None = None,
+        sort_by: str | None = None,
+        sort_order: str | None = None,
+    ) -> Sequence[Mapping[str, Any]]:
+        stmt = select(
+            tblinsurance_company.c.id,
+            tblinsurance_company.c.insurance_company_name,
+            tblinsurance_company.c.created_at,
+            tblinsurance_company.c.created_by,
+        ).where(tblinsurance_company.c.is_active)
+
+        if search:
+            search_filters = [
+                col.ilike(f"%{search}%")
+                for col in INSURANCE_COMPANY_SEARCHABLE_COLUMNS.values()
+            ]
+            stmt = stmt.where(or_(*search_filters))
+
+        if cursor:
+            stmt = stmt.where(tblinsurance_company.c.id > cursor)
+
+        sort_column = INSURANCE_COMPANY_SORTABLE_COLUMNS.get(
+            sort_by, tblinsurance_company.c.id
+        )
+        if sort_order.lower() == "asc":
+            stmt = stmt.order_by(asc(sort_column))
+        else:
+            stmt = stmt.order_by(desc(sort_column))
+
+        stmt = stmt.limit(limit)
+        result = await self.session.execute(stmt)
+        rows = result.mappings().all()
+        return rows

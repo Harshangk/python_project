@@ -6,6 +6,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    Numeric,
     String,
     Table,
     Text,
@@ -106,12 +107,106 @@ tblbuylead_file = Table(
     Index("idx_tblbuylead_file_file_uuid", "file_uuid"),
 )
 
+tblbuylead_payment = Table(
+    "tblbuylead_payment",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("buylead_id", Integer, ForeignKey("tblbuylead.id"), nullable=False),
+    Column("refurb_cost", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("deal", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column(
+        "service_charge", Numeric(12, 2), server_default=text("0.00"), nullable=False
+    ),
+    Column("tcs", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("gst", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("tax", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("rcd", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("commission", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column(
+        "deal_with_commission",
+        Numeric(12, 2),
+        server_default=text("0.00"),
+        nullable=False,
+    ),
+    Column(
+        "deal_without_commission",
+        Numeric(12, 2),
+        server_default=text("0.00"),
+        nullable=False,
+    ),
+    Column("token", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("cash", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("loan", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("less", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("hold", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("ch_rtgs", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("total_payble", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("remarks", String(500), nullable=False),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+    Column("modified_at", DateTime, nullable=True),
+    Column("modified_by", String(length=50), nullable=True),
+    UniqueConstraint("buylead_id", name="uq_tblbuylead_payment_buylead_id"),
+)
+
+tblbuylead_vehicle = Table(
+    "tblbuylead_vehicle",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("buylead_id", Integer, ForeignKey("tblbuylead.id"), nullable=False),
+    Column("registration_no", String(12), nullable=False),
+    Column("transmission", String(8), nullable=False),
+    Column("cubic_capacity", Integer, server_default=text("0"), nullable=False),
+    Column("push_button", String(3), nullable=True),
+    Column("reg_month", String(9), nullable=True),
+    Column("reg_year", String(4), nullable=True),
+    Column("euro", String(4), nullable=True),
+    Column("rc_book", String(3), nullable=True),
+    Column("second_key", String(3), nullable=True),
+    Column("hypo", String(3), nullable=True),
+    Column("hypo_bank", String(255), nullable=True),
+    Column("service_record", String(3), nullable=True),
+    Column("puc", String(3), nullable=True),
+    Column("memo", String(3), nullable=True),
+    Column("memo_amount", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("memo_paid", String(8), nullable=True),
+    Column("mv_tax", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("rma", String(8), nullable=True),
+    Column("taxi_private", String(8), nullable=True),
+    Column("other_noc", String(8), nullable=True),
+    Column("blacklist", String(8), nullable=True),
+    Column("rto_status", String(8), nullable=True),
+    UniqueConstraint("buylead_id", name="uq_tblbuylead_vehicle_buylead_id"),
+)
+
+tblbuylead_vehicle_insurance = Table(
+    "tblbuylead_vehicle_insurance",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("buylead_id", Integer, ForeignKey("tblbuylead.id"), nullable=False),
+    Column("online_insurance", String(3), nullable=False),
+    Column("insurance_type", String(6), nullable=False),
+    Column("cp_zd_company", String(255), nullable=True),
+    Column("tp_company", String(255), nullable=True),
+    Column("cp_zd_date", DateTime, nullable=True),
+    Column("tp_date", DateTime, nullable=True),
+    Column("idv", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("ncb", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("premium", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    UniqueConstraint("buylead_id", name="uq_tblbuylead_vehicle_insurance_buylead_id"),
+)
+
 
 def start_mappers() -> None:
     mapper_registry.map_imperatively(BuyModel.BuyLead, tblbuylead)
     mapper_registry.map_imperatively(BuyModel.BuyLeadAddress, tblbuylead_address)
     mapper_registry.map_imperatively(BuyModel._BuyLeadFollowup, tblbuylead_followup)
     mapper_registry.map_imperatively(BuyModel.BuyLeadFile, tblbuylead_file)
+    mapper_registry.map_imperatively(BuyModel.BuyLeadPayment, tblbuylead_payment)
+    mapper_registry.map_imperatively(BuyModel.BuyLeadVehicle, tblbuylead_vehicle)
+    mapper_registry.map_imperatively(
+        BuyModel.BuyLeadVehicleInsurance, tblbuylead_vehicle_insurance
+    )
 
 
 def stop_mappers() -> None:

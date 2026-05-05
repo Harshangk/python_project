@@ -31,6 +31,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("buylead_id", sa.Integer(), nullable=False),
+        sa.Column("online_insurance", sa.String(3), nullable=False),
         sa.Column("insurance_type", sa.String(6), nullable=False),
         sa.Column("cp_zd_company", sa.String(255), nullable=True),
         sa.Column("tp_company", sa.String(255), nullable=True),
@@ -45,12 +46,6 @@ def upgrade() -> None:
         sa.Column(
             "premium", sa.Numeric(12, 2), server_default=text("0.00"), nullable=False
         ),
-        sa.Column(
-            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
-        ),
-        sa.Column("created_by", sa.String(50), nullable=False),
-        sa.Column("modified_at", sa.DateTime(), nullable=True),
-        sa.Column("modified_by", sa.String(50), nullable=True),
         sa.ForeignKeyConstraint(
             ["buylead_id"],
             ["tblbuylead.id"],

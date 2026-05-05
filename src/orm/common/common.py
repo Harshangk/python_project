@@ -128,6 +128,36 @@ mstcity = Table(
     Index("idx_mstcity_city", "city"),
 )
 
+tblbank = Table(
+    "tblbank",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("bank_name", String(255), nullable=False),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+    Column("modified_at", DateTime, nullable=True),
+    Column("modified_by", String(length=50), nullable=True),
+    Column("is_active", Boolean, server_default=text("true"), nullable=False),
+    Column("is_deleted", Boolean, server_default=text("false"), nullable=False),
+    UniqueConstraint("bank_name"),
+    Index("idx_tblbank_bank_name", "bank_name"),
+)
+
+tblinsurance_company = Table(
+    "tblinsurance_company",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("insurance_company_name", String(255), nullable=False),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+    Column("modified_at", DateTime, nullable=True),
+    Column("modified_by", String(length=50), nullable=True),
+    Column("is_active", Boolean, server_default=text("true"), nullable=False),
+    Column("is_deleted", Boolean, server_default=text("false"), nullable=False),
+    UniqueConstraint("insurance_company_name"),
+    Index("idx_tblinsurance_company_insurance_company_name", "insurance_company_name"),
+)
+
 
 def start_mappers() -> None:
     mapper_registry.map_imperatively(CommonModel.Make, mstmake)
@@ -138,6 +168,8 @@ def start_mappers() -> None:
     mapper_registry.map_imperatively(CommonModel.Broker, mstbroker)
     mapper_registry.map_imperatively(CommonModel.State, mststate)
     mapper_registry.map_imperatively(CommonModel.City, mstcity)
+    mapper_registry.map_imperatively(CommonModel.Bank, tblbank)
+    mapper_registry.map_imperatively(CommonModel.InsuranceCompany, tblinsurance_company)
 
 
 def stop_mappers() -> None:

@@ -9,9 +9,11 @@ from common.file_storage import AbstractFileStorage
 from common.schema_types import Bucket
 from repository.common.common_repository_interface import CommonRepositoryInterface
 from schema.common.common import (
+    BankItem,
     BranchItem,
     BrokerItem,
     CityItem,
+    InsuranceCompanyItem,
     LeadSourceItem,
     MakeItem,
     ModelItem,
@@ -189,6 +191,40 @@ class CommonService(CommonServiceInterface):
         return await self.common_repository.get_total_city(
             state_id=state_id, search=search
         )
+
+    async def get_bank(
+        self,
+        cursor: int | None,
+        limit: int,
+        search: str | None = None,
+        sort_by: str | None = None,
+        sort_order: str | None = None,
+    ) -> List[BankItem]:
+        rows = await self.common_repository.get_bank(
+            cursor, limit, search, sort_by, sort_order
+        )
+        bank = [BankItem(**row) for row in rows]
+        return bank
+
+    async def get_total_bank(self, search: str | None = None) -> int:
+        return await self.common_repository.get_total_bank(search)
+
+    async def get_insurance_company(
+        self,
+        cursor: int | None,
+        limit: int,
+        search: str | None = None,
+        sort_by: str | None = None,
+        sort_order: str | None = None,
+    ) -> List[InsuranceCompanyItem]:
+        rows = await self.common_repository.get_insurance_company(
+            cursor, limit, search, sort_by, sort_order
+        )
+        insurance_company = [InsuranceCompanyItem(**row) for row in rows]
+        return insurance_company
+
+    async def get_total_insurance_company(self, search: str | None = None) -> int:
+        return await self.common_repository.get_total_insurance_company(search)
 
     async def download_s3_file(
         self,

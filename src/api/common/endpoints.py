@@ -28,12 +28,16 @@ from common.schema_types import (
 )
 from common.utils import enum_to_dict_list
 from schema.common.common import (
+    BankList,
+    BankSortBy,
     BranchList,
     BranchSortBy,
     BrokerList,
     BrokerSortBy,
     CityList,
     CitySortBy,
+    InsuranceCompanyList,
+    InsuranceCompanySortBy,
     LeadSourceList,
     LeadSourceSortBy,
     MakeList,
@@ -403,6 +407,72 @@ async def get_city(
         next_url = build_next_page_url(request, last_id, limit)
 
     return CityList(total=total, limit=limit, next=next_url, items=city)
+
+
+@router.get(
+    "/bank",
+    response_model=BankList,
+    status_code=status.HTTP_200_OK,
+)
+async def get_bank(
+    request: Request,
+    cursor: int | None = None,
+    limit: int | None = None,
+    search: str | None = None,
+    sort_by: BankSortBy = Query(BankSortBy.id, description="Field to sort by"),
+    sort_order: SortOrder = Query(SortOrder.desc, description="Sort direction"),
+    common_service: CommonServiceInterface = Depends(deps.common_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> BankList:
+    logger.info(f"request:{request},current_user:{current_user}")
+    limit = normalize_limit(limit)
+    bank = await common_service.get_bank(
+        cursor, limit, search, sort_by.value, sort_order.value
+    )
+    total = await common_service.get_total_bank(search)
+
+    next_url = None
+    if len(bank) == limit:
+        last_id = bank[-1].id
+        next_url = build_next_page_url(request, last_id, limit)
+
+    return BankList(total=total, limit=limit, next=next_url, items=bank)
+
+
+@router.get(
+    "/insurance-company",
+    response_model=InsuranceCompanyList,
+    status_code=status.HTTP_200_OK,
+)
+async def get_insurance_company(
+    request: Request,
+    cursor: int | None = None,
+    limit: int | None = None,
+    search: str | None = None,
+    sort_by: InsuranceCompanySortBy = Query(
+        InsuranceCompanySortBy.id, description="Field to sort by"
+    ),
+    sort_order: SortOrder = Query(SortOrder.desc, description="Sort direction"),
+    common_service: CommonServiceInterface = Depends(deps.common_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> InsuranceCompanyList:
+    logger.info(f"request:{request},current_user:{current_user}")
+    limit = normalize_limit(limit)
+    insurance_company = await common_service.get_insurance_company(
+        cursor, limit, search, sort_by.value, sort_order.value
+    )
+    total = await common_service.get_total_insurance_company(search)
+
+    next_url = None
+    if len(insurance_company) == limit:
+        last_id = insurance_company[-1].id
+        next_url = build_next_page_url(request, last_id, limit)
+
+    return InsuranceCompanyList(
+        total=total, limit=limit, next=next_url, items=insurance_company
+    )
 
 
 @router.get("/import/{s3_key:path}/download")

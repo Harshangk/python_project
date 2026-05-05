@@ -41,3 +41,13 @@ class State:
 class City:
     state_id: int
     city: str
+
+
+@dataclass
+class Bank:
+    bank_name: str
+
+
+@dataclass
+class InsuranceCompany:
+    insurance_company_name: str

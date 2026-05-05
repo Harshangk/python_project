@@ -36,18 +36,17 @@ def upgrade() -> None:
         sa.Column(
             "cubic_capacity", sa.Integer(), server_default=text("0"), nullable=False
         ),
-        sa.Column("push_button", sa.String(3), nullable=False),
-        sa.Column("reg_month", sa.String(9), nullable=False),
-        sa.Column("reg_year", sa.String(4), nullable=False),
-        sa.Column("euro", sa.String(4), nullable=False),
-        sa.Column("rc_book", sa.String(3), nullable=False),
-        sa.Column("second_key", sa.String(3), nullable=False),
-        sa.Column("hypo", sa.String(3), nullable=False),
+        sa.Column("push_button", sa.String(3), nullable=True),
+        sa.Column("reg_month", sa.String(9), nullable=True),
+        sa.Column("reg_year", sa.String(4), nullable=True),
+        sa.Column("euro", sa.String(4), nullable=True),
+        sa.Column("rc_book", sa.String(3), nullable=True),
+        sa.Column("second_key", sa.String(3), nullable=True),
+        sa.Column("hypo", sa.String(3), nullable=True),
         sa.Column("hypo_bank", sa.String(255), nullable=True),
-        sa.Column("service_record", sa.String(3), nullable=False),
-        sa.Column("online_insurance", sa.String(3), nullable=False),
-        sa.Column("puc", sa.String(3), nullable=False),
-        sa.Column("memo", sa.String(3), nullable=False),
+        sa.Column("service_record", sa.String(3), nullable=True),
+        sa.Column("puc", sa.String(3), nullable=True),
+        sa.Column("memo", sa.String(3), nullable=True),
         sa.Column(
             "memo_amount",
             sa.Numeric(12, 2),
@@ -58,17 +57,11 @@ def upgrade() -> None:
         sa.Column(
             "mv_tax", sa.Numeric(12, 2), server_default=text("0.00"), nullable=False
         ),
-        sa.Column("rma", sa.String(8), nullable=False),
-        sa.Column("taxi_private", sa.String(8), nullable=False),
-        sa.Column("other_noc", sa.String(8), nullable=False),
-        sa.Column("blacklist", sa.String(8), nullable=False),
-        sa.Column("rto_status", sa.String(8), nullable=False),
-        sa.Column(
-            "created_at", sa.DateTime(), server_default=text("now()"), nullable=False
-        ),
-        sa.Column("created_by", sa.String(50), nullable=False),
-        sa.Column("modified_at", sa.DateTime(), nullable=True),
-        sa.Column("modified_by", sa.String(50), nullable=True),
+        sa.Column("rma", sa.String(8), nullable=True),
+        sa.Column("taxi_private", sa.String(8), nullable=True),
+        sa.Column("other_noc", sa.String(8), nullable=True),
+        sa.Column("blacklist", sa.String(8), nullable=True),
+        sa.Column("rto_status", sa.String(8), nullable=True),
         sa.ForeignKeyConstraint(
             ["buylead_id"],
             ["tblbuylead.id"],

@@ -155,3 +155,41 @@ class CitySortBy(str, Enum):
     id = "id"
     state = "state"
     city = "city"
+
+
+class BankItem(CamelBaseModel):
+    id: int
+    bank_name: str
+    created_at: datetime
+    created_by: str
+
+
+class BankList(CamelBaseModel):
+    total: int
+    limit: int
+    next: Optional[str]
+    items: List[BankItem]
+
+
+class BankSortBy(str, Enum):
+    id = "id"
+    bank_name = "bank_name"
+
+
+class InsuranceCompanyItem(CamelBaseModel):
+    id: int
+    insurance_company_name: str
+    created_at: datetime
+    created_by: str
+
+
+class InsuranceCompanyList(CamelBaseModel):
+    total: int
+    limit: int
+    next: Optional[str]
+    items: List[InsuranceCompanyItem]
+
+
+class InsuranceCompanySortBy(str, Enum):
+    id = "id"
+    insurance_company_name = "insurance_company_name"
