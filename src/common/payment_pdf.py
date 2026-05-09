@@ -3,11 +3,7 @@ from decimal import Decimal
 from textwrap import wrap
 from typing import Any, Mapping
 
-PAGE_WIDTH = 595
-PAGE_HEIGHT = 842
-MARGIN = 42
-BOTTOM_MARGIN = 42
-LINE_HEIGHT = 14
+from app.constant import BOTTOM_MARGIN, LINE_HEIGHT, MARGIN, PAGE_HEIGHT, PAGE_WIDTH
 
 
 def _escape_pdf_text(value: Any) -> str:
