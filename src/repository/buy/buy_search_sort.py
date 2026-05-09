@@ -219,6 +219,8 @@ LEAD_PAYMENT_PDF_COLUMNS = [
     tblbuylead_vehicle.c.transmission,
     tblbuylead_vehicle.c.cubic_capacity,
     tblbuylead_vehicle.c.push_button,
+    tblbuylead_vehicle.c.company_invoice,
+    tblbuylead_vehicle.c.noc,
     tblbuylead_vehicle.c.reg_month,
     tblbuylead_vehicle.c.reg_year,
     tblbuylead_vehicle.c.euro,

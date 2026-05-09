@@ -214,6 +214,8 @@ def build_buy_lead_payment_pdf(payment: Mapping[str, Any]) -> bytes:
             ("Transmission", payment.get("transmission")),
             ("Cubic Capacity", payment.get("cubic_capacity")),
             ("Push Button", payment.get("push_button")),
+            ("Company Invoice", payment.get("company_invoice")),
+            ("NOC", payment.get("noc")),
             ("Reg Month", payment.get("reg_month")),
             ("Reg Year", payment.get("reg_year")),
             ("Euro", payment.get("euro")),

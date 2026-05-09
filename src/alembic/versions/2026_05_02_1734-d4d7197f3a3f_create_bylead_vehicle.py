@@ -36,6 +36,8 @@ def upgrade() -> None:
         sa.Column(
             "cubic_capacity", sa.Integer(), server_default=text("0"), nullable=False
         ),
+        sa.Column("company_invoice", sa.String(3), nullable=True),
+        sa.Column("noc", sa.String(3), nullable=True),
         sa.Column("push_button", sa.String(3), nullable=True),
         sa.Column("reg_month", sa.String(9), nullable=True),
         sa.Column("reg_year", sa.String(4), nullable=True),

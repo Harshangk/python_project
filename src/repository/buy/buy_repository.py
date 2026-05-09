@@ -961,6 +961,12 @@ class BuyRepository(BuyRepositoryInterface):
                         if lead_vehicle.push_button
                         else None
                     ),
+                    company_invoice=(
+                        lead_vehicle.company_invoice.value
+                        if lead_vehicle.company_invoice
+                        else None
+                    ),
+                    noc=(lead_vehicle.noc.value if lead_vehicle.noc else None),
                     reg_month=(
                         lead_vehicle.reg_month.value if lead_vehicle.reg_month else None
                     ),

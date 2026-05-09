@@ -51,3 +51,27 @@ class Bank:
 @dataclass
 class InsuranceCompany:
     insurance_company_name: str
+
+
+@dataclass
+class Part:
+    part_name: str
+
+
+@dataclass
+class SubPart:
+    part_id: int
+    subpart_name: str
+
+
+@dataclass
+class SubPartStatus:
+    subpart_id: int
+    subpart_status: str
+    is_default: bool
+
+
+@dataclass
+class SubPartSubStatus:
+    subpartstatus_id: int
+    subpart_sub_status: str

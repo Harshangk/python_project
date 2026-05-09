@@ -158,6 +158,8 @@ tblbuylead_vehicle = Table(
     Column("transmission", String(8), nullable=False),
     Column("cubic_capacity", Integer, server_default=text("0"), nullable=False),
     Column("push_button", String(3), nullable=True),
+    Column("company_invoice", String(3), nullable=True),
+    Column("noc", String(3), nullable=True),
     Column("reg_month", String(9), nullable=True),
     Column("reg_year", String(4), nullable=True),
     Column("euro", String(4), nullable=True),

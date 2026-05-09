@@ -471,6 +471,8 @@ class LeadVehicle(CamelBaseModel):
     transmission: Transmission
     cubic_capacity: int | None = 0
     push_button: CommonFieldStatus | None = None
+    company_invoice: CommonFieldStatus | None = None
+    noc: CommonFieldStatus | None = None
     reg_month: Months | None = None
     reg_year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
     euro: str = Field(None, min_length=1, max_length=4)
@@ -558,6 +560,8 @@ class CreateBuyLeadPayment(CamelBaseModel):
                     transmission=self.lead_vehicle.transmission,
                     cubic_capacity=self.lead_vehicle.cubic_capacity,
                     push_button=self.lead_vehicle.push_button,
+                    company_invoice=self.lead_vehicle.company_invoice,
+                    noc=self.lead_vehicle.noc,
                     reg_month=self.lead_vehicle.reg_month,
                     reg_year=self.lead_vehicle.reg_year,
                     euro=self.lead_vehicle.euro,

@@ -159,6 +159,69 @@ tblinsurance_company = Table(
 )
 
 
+mstpart = Table(
+    "mstpart",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("part_name", String(length=50), nullable=False),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+    Column("modified_at", DateTime, nullable=True),
+    Column("modified_by", String(length=50), nullable=True),
+    Column("is_active", Boolean, server_default=text("true"), nullable=False),
+    Column("is_deleted", Boolean, server_default=text("false"), nullable=False),
+    UniqueConstraint("part_name", name="uq_mstpart_part_name"),
+)
+
+mstsubpart = Table(
+    "mstsubpart",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("part_id", Integer(), ForeignKey("mstpart.id"), nullable=False),
+    Column("subpart_name", String(50), nullable=False),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+    Column("modified_at", DateTime, nullable=True),
+    Column("modified_by", String(length=50), nullable=True),
+    Column("is_active", Boolean, server_default=text("true"), nullable=False),
+    Column("is_deleted", Boolean, server_default=text("false"), nullable=False),
+    Index("idx_mstsubpart_part_id", "part_id"),
+)
+
+mstsubpartstatus = Table(
+    "mstsubpartstatus",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("subpart_id", Integer(), ForeignKey("mstsubpart.id"), nullable=False),
+    Column("subpart_status", String(50), nullable=False),
+    Column("is_default", Boolean, server_default=text("false"), nullable=False),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+    Column("modified_at", DateTime, nullable=True),
+    Column("modified_by", String(length=50), nullable=True),
+    Column("is_active", Boolean, server_default=text("true"), nullable=False),
+    Column("is_deleted", Boolean, server_default=text("false"), nullable=False),
+    Index("idx_mstsubpartstatus_subpart_id", "subpart_id"),
+)
+
+mstsubpartsubstatus = Table(
+    "mstsubpartsubstatus",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column(
+        "subpartstatus_id", Integer(), ForeignKey("mstsubpartstatus.id"), nullable=False
+    ),
+    Column("subpart_sub_status", String(50), nullable=False),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+    Column("modified_at", DateTime, nullable=True),
+    Column("modified_by", String(length=50), nullable=True),
+    Column("is_active", Boolean, server_default=text("true"), nullable=False),
+    Column("is_deleted", Boolean, server_default=text("false"), nullable=False),
+    Index("idx_mstsubpartsubstatus_subpartstatus_id", "subpartstatus_id"),
+)
+
+
 def start_mappers() -> None:
     mapper_registry.map_imperatively(CommonModel.Make, mstmake)
     mapper_registry.map_imperatively(CommonModel.Model, mstmodel)
@@ -170,6 +233,10 @@ def start_mappers() -> None:
     mapper_registry.map_imperatively(CommonModel.City, mstcity)
     mapper_registry.map_imperatively(CommonModel.Bank, tblbank)
     mapper_registry.map_imperatively(CommonModel.InsuranceCompany, tblinsurance_company)
+    mapper_registry.map_imperatively(CommonModel.Part, mstpart)
+    mapper_registry.map_imperatively(CommonModel.SubPart, mstsubpart)
+    mapper_registry.map_imperatively(CommonModel.SubPartStatus, mstsubpartstatus)
+    mapper_registry.map_imperatively(CommonModel.SubPartSubStatus, mstsubpartsubstatus)
 
 
 def stop_mappers() -> None:

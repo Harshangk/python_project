@@ -180,6 +180,8 @@ class BuyLeadVehicle:
     transmission: Transmission
     cubic_capacity: int
     push_button: CommonFieldStatus | None = None
+    company_invoice: CommonFieldStatus | None = None
+    noc: CommonFieldStatus | None = None
     reg_month: Months | None = None
     reg_year: str | None = None
     euro: str | None = None
