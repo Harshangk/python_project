@@ -1,3 +1,4 @@
+import io
 from uuid import UUID, uuid4
 
 from fastapi import (
@@ -13,6 +14,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from fastapi.responses import StreamingResponse
 
 from api.buy import deps, example
 from api.common.deps import common_service
@@ -643,3 +645,42 @@ async def create_lead_payment(
         logger.error(f"[{trace_id}] create_lead failed: {str(ex)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
     return Response(id=payment_id, message=constant.CREATED)
+
+
+@router.get(
+    "/{lead_id}/payment/pdf",
+    status_code=status.HTTP_200_OK,
+)
+async def download_lead_payment_pdf(
+    request: Request,
+    lead_id: int,
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+):
+    logger.info(f"request: {request}, user: {current_user}, id:{lead_id}")
+    try:
+        payment_pdf = await buy_service.get_lead_payment_pdf(
+            lead_id=lead_id,
+            created_by=current_user.user_name,
+            role_id=current_user.role_id,
+        )
+        if not payment_pdf:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
+
+        filename, pdf_bytes = payment_pdf
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+            },
+        )
+    except HTTPException:
+        raise
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"[{trace_id}] download_lead_payment_pdf failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)

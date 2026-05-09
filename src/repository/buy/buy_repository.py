@@ -41,6 +41,7 @@ from repository.buy.buy_search_sort import (
     IMPORT_LEAD_COLUMNS,
     IMPORT_LEAD_SEARCHABLE_COLUMNS,
     LEAD_COLUMNS,
+    LEAD_PAYMENT_PDF_COLUMNS,
     LEAD_SEARCHABLE_COLUMNS,
     LEAD_SORTABLE_COLUMNS,
 )
@@ -1038,3 +1039,44 @@ class BuyRepository(BuyRepositoryInterface):
         except IntegrityError:
             await self.session.rollback()
             raise CreationError(constant.FAILED)
+
+    async def get_lead_payment_pdf(
+        self,
+        lead_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> Mapping[str, Any] | None:
+        stmt = (
+            select(*LEAD_PAYMENT_PDF_COLUMNS)
+            .join(mstmake, tblbuylead.c.make_id == mstmake.c.id)
+            .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
+            .join(
+                tblbuylead_payment,
+                tblbuylead.c.id == tblbuylead_payment.c.buylead_id,
+            )
+            .outerjoin(
+                tblbuylead_vehicle,
+                tblbuylead.c.id == tblbuylead_vehicle.c.buylead_id,
+            )
+            .outerjoin(
+                tblbuylead_vehicle_insurance,
+                tblbuylead.c.id == tblbuylead_vehicle_insurance.c.buylead_id,
+            )
+            .where(
+                tblbuylead.c.id == lead_id,
+                tblbuylead.c.is_active.is_(True),
+                tblbuylead.c.is_deleted.is_(False),
+            )
+        )
+
+        if role_id != 1:
+            stmt = stmt.where(
+                or_(
+                    tblbuylead.c.telecaller == created_by,
+                    tblbuylead.c.executive == created_by,
+                    tblbuylead_payment.c.created_by == created_by,
+                )
+            )
+
+        result = await self.session.execute(stmt)
+        return result.mappings().one_or_none()

@@ -6,6 +6,7 @@ from uuid import UUID
 
 from app import constant
 from common.file_storage import AbstractFileStorage
+from common.payment_pdf import build_buy_lead_payment_pdf
 from common.schema_types import BuyStage, BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
@@ -493,3 +494,20 @@ class BuyService(BuyServiceInterface):
         return await self.buy_repository.create_lead_payment(
             lead_payment=lead_payment, created_by=created_by
         )
+
+    async def get_lead_payment_pdf(
+        self,
+        lead_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> tuple[str, bytes] | None:
+        payment = await self.buy_repository.get_lead_payment_pdf(
+            lead_id=lead_id,
+            created_by=created_by,
+            role_id=role_id,
+        )
+        if not payment:
+            return None
+
+        filename = f"buy_lead_payment_{lead_id}.pdf"
+        return filename, build_buy_lead_payment_pdf(payment)

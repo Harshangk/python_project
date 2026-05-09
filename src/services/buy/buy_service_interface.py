@@ -198,3 +198,12 @@ class BuyServiceInterface(ABC):
         self, lead_payment: BuyLeadPayment, created_by: str
     ) -> int:
         pass
+
+    @abstractmethod
+    async def get_lead_payment_pdf(
+        self,
+        lead_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> tuple[str, bytes] | None:
+        pass
