@@ -10,7 +10,7 @@ from app.db.session import SessionLocal
 from app.s3 import get_s3_client
 from auth.dto import AuthenticatedActor, AuthenticatedUser
 from auth.factory import make_auth_service_factory
-from auth.services import AbstractAuthService, FakeAuthService
+from auth.services import AbstractAuthService
 from common.file_storage import AbstractFileStorage, LocalFileStorage, S3FileStorage
 from common.utils import trace_id_var
 
@@ -31,15 +31,11 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @cache
-def _fake_auth_service() -> AbstractAuthService:
-    return FakeAuthService()
+def _get_auth_service_factory() -> Callable[[], AbstractAuthService]:
+    return make_auth_service_factory()
 
 
-_get_auth_service: Callable[[], AbstractAuthService]
-if not settings.application_env or settings.application_env == "Local":
-    _get_auth_service = _fake_auth_service
-else:
-    _get_auth_service = make_auth_service_factory()
+_get_auth_service = _get_auth_service_factory()
 
 
 def get_authenticated_user(

@@ -61,7 +61,10 @@ class FakeAuthService(AbstractAuthService):
 
 
 class JWTAuthService(AbstractAuthService):
-    def __init__(self, token: str):
+    def __init__(self, token: str | None):
+        if not token:
+            raise Unauthorized()
+
         try:
             payload = jwt.decode(
                 token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]

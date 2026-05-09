@@ -12,5 +12,5 @@ class AuthServiceInterface(ABC):
         pass
 
     @abstractmethod
-    async def logout(self, token: str):
+    async def logout(self):
         pass

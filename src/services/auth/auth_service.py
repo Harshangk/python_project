@@ -57,7 +57,7 @@ class AuthService(AuthServiceInterface):
                 refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
             )
 
-            username = payload.get("sub")
+            username = payload.get("user_name")
 
             if not username:
                 raise HTTPException(status_code=401, detail="Invalid refresh token")
@@ -68,7 +68,7 @@ class AuthService(AuthServiceInterface):
         except JWTError:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
 
-    async def logout(self, token: str):
+    async def logout(self):
 
         # For now stateless logout
         # Later we can add token blacklist

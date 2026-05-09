@@ -12,7 +12,6 @@ async def handle_unauthorized(request: Request, exc: Unauthorized) -> JSONRespon
     return JSONResponse(
         dict(detail="Not authenticated"),
         status_code=status.HTTP_401_UNAUTHORIZED,
-        headers={"WWW-Authenticate": "Bearer"},
     )
 
 
