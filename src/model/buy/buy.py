@@ -49,7 +49,7 @@ class BuyLead:
     client_offer: int
     our_offer: int
     remarks: str
-    status: BuyStatus
+    status: BuyStatus | None = None
     alternate_mobile: str | None = None
     broker_name: str | None = None
     variant: str | None = None

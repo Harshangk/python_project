@@ -488,8 +488,8 @@ class BuyService(BuyServiceInterface):
         return BuyLeadImportItem(**row)
 
     async def create_lead_payment(
-        self, lead_id: int, lead_payment: BuyLeadPayment, created_by: str
+        self, lead_payment: BuyLeadPayment, created_by: str
     ) -> int:
         return await self.buy_repository.create_lead_payment(
-            lead_id=lead_id, lead_payment=lead_payment, created_by=created_by
+            lead_payment=lead_payment, created_by=created_by
         )

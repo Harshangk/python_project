@@ -61,13 +61,17 @@ class CreateBuyLead(CamelBaseModel):
     source: str
     mode: BuyMode
     broker_name: str | None = Field(None, max_length=255)
+    category: Category
     customer_name: str = Field(..., min_length=1, max_length=255)
+    owner_name: str = Field(..., min_length=1, max_length=255)
+    payment_name: str = Field(..., min_length=1, max_length=255)
     lead_address: LeadAddress | None = None
     make_id: int
     model_id: int
     variant: str | None = Field(None, max_length=255)
     color: Annotated[Color | None, BeforeValidator(empty_to_none)] = None
     fuel_type: FuelType
+    mfg_month: Months
     mfg_year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
     kms: int
     owner: str = Field(..., min_length=1, max_length=1)
@@ -93,12 +97,16 @@ class CreateBuyLead(CamelBaseModel):
             source=self.source,
             mode=self.mode,
             broker_name=self.broker_name,
+            category=self.category,
             customer_name=self.customer_name,
+            owner_name=self.owner_name,
+            payment_name=self.payment_name,
             make_id=self.make_id,
             model_id=self.model_id,
             variant=self.variant,
             color=self.color,
             fuel_type=self.fuel_type,
+            mfg_month=self.mfg_month,
             mfg_year=self.mfg_year,
             kms=self.kms,
             owner=self.owner,
@@ -464,7 +472,7 @@ class LeadVehicle(CamelBaseModel):
     cubic_capacity: int | None = 0
     push_button: CommonFieldStatus | None = None
     reg_month: Months | None = None
-    reg_year: int | None = None
+    reg_year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
     euro: str = Field(None, min_length=1, max_length=4)
     rc_book: CommonFieldStatus | None = None
     second_key: CommonFieldStatus | None = None
@@ -521,8 +529,9 @@ class CreateBuyLeadPayment(CamelBaseModel):
         schema_extra = {"example": BUY_LEAD_PAYMENT}
         orm_mode = True
 
-    def to_model(self) -> BuyModel.BuyLeadPayment:
+    def to_model(self, lead_id: int, created_by: str) -> BuyModel.BuyLeadPayment:
         return BuyModel.BuyLeadPayment(
+            buylead_id=lead_id,
             refurb_cost=self.refurb_cost,
             deal=self.deal,
             service_charge=self.service_charge,
@@ -541,8 +550,10 @@ class CreateBuyLeadPayment(CamelBaseModel):
             ch_rtgs=self.ch_rtgs,
             total_payble=self.total_payble,
             remarks=self.remarks,
+            created_by=created_by,
             lead_vehicle=(
                 BuyModel.BuyLeadVehicle(
+                    buylead_id=lead_id,
                     registration_no=self.lead_vehicle.registration_no,
                     transmission=self.lead_vehicle.transmission,
                     cubic_capacity=self.lead_vehicle.cubic_capacity,
@@ -571,6 +582,7 @@ class CreateBuyLeadPayment(CamelBaseModel):
             ),
             lead_vehicle_insurance=(
                 BuyModel.BuyLeadVehicleInsurance(
+                    buylead_id=lead_id,
                     online_insurance=self.lead_vehicle_insurance.online_insurance,
                     insurance_type=self.lead_vehicle_insurance.insurance_type,
                     cp_zd_company=self.lead_vehicle_insurance.cp_zd_company,

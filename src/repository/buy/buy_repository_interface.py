@@ -189,6 +189,6 @@ class BuyRepositoryInterface(ABC):
 
     @abstractmethod
     async def create_lead_payment(
-        self, lead_id: int, lead_payment: BuyLeadPayment, created_by: str
+        self, lead_payment: BuyLeadPayment, created_by: str
     ) -> int:
         pass

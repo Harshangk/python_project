@@ -624,13 +624,18 @@ async def create_lead_payment(
     logger.info(f"request: {request}")
     try:
         payment_id = await buy_service.create_lead_payment(
-            lead_id=lead_id,
-            lead_payment=lead_payment.to_model(),
+            lead_payment=lead_payment.to_model(
+                lead_id=lead_id,
+                created_by=current_user.user_name,
+            ),
             created_by=current_user.user_name,
         )
     except CreationError as ex:
         logger.error(f"ValueError error: {ex}")
         raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.FAILED)
+    except NotFound as ex:
+        logger.error(f"Not Found error: {ex}")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
     except ValueError as ex:
         logger.error(f"ValueError error: {ex}")
         raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)

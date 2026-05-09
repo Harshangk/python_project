@@ -18,12 +18,20 @@ from common.schema_types import (
 )
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
-from model.buy.buy import BuyLeadFile, BuyLeadFollowup, BuyLeadFollowupDetail
+from model.buy.buy import (
+    BuyLeadFile,
+    BuyLeadFollowup,
+    BuyLeadFollowupDetail,
+    BuyLeadPayment,
+)
 from orm.buy.buy import (
     tblbuylead,
     tblbuylead_address,
     tblbuylead_file,
     tblbuylead_followup,
+    tblbuylead_payment,
+    tblbuylead_vehicle,
+    tblbuylead_vehicle_insurance,
 )
 from orm.common.common import mstmake, mstmodel
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
@@ -61,16 +69,26 @@ class BuyRepository(BuyRepositoryInterface):
                     source=lead.source,
                     mode=lead.mode.value,
                     broker_name=lead.broker_name,
-                    category=Category.Individual.value,
+                    category=(
+                        lead.category.value
+                        if lead.category
+                        else Category.Individual.value
+                    ),
                     customer_name=lead.customer_name,
-                    owner_name=lead.customer_name,
-                    payment_name=lead.customer_name,
+                    owner_name=(
+                        lead.owner_name if lead.owner_name else lead.customer_name
+                    ),
+                    payment_name=(
+                        lead.payment_name if lead.payment_name else lead.customer_name
+                    ),
                     make_id=lead.make_id,
                     model_id=lead.model_id,
                     variant=lead.variant,
                     color=lead.color.value if lead.color else None,
                     fuel_type=lead.fuel_type.value,
-                    mfg_month=Months.January.value,
+                    mfg_month=(
+                        lead.mfg_month.value if lead.mfg_month else Months.January.value
+                    ),
                     mfg_year=str(lead.mfg_year),
                     kms=lead.kms,
                     owner=lead.owner,
@@ -859,3 +877,164 @@ class BuyRepository(BuyRepositoryInterface):
             stmt = stmt.where(or_(tblbuylead_file.c.created_by == created_by))
         result = await self.session.execute(stmt)
         return result.mappings().one_or_none()
+
+    async def create_lead_payment(
+        self, lead_payment: BuyLeadPayment, created_by: str
+    ) -> int:
+        try:
+            existing_stmt = select(
+                tblbuylead.c.id,
+            ).where(
+                tblbuylead.c.id == lead_payment.buylead_id,
+                tblbuylead.c.is_active.is_(True),
+                tblbuylead.c.is_deleted.is_(False),
+                or_(
+                    tblbuylead.c.status == BuyStatus.Appointment.value,
+                ),
+            )
+
+            result = await self.session.execute(existing_stmt)
+            existing = result.fetchone()
+
+            if not existing:
+                raise NotFound(constant.NOTFOUND)
+
+            payment_values = dict(
+                buylead_id=lead_payment.buylead_id,
+                refurb_cost=lead_payment.refurb_cost,
+                deal=lead_payment.deal,
+                service_charge=lead_payment.service_charge,
+                tcs=lead_payment.tcs,
+                gst=lead_payment.gst,
+                tax=lead_payment.tax,
+                rcd=lead_payment.rcd,
+                commission=lead_payment.commission,
+                deal_with_commission=lead_payment.deal_with_commission,
+                deal_without_commission=lead_payment.deal_without_commission,
+                token=lead_payment.token,
+                cash=lead_payment.cash,
+                loan=lead_payment.loan,
+                less=lead_payment.less,
+                hold=lead_payment.hold,
+                ch_rtgs=lead_payment.ch_rtgs,
+                total_payble=lead_payment.total_payble,
+                remarks=lead_payment.remarks,
+                created_by=lead_payment.created_by,
+            )
+            payment_update_values = {
+                key: value
+                for key, value in payment_values.items()
+                if key != "buylead_id"
+            }
+            payment_update_values.pop("created_by")
+            payment_update_values.update(
+                modified_at=func.now(),
+                modified_by=created_by,
+            )
+
+            stmt = (
+                insert(tblbuylead_payment)
+                .values(**payment_values)
+                .on_conflict_do_update(
+                    index_elements=[tblbuylead_payment.c.buylead_id],
+                    set_=payment_update_values,
+                )
+                .returning(tblbuylead_payment.c.id)
+            )
+            result = await self.session.execute(stmt)
+            payment_id = result.scalar_one()
+
+            if lead_payment.lead_vehicle:
+                lead_vehicle = lead_payment.lead_vehicle
+                vehicle_values = dict(
+                    buylead_id=lead_vehicle.buylead_id,
+                    registration_no=lead_vehicle.registration_no,
+                    transmission=(
+                        lead_vehicle.transmission.value
+                        if lead_vehicle.transmission
+                        else None
+                    ),
+                    cubic_capacity=lead_vehicle.cubic_capacity,
+                    push_button=(
+                        lead_vehicle.push_button.value
+                        if lead_vehicle.push_button
+                        else None
+                    ),
+                    reg_month=(
+                        lead_vehicle.reg_month.value if lead_vehicle.reg_month else None
+                    ),
+                    reg_year=(
+                        str(lead_vehicle.reg_year)
+                        if lead_vehicle.reg_year is not None
+                        else None
+                    ),
+                    euro=lead_vehicle.euro,
+                    rc_book=lead_vehicle.rc_book.value,
+                    second_key=lead_vehicle.second_key.value,
+                    hypo=lead_vehicle.hypo.value,
+                    hypo_bank=lead_vehicle.hypo_bank,
+                    service_record=lead_vehicle.service_record.value,
+                    puc=lead_vehicle.puc.value,
+                    memo=lead_vehicle.memo.value,
+                    memo_amount=lead_vehicle.memo_amount,
+                    memo_paid=(
+                        lead_vehicle.memo_paid.value if lead_vehicle.memo_paid else None
+                    ),
+                    mv_tax=lead_vehicle.mv_tax,
+                    rma=lead_vehicle.rma,
+                    taxi_private=lead_vehicle.taxi_private,
+                    other_noc=lead_vehicle.other_noc,
+                    blacklist=lead_vehicle.blacklist,
+                    rto_status=lead_vehicle.rto_status,
+                )
+                vehicle_update_values = {
+                    key: value
+                    for key, value in vehicle_values.items()
+                    if key != "buylead_id"
+                }
+                stmt = (
+                    insert(tblbuylead_vehicle)
+                    .values(**vehicle_values)
+                    .on_conflict_do_update(
+                        index_elements=[tblbuylead_vehicle.c.buylead_id],
+                        set_=vehicle_update_values,
+                    )
+                )
+                await self.session.execute(stmt)
+
+            if lead_payment.lead_vehicle_insurance:
+                lead_vehicle_insurance = lead_payment.lead_vehicle_insurance
+                vehicle_insurance_values = dict(
+                    buylead_id=lead_vehicle_insurance.buylead_id,
+                    online_insurance=lead_vehicle_insurance.online_insurance.value,
+                    insurance_type=lead_vehicle_insurance.insurance_type.value,
+                    cp_zd_company=lead_vehicle_insurance.cp_zd_company,
+                    tp_company=lead_vehicle_insurance.tp_company,
+                    cp_zd_date=lead_vehicle_insurance.cp_zd_date,
+                    tp_date=lead_vehicle_insurance.tp_date,
+                    idv=lead_vehicle_insurance.idv,
+                    ncb=lead_vehicle_insurance.ncb,
+                    premium=lead_vehicle_insurance.premium,
+                )
+                vehicle_insurance_update_values = {
+                    key: value
+                    for key, value in vehicle_insurance_values.items()
+                    if key != "buylead_id"
+                }
+                stmt = (
+                    insert(tblbuylead_vehicle_insurance)
+                    .values(**vehicle_insurance_values)
+                    .on_conflict_do_update(
+                        index_elements=[
+                            tblbuylead_vehicle_insurance.c.buylead_id,
+                        ],
+                        set_=vehicle_insurance_update_values,
+                    )
+                )
+                await self.session.execute(stmt)
+
+            await self.session.commit()
+            return payment_id
+        except IntegrityError:
+            await self.session.rollback()
+            raise CreationError(constant.FAILED)
