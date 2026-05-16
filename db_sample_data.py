@@ -99,3 +99,51 @@
 #  INSERT INTO mstpart (part_name,created_by) VALUES ('Accident','Harshang');
 #  INSERT INTO mstpart (part_name,created_by) VALUES ('Bumper','Harshang');
 #  INSERT INTO mstpart (part_name,created_by) VALUES ('Bonet/Hood','Harshang');
+
+#  INSERT INTO mstsubpart (part_id,subpart_name,created_by) VALUES (1,'Major','Harshang'); # noqa
+#  INSERT INTO mstsubpart (part_id,subpart_name,created_by) VALUES (1,'Minor','Harshang'); # noqa
+#  INSERT INTO mstsubpart (part_id,subpart_name,created_by) VALUES (2,'Front','Harshang'); # noqa
+#  INSERT INTO mstsubpart (part_id,subpart_name,created_by) VALUES (2,'Rear','Harshang'); # noqa
+#  INSERT INTO mstsubpart (part_id,subpart_name,created_by) VALUES (3,'N/A','Harshang'); # noqa
+
+#  INSERT INTO mstsubpartstatus (subpart_id,subpart_status,is_default,created_by) VALUES (1,'No',true,'Harshang'); # noqa
+#  INSERT INTO mstsubpartstatus (subpart_id,subpart_status,is_default,created_by) VALUES (1,'Yes',false,'Harshang'); # noqa
+#  INSERT INTO mstsubpartstatus (subpart_id,subpart_status,is_default,created_by) VALUES (2,'No',true,'Harshang') ; # noqa
+#  INSERT INTO mstsubpartstatus (subpart_id,subpart_status,is_default,created_by) VALUES (2,'Yes',false,'Harshang'); # noqa
+#  INSERT INTO mstsubpartstatus (subpart_id,subpart_status,is_default,created_by) VALUES (3,'OK',true,'Harshang') ; # noqa
+#  INSERT INTO mstsubpartstatus (subpart_id,subpart_status,is_default,created_by) VALUES (3,'Not OK',false,'Harshang'); # noqa
+#  INSERT INTO mstsubpartstatus (subpart_id,subpart_status,is_default,created_by) VALUES (4,'OK',true,'Harshang') ; # noqa
+#  INSERT INTO mstsubpartstatus (subpart_id,subpart_status,is_default,created_by) VALUES (4,'Not OK',false,'Harshang'); # noqa
+#  INSERT INTO mstsubpartstatus (subpart_id,subpart_status,is_default,created_by) VALUES (5,'OK',true,'Harshang') ; # noqa
+#  INSERT INTO mstsubpartstatus (subpart_id,subpart_status,is_default,created_by) VALUES (5,'Not OK',false,'Harshang'); # noqa
+
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (2,'Apron','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (2,'Pillars','Harshang'); # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (2,'Chais repair','Harshang'); # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (2,'Body cell','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (4,'Door change','Harshang'); # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (4,'Bonet change','Harshang'); # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (4,'Dicky change','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (4,'Body panel repair','Harshang'); # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (6,'Repainted','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (6,'Repaired','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (6,'Replaced','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (6,'Scratched','Harshang') ;# noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (6,'Damaged','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (6,'Grill damaged','Harshang'); # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (6,'Dented','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (6,'Touching','Harshang'); # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (8,'Repainted','Harshang'); # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (8,'Repaired','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (8,'Replaced','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (8,'Scratched','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (8,'Damaged','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (8,'Dented','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (8,'Touching','Harshang'); # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (10,'Repainted','Harshang'); # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (10,'Repaired','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (10,'Replaced','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (10,'Scratched','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (10,'Damaged','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (10,'Dented','Harshang') ; # noqa
+#  INSERT INTO mstsubpartsubstatus (subpartstatus_id,subpart_sub_status,created_by) VALUES (10,'Rusted','Harshang') ; # noqa
