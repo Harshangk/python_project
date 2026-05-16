@@ -1,7 +1,7 @@
 from typing import Any, Mapping, Sequence
 from uuid import UUID
 
-from sqlalchemy import String, asc, cast, delete, desc, func, or_, select, update
+from sqlalchemy import String, and_, asc, cast, delete, desc, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -36,7 +36,14 @@ from orm.buy.buy import (
     tblbuylead_vehicle,
     tblbuylead_vehicle_insurance,
 )
-from orm.common.common import mstmake, mstmodel
+from orm.common.common import (
+    mstmake,
+    mstmodel,
+    mstpart,
+    mstsubpart,
+    mstsubpartstatus,
+    mstsubpartsubstatus,
+)
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 from repository.buy.buy_search_sort import (
     FOLLOWUP_LEAD_COLUMNS,
@@ -44,6 +51,7 @@ from repository.buy.buy_search_sort import (
     IMPORT_LEAD_COLUMNS,
     IMPORT_LEAD_SEARCHABLE_COLUMNS,
     LEAD_COLUMNS,
+    LEAD_EVALUATION_PDF_COLUMNS,
     LEAD_PAYMENT_PDF_COLUMNS,
     LEAD_SEARCHABLE_COLUMNS,
     LEAD_SORTABLE_COLUMNS,
@@ -1158,3 +1166,135 @@ class BuyRepository(BuyRepositoryInterface):
         except Exception as ex:
             await self.session.rollback()
             raise ex
+
+    async def get_lead_evaluation_pdf(
+        self,
+        lead_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> Mapping[str, Any] | None:
+
+        lead_stmt = (
+            select(*LEAD_EVALUATION_PDF_COLUMNS)
+            .join(
+                mstmake,
+                tblbuylead.c.make_id == mstmake.c.id,
+            )
+            .join(
+                mstmodel,
+                tblbuylead.c.model_id == mstmodel.c.id,
+            )
+            .join(
+                tblbuylead_evaluation,
+                tblbuylead.c.id == tblbuylead_evaluation.c.buylead_id,
+            )
+            .outerjoin(
+                tblbuylead_vehicle,
+                tblbuylead.c.id == tblbuylead_vehicle.c.buylead_id,
+            )
+            .outerjoin(
+                tblbuylead_vehicle_insurance,
+                tblbuylead.c.id == tblbuylead_vehicle_insurance.c.buylead_id,
+            )
+            .where(
+                tblbuylead.c.id == lead_id,
+                tblbuylead.c.is_active.is_(True),
+                tblbuylead.c.is_deleted.is_(False),
+            )
+        )
+
+        if role_id != 1:
+            lead_stmt = lead_stmt.where(
+                or_(
+                    tblbuylead.c.telecaller == created_by,
+                    tblbuylead.c.executive == created_by,
+                    tblbuylead_payment.c.created_by == created_by,
+                )
+            )
+
+        lead_result = await self.session.execute(lead_stmt)
+        lead = lead_result.mappings().one_or_none()
+
+        if not lead:
+            return None
+
+        param_stmt = (
+            select(
+                tblbuylead_evaluation_parameter.c.part_id,
+                tblbuylead_evaluation_parameter.c.subpart_id,
+                tblbuylead_evaluation_parameter.c.subpartstatus_id,
+                tblbuylead_evaluation_parameter.c.subpartsubstatus_id,
+                mstpart.c.part_name,
+                mstsubpart.c.subpart_name,
+                mstsubpartstatus.c.subpart_status,
+                mstsubpartsubstatus.c.subpart_sub_status,
+            )
+            .join(
+                mstpart,
+                tblbuylead_evaluation_parameter.c.part_id == mstpart.c.id,
+            )
+            .join(
+                mstsubpart,
+                and_(
+                    tblbuylead_evaluation_parameter.c.part_id == mstsubpart.c.part_id,
+                    tblbuylead_evaluation_parameter.c.subpart_id == mstsubpart.c.id,
+                ),
+            )
+            .join(
+                mstsubpartstatus,
+                and_(
+                    tblbuylead_evaluation_parameter.c.subpart_id
+                    == mstsubpartstatus.c.subpart_id,
+                    tblbuylead_evaluation_parameter.c.subpartstatus_id
+                    == mstsubpartstatus.c.id,
+                ),
+            )
+            .join(
+                mstsubpartsubstatus,
+                and_(
+                    tblbuylead_evaluation_parameter.c.subpartstatus_id
+                    == mstsubpartsubstatus.c.subpartstatus_id,
+                    tblbuylead_evaluation_parameter.c.subpartsubstatus_id
+                    == mstsubpartsubstatus.c.id,
+                ),
+            )
+            .where(tblbuylead_evaluation_parameter.c.buylead_id == lead_id)
+        )
+
+        param_result = await self.session.execute(param_stmt)
+        params = param_result.mappings().all()
+
+        photo_stmt = select(
+            tblbuylead_evaluation_photo.c.id,
+            tblbuylead_evaluation_photo.c.buylead_id,
+            tblbuylead_evaluation_photo.c.s3_key,
+            tblbuylead_evaluation_photo.c.photo_name,
+        ).where(tblbuylead_evaluation_photo.c.buylead_id == lead_id)
+
+        photo_result = await self.session.execute(photo_stmt)
+        photos = photo_result.mappings().all()
+
+        lead = dict(lead)
+
+        lead["evaluation_parameters"] = [
+            {
+                "part_id": p["part_id"],
+                "part_name": p["part_name"],
+                "subpart_id": p["subpart_id"],
+                "subpart_name": p["subpart_name"],
+                "subpart_status": p["subpart_status"],
+                "subpart_sub_status": p["subpart_sub_status"],
+            }
+            for p in params
+        ]
+
+        lead["photos"] = [
+            {
+                "id": p["id"],
+                "s3_key": p["s3_key"],
+                "photo_name": p["photo_name"],
+            }
+            for p in photos
+        ]
+
+        return lead

@@ -35,6 +35,7 @@ nodeenv==1.10.0
 packaging==26.0
 passlib==1.7.4
 pathspec==1.0.4
+pillow==12.2.0
 platformdirs==4.9.4
 pre_commit==4.5.1
 psycopg==3.3.3

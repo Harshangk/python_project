@@ -7,6 +7,7 @@ from typing import List
 from uuid import UUID
 
 from app import constant
+from common.evaluation_pdf import build_buy_lead_evaluation_pdf
 from common.file_storage import AbstractFileStorage
 from common.payment_pdf import build_buy_lead_payment_pdf
 from common.schema_types import BuyStage, BuyStatus, FileStatus
@@ -591,3 +592,35 @@ class BuyService(BuyServiceInterface):
             )
         except Exception as ex:
             raise ex
+
+    async def get_lead_evaluation_pdf(
+        self,
+        lead_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> tuple[str, bytes] | None:
+        evaluation = await self.buy_repository.get_lead_evaluation_pdf(
+            lead_id=lead_id,
+            created_by=created_by,
+            role_id=role_id,
+        )
+        if not evaluation:
+            return None
+
+        photos = evaluation.get("photos", [])
+
+        async def load_photo(photo):
+            image_bytes = await asyncio.to_thread(
+                self.evaluation_file_storage.download_file, photo["s3_key"]
+            )
+
+            return {
+                "photo_name": photo.get("photo_name"),
+                "photo_type": photo.get("photo_type"),
+                "image_bytes": image_bytes,
+            }
+
+        evaluation["photos"] = await asyncio.gather(*(load_photo(p) for p in photos))
+
+        filename = f"buy_lead_evaluation_{lead_id}.pdf"
+        return filename, build_buy_lead_evaluation_pdf(evaluation)

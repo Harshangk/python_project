@@ -760,3 +760,42 @@ async def create_evaluation(
         logger.error(f"[{trace_id}] Evaluation failed: {str(ex)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
     return Response(id=lead_id, message=constant.REQUEST)
+
+
+@router.get(
+    "/{lead_id}/evaluation/pdf",
+    status_code=status.HTTP_200_OK,
+)
+async def download_lead_evaluation_pdf(
+    request: Request,
+    lead_id: int,
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+):
+    logger.info(f"request: {request}, user: {current_user}, id:{lead_id}")
+    try:
+        evaluation_pdf = await buy_service.get_lead_evaluation_pdf(
+            lead_id=lead_id,
+            created_by=current_user.user_name,
+            role_id=current_user.role_id,
+        )
+        if not evaluation_pdf:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
+
+        filename, pdf_bytes = evaluation_pdf
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+            },
+        )
+    except HTTPException:
+        raise
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"[{trace_id}] download_lead_evaluation_pdf failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)

@@ -3,6 +3,7 @@ import pathlib
 import shutil
 from abc import ABC, abstractmethod
 from datetime import date
+from io import BytesIO
 from typing import IO, Iterator
 
 from botocore.exceptions import ClientError, ParamValidationError, ValidationError
@@ -58,8 +59,15 @@ class S3FileStorage(AbstractFileStorage):
         for s3_file in query.all().page_size(self.page_size):
             yield s3_file.key
 
-    def download_file(self, file_key: str, file_obj: IO[bytes]) -> None:
-        self.bucket.download_fileobj(Key=file_key, Fileobj=file_obj)
+    # def download_file(self, file_key: str, file_obj: IO[bytes]) -> None:
+    #     self.bucket.download_fileobj(Key=file_key, Fileobj=file_obj)
+    def download_file(self, file_key: str) -> bytes:
+        buffer = BytesIO()
+
+        self.bucket.download_fileobj(Key=file_key, Fileobj=buffer)
+
+        buffer.seek(0)
+        return buffer.read()
 
     def move_file(self, source_path: str, target_path: str) -> None:
         self.copy_file(source_path, target_path)
