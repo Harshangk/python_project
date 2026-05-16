@@ -216,3 +216,13 @@ class BuyServiceInterface(ABC):
         created_by: str,
     ) -> None:
         pass
+
+    @abstractmethod
+    async def save_evaluation_parameters(
+        self,
+        lead_id: int,
+        remarks: str,
+        evaluation_parameters: list[dict],
+        created_by: str,
+    ) -> int:
+        pass

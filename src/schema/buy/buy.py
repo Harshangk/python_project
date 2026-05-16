@@ -601,3 +601,10 @@ class CreateBuyLeadPayment(CamelBaseModel):
                 else None
             ),
         )
+
+
+class EvaluationParameterRequest(CamelBaseModel):
+    part_id: int
+    subpart_id: int
+    subpartstatus_id: int
+    subpartsubstatus_id: int | None = None

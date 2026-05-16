@@ -208,3 +208,13 @@ class BuyRepositoryInterface(ABC):
         evaluation_photos: list[dict],
     ) -> None:
         pass
+
+    @abstractmethod
+    async def save_evaluation_parameters(
+        self,
+        lead_id: int,
+        evaluation_parameters: list[dict],
+        remarks: str,
+        created_by: str,
+    ) -> int:
+        pass

@@ -561,3 +561,33 @@ class BuyService(BuyServiceInterface):
             await self.buy_repository.upsert_evaluation_photos(photo_records)
         except Exception:
             raise
+
+    async def save_evaluation_parameters(
+        self,
+        lead_id: int,
+        remarks: str,
+        evaluation_parameters: list[dict],
+        created_by: str,
+    ) -> int:
+
+        try:
+            records = []
+            for item in evaluation_parameters:
+                records.append(
+                    {
+                        "buylead_id": lead_id,
+                        "part_id": item["part_id"],
+                        "subpart_id": item["subpart_id"],
+                        "subpartstatus_id": item["subpartstatus_id"],
+                        "subpartsubstatus_id": item.get("subpartsubstatus_id"),
+                        "created_by": created_by,
+                    }
+                )
+            return await self.buy_repository.save_evaluation_parameters(
+                lead_id=lead_id,
+                evaluation_parameters=records,
+                remarks=remarks,
+                created_by=created_by,
+            )
+        except Exception as ex:
+            raise ex

@@ -1,7 +1,7 @@
 from typing import Any, Mapping, Sequence
 from uuid import UUID
 
-from sqlalchemy import String, asc, cast, desc, func, or_, select, update
+from sqlalchemy import String, asc, cast, delete, desc, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -27,6 +27,8 @@ from model.buy.buy import (
 from orm.buy.buy import (
     tblbuylead,
     tblbuylead_address,
+    tblbuylead_evaluation,
+    tblbuylead_evaluation_parameter,
     tblbuylead_evaluation_photo,
     tblbuylead_file,
     tblbuylead_followup,
@@ -1115,3 +1117,44 @@ class BuyRepository(BuyRepositoryInterface):
         await self.session.execute(stmt)
         await self.session.commit()
         return lead_id
+
+    async def save_evaluation_parameters(
+        self,
+        lead_id: int,
+        evaluation_parameters: list[dict],
+        remarks: str,
+        created_by: str,
+    ) -> int:
+        try:
+            delete_stmt = delete(tblbuylead_evaluation_parameter).where(
+                tblbuylead_evaluation_parameter.c.buylead_id == lead_id
+            )
+
+            await self.session.execute(delete_stmt)
+            if evaluation_parameters:
+                await self.session.execute(
+                    tblbuylead_evaluation_parameter.insert(),
+                    evaluation_parameters,
+                )
+            stmt = insert(tblbuylead_evaluation).values(
+                buylead_id=lead_id,
+                remarks=remarks,
+                created_by=created_by,
+            )
+
+            stmt = stmt.on_conflict_do_update(
+                index_elements=[tblbuylead_evaluation.c.buylead_id],
+                set_={
+                    "remarks": remarks,
+                    "modified_at": func.now(),
+                    "modified_by": created_by,
+                },
+            )
+
+            await self.session.execute(stmt)
+            await self.session.commit()
+            return lead_id
+
+        except Exception as ex:
+            await self.session.rollback()
+            raise ex

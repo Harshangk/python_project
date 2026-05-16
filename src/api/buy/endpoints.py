@@ -19,6 +19,7 @@ from fastapi import (
 from fastapi.responses import StreamingResponse
 
 from api.buy import deps, example
+from api.buy.validation import validate_evaluation_parameters
 from api.common.deps import common_service
 from api.deps import get_authenticated_user, get_trace_id
 from app import constant
@@ -698,6 +699,7 @@ async def create_evaluation(
     request: Request,
     background_tasks: BackgroundTasks,
     lead_id: Annotated[int, Path(gt=0)],
+    evaluation_data: Annotated[str, Form(...)],
     photos: Annotated[str, Form(...)],
     files: Annotated[
         list[UploadFile],
@@ -706,6 +708,7 @@ async def create_evaluation(
             description="Upload evaluation images",
         ),
     ],
+    remarks: Annotated[str, Form(...)],
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
@@ -717,6 +720,17 @@ async def create_evaluation(
         if not lead:
             logger.info(f"Not Found: {lead_id}")
             raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
+
+        evaluation_parameters = await validate_evaluation_parameters(
+            evaluation_data=evaluation_data,
+        )
+
+        await buy_service.save_evaluation_parameters(
+            lead_id=lead_id,
+            remarks=remarks,
+            evaluation_parameters=evaluation_parameters,
+            created_by=current_user.user_name,
+        )
 
         processed_files = await validate_photos(
             photos=photos,
