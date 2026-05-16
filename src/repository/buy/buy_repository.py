@@ -27,6 +27,7 @@ from model.buy.buy import (
 from orm.buy.buy import (
     tblbuylead,
     tblbuylead_address,
+    tblbuylead_evaluation_photo,
     tblbuylead_file,
     tblbuylead_followup,
     tblbuylead_payment,
@@ -1086,3 +1087,31 @@ class BuyRepository(BuyRepositoryInterface):
 
         result = await self.session.execute(stmt)
         return result.mappings().one_or_none()
+
+    async def upsert_evaluation_photos(
+        self,
+        evaluation_photos: list[dict],
+    ) -> int:
+
+        if not evaluation_photos:
+            return 0
+
+        lead_id = evaluation_photos[0]["buylead_id"]
+
+        stmt = insert(tblbuylead_evaluation_photo).values(evaluation_photos)
+
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[
+                tblbuylead_evaluation_photo.c.buylead_id,
+                tblbuylead_evaluation_photo.c.photo_name,
+            ],
+            set_={
+                "s3_key": stmt.excluded.s3_key,
+                "content_type": stmt.excluded.content_type,
+                "modified_by": stmt.excluded.created_by,
+                "modified_at": func.now(),
+            },
+        )
+        await self.session.execute(stmt)
+        await self.session.commit()
+        return lead_id

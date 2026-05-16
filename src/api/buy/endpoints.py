@@ -1,4 +1,5 @@
 import io
+from typing import Annotated
 from uuid import UUID, uuid4
 
 from fastapi import (
@@ -9,6 +10,7 @@ from fastapi import (
     File,
     Form,
     HTTPException,
+    Path,
     Query,
     Request,
     UploadFile,
@@ -34,6 +36,7 @@ from common.schema_types import (
     validate_csv_headers,
     validate_file_extension,
     validate_file_size,
+    validate_photos,
 )
 from schema.buy.buy import (
     AllocateLeadsRequest,
@@ -684,3 +687,62 @@ async def download_lead_payment_pdf(
     except Exception as ex:
         logger.error(f"[{trace_id}] download_lead_payment_pdf failed: {str(ex)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
+@router.post(
+    "/lead/{lead_id}/evaluation",
+    response_model=Response,
+    status_code=201,
+)
+async def create_evaluation(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    lead_id: Annotated[int, Path(gt=0)],
+    photos: Annotated[str, Form(...)],
+    files: Annotated[
+        list[UploadFile],
+        File(
+            ...,
+            description="Upload evaluation images",
+        ),
+    ],
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+):
+
+    logger.info(f"request: {request}, user: {current_user}, id:{lead_id}")
+    try:
+        lead = await buy_service.get_lead_by_id(lead_id)
+        if not lead:
+            logger.info(f"Not Found: {lead_id}")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
+
+        processed_files = await validate_photos(
+            photos=photos,
+            files=files,
+        )
+
+        background_tasks.add_task(
+            buy_service.process_evaluation_photos,
+            lead_id,
+            processed_files,
+            current_user.user_name,
+        )
+
+    except HTTPException as ex:
+        logger.error(
+            f"General HTTP exception [{trace_id}] \
+                     Evaluation failed: {str(ex)}"
+        )
+        raise ex
+    except CreationError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.FAILED)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"[{trace_id}] Evaluation failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+    return Response(id=lead_id, message=constant.REQUEST)

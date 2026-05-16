@@ -1,21 +1,30 @@
 import csv
 import io
+import json
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import TypeVar
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, Path, UploadFile, status
 from pydantic import BaseModel as PydanticBaseModel
 
 from app.constant import (
+    COUNTMISMATCH,
+    DUPLICATE,
+    EMPTYFILE,
     EXTENSION,
     FILELARGE,
     FILENAME,
+    IMAGECONTENTTYPE,
+    IMAGEEXTENSION,
+    INVALID,
     INVALIDCSV,
+    INVALIDPAYLOAD,
     MISSINGCOLUMNS,
     MOBILEERROR,
 )
 from app.core.config import settings
+from app.core.logging import logger
 
 
 def to_camel(s: str) -> str:
@@ -40,6 +49,147 @@ class HumanReadableBaseModel(PydanticBaseModel):
 
 
 T = TypeVar("T")
+
+
+async def validate_image(file: UploadFile, file_bytes: bytes):
+
+    extension = Path(file.filename).suffix.lower()
+
+    if extension not in settings.allowed_image_extensions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=IMAGEEXTENSION
+        )
+
+    if file.content_type not in settings.allowed_content_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=IMAGECONTENTTYPE
+        )
+
+    if len(file_bytes) > settings.max_image_size:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, FILELARGE)
+
+
+async def validate_photos(
+    photos: str,
+    files: list[UploadFile],
+) -> list[dict]:
+
+    # Validate JSON
+    try:
+        photo_mappings = json.loads(photos)
+
+    except json.JSONDecodeError:
+
+        logger.info("Invalid photos payload")
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=INVALIDPAYLOAD,
+        )
+
+    # Count validation
+    if len(photo_mappings) != len(files):
+
+        logger.info(f"Files count mismatch: " f"{len(photo_mappings)} != {len(files)}")
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=COUNTMISMATCH,
+        )
+
+    processed_files = []
+
+    used_photo_names = set()
+
+    for item in photo_mappings:
+
+        # Validate payload structure
+        if "photo_name" not in item or "index" not in item:
+
+            logger.info(f"Invalid mapping payload: {item}")
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=INVALIDPAYLOAD,
+            )
+
+        photo_name = item["photo_name"]
+
+        # Validate index
+        try:
+            index = int(item["index"])
+
+        except (TypeError, ValueError):
+
+            logger.info(f"Invalid index: {item}")
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=INVALID,
+            )
+
+        # Validate index range
+        if index < 0 or index >= len(files):
+
+            logger.info(f"Index out of range: {index}")
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=INVALID,
+            )
+
+        # Validate enum
+        if photo_name not in Photos._value2member_map_:
+
+            logger.info(f"Invalid photo name: {photo_name}")
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=INVALID,
+            )
+
+        # Duplicate validation
+        if photo_name in used_photo_names:
+
+            logger.info(f"Duplicate photo name: {photo_name}")
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=DUPLICATE,
+            )
+
+        used_photo_names.add(photo_name)
+
+        file = files[index]
+
+        filename = file.filename.strip()
+
+        # Read file
+        file_bytes = await file.read()
+
+        # Empty validation
+        if not file_bytes:
+
+            logger.info(f"Empty file uploaded: {filename}")
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=EMPTYFILE,
+            )
+
+        # Validate image
+        validate_image(file, file_bytes)
+
+        processed_files.append(
+            {
+                "photo_name": photo_name,
+                "filename": filename,
+                "file_bytes": file_bytes,
+                "content_type": file.content_type,
+            }
+        )
+
+    return processed_files
 
 
 async def validate_file_extension(filename: str, allowed_extensions: set[str]):
@@ -256,3 +406,23 @@ class FileStatus(str, Enum):
 class Bucket(str, Enum):
     BuyFile = settings.s3_bucket_name
     BuyFileError = settings.error_s3_bucket_name
+
+
+class Photos(str, Enum):
+    Front = "Front"
+    LHSideFront = "LHSideFront"
+    RHSideFront = "RHSideFront"
+    BackSide = "BackSide"
+    RearSideDashboard = "RearSideDashboard"
+    Engine = "Engine"
+    RHSFrontTyre = "RHSFrontTyre"
+    RHSRearTyre = "RHSRearTyre"
+    LHSFrontTyre = "LHSFrontTyre"
+    LHSRearTyre = "LHSRearTyre"
+    Interior = "Interior"
+    Interior_1 = "Interior_1"
+    Interior_2 = "Interior_2"
+    Interior_3 = "Interior_3"
+    Other_1 = "Other_1"
+    Other_2 = "Other_2"
+    Other_3 = "Other_3"

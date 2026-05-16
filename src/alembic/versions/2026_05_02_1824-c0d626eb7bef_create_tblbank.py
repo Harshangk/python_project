@@ -53,10 +53,3 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_table("tblbank")
-
-
-# insert into tblbank
-# (bank_name,created_by)
-# values
-# ('AXIS Bank','Harshang'),
-# ('ICICI Bank','Harshang');

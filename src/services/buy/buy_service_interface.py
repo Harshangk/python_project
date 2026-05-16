@@ -207,3 +207,12 @@ class BuyServiceInterface(ABC):
         role_id: int,
     ) -> tuple[str, bytes] | None:
         pass
+
+    @abstractmethod
+    async def process_evaluation_photos(
+        self,
+        lead_id: int,
+        processed_files: list[dict],
+        created_by: str,
+    ) -> None:
+        pass

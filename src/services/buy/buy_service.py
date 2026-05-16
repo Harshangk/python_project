@@ -1,6 +1,8 @@
 import asyncio
 import csv
 import io
+from io import BytesIO
+from pathlib import Path
 from typing import List
 from uuid import UUID
 
@@ -31,11 +33,13 @@ class BuyService(BuyServiceInterface):
         buy_repository: BuyRepositoryInterface,
         file_storage: AbstractFileStorage,
         error_file_storage: AbstractFileStorage,
+        evaluation_file_storage: AbstractFileStorage,
         common_repository: CommonRepositoryInterface,
     ) -> None:
         self.buy_repository = buy_repository
         self.file_storage = file_storage
         self.error_file_storage = error_file_storage
+        self.evaluation_file_storage = evaluation_file_storage
         self.common_repository = common_repository
 
     async def create_lead(self, lead: BuyLeadModel, created_by: str) -> int:
@@ -511,3 +515,49 @@ class BuyService(BuyServiceInterface):
 
         filename = f"buy_lead_payment_{lead_id}.pdf"
         return filename, build_buy_lead_payment_pdf(payment)
+
+    async def process_evaluation_photos(
+        self,
+        lead_id: int,
+        processed_files: list[dict],
+        created_by: str,
+    ) -> None:
+        try:
+
+            async def upload_single_photo(
+                item: dict,
+            ) -> dict:
+                photo_name = item["photo_name"]
+                filename = item["filename"]
+                file_bytes = item["file_bytes"]
+                content_type = item["content_type"]
+                extension = Path(filename).suffix.lower()
+
+                s3_key = f"lead_{lead_id}/" f"{photo_name}{extension}"
+
+                file_obj = BytesIO(file_bytes)
+
+                uploaded_s3_key = await asyncio.to_thread(
+                    self.evaluation_file_storage.upload_file,
+                    filename=s3_key,
+                    file_obj=file_obj,
+                    content_type=content_type,
+                )
+
+                return {
+                    "buylead_id": lead_id,
+                    "photo_name": photo_name,
+                    "s3_key": uploaded_s3_key,
+                    "content_type": content_type,
+                    "created_by": created_by,
+                }
+
+            # Concurrent uploads
+            photo_records = await asyncio.gather(
+                *[upload_single_photo(item) for item in processed_files]
+            )
+
+            # Bulk upsert
+            await self.buy_repository.upsert_evaluation_photos(photo_records)
+        except Exception:
+            raise

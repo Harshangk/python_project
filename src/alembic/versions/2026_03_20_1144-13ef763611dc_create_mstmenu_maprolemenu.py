@@ -101,35 +101,3 @@ def downgrade() -> None:
     """Downgrade schema."""
     op.drop_table("maprolemenu")
     op.drop_table("mstmenu")
-
-
-# insert into mstmenu
-# (menu_name,menu_icon,menu_path,parent_id, order_no)
-# values
-# ('Dashboard', 'LayoutDashboard', '/dashboard', NULL, 1),
-# ('Leads', 'Users', NULL, NULL, 2),
-# ('Buy Lead: Single', NULL, '/leads/buylead', 2, 3),
-# ('Buy Lead: List', NULL, '/leads/buyleadlist', 2, 4),
-# ('Untouched', NULL, '/leads/untouched', 2, 5),
-# ('Smart Assignment', 'Brain', NULL, NULL, 6),
-# ('Assignment Rules', NULL, '/assignment-rules', 6, 7),
-# ('Budget Segmentation', NULL, '/budget', 6, 8),
-# ('Make Expertise', NULL, '/expertise', 6, 9),
-# ('Workload Monitor', NULL, '/workload', 6, 10),
-# ('Round Robin Setup', NULL, '/round-robin', 6, 11),
-# ('SLA & Escalation', NULL, '/sla', 6, 12),
-# ('Automation', NULL, '/automation', 6, 13),
-# ('Buy', 'ShoppingCart', NULL, NULL, 14),
-# ('Tracker', NULL, '/leads/buyleadtracker', 14, 15),
-# ('Buy Lead: Bulk', NULL, '/leads/buyleadimport', 14, 16),
-# ('Untouched', NULL, '/leads/untouchedlist', 14, 17),
-# ('Lost/Re-Open', NULL, '/leads/buyleadlostlist', 14, 18),
-# ('Re-Allocation', NULL, '/leads/reallocationlist', 14, 19),
-# ('Followup', NULL, '/leads/buyleadfollowuplist', 14, 20),
-# ('Sale', 'TrendingUp', NULL, NULL, 21),
-# ('Untouched', NULL, '/leads/untouched', 21, 22);
-
-
-# insert into maprolemenu
-# (role_id, menu_id,created_by)
-# select 1, id, 1 from mstmenu;

@@ -60,10 +60,3 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_table("tblinsurance_company")
-
-
-# insert into tblinsurance_company
-# (insurance_company_name,created_by)
-# values
-# ('National Insurance Co Ltd','Harshang'),
-# ('The Oriental Insurance Co Ltd','Harshang');

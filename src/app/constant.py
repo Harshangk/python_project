@@ -19,13 +19,20 @@ CREATED = "created successfully."
 UPDATED = "updated successfully."
 FAILED = "creation failed."
 NOTFOUND = "not found."
+COUNTMISMATCH = "count mismatch."
+INVALID = "invalid data."
+DUPLICATE = "duplicate data."
 REMOVED = "remove successfully."
 MAXLIMITREACH = "max limit 100 reach."
+INVALIDPAYLOAD = "invalid payload."
+EMPTYFILE = "file is empty."
 
 BATCHSIZE = 1000
 FILENAME = "file name missing."
 FILELARGE = "file too large."
 EXTENSION = "only csv allowed."
+IMAGEEXTENSION = "only jpg, jpeg, png, webp allowed."
+IMAGECONTENTTYPE = "only image/jpeg, image/png, image/jpg, image/webp allowed."
 
 MOBILEERROR = (
     "Mobile number must be between 10 and 15 digits, Mobile must contain only digits."

@@ -240,3 +240,31 @@ class BuyLeadPayment:
     total_payble: Decimal = Decimal("0.00")
     lead_vehicle: BuyLeadVehicle | None = None
     lead_vehicle_insurance: BuyLeadVehicleInsurance | None = None
+
+
+@dataclass
+class BuyLeadEvaluationParameter:
+    buylead_id: int
+    part_id: int
+    subpart_id: int
+    subpartstatus_id: int
+    subpartsubstatus_id: int | None = None
+
+
+@dataclass
+class BuyLeadEvaluationPhoto:
+    buylead_id: int
+    photo_name: str
+    s3_key: str
+    content_type: str | None = None
+
+
+@dataclass
+class BuyLeadEvaluation:
+    buylead_id: int
+    lead: UpdateLead
+    created_by: str
+    lead_vehicle: BuyLeadVehicle | None = None
+    lead_vehicle_insurance: BuyLeadVehicleInsurance | None = None
+    evaluation_parameters: List[BuyLeadEvaluationParameter] | None = None
+    photos: List[BuyLeadEvaluationPhoto] | None = None

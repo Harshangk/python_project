@@ -201,3 +201,10 @@ class BuyRepositoryInterface(ABC):
         role_id: int,
     ) -> Mapping[str, Any] | None:
         pass
+
+    @abstractmethod
+    async def upsert_evaluation_photos(
+        self,
+        evaluation_photos: list[dict],
+    ) -> None:
+        pass
