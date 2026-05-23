@@ -218,6 +218,24 @@ class BuyServiceInterface(ABC):
         pass
 
     @abstractmethod
+    async def process_stockin_documents(
+        self,
+        lead_id: int,
+        processed_documents: list[dict],
+        created_by: str,
+    ) -> None:
+        pass
+
+    @abstractmethod
+    async def save_stockin(
+        self,
+        lead_id: int,
+        remarks: str,
+        created_by: str,
+    ) -> int:
+        pass
+
+    @abstractmethod
     async def save_evaluation_parameters(
         self,
         lead_id: int,

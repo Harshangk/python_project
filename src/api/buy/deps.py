@@ -29,6 +29,7 @@ buy_lead_file_storage_error = get_file_storage_object(settings.error_s3_bucket_n
 buy_lead_file_storage_evaluation = get_file_storage_object(
     settings.evaluation_photos_s3_bucket_name
 )
+buy_lead_file_storage_stockin = get_file_storage_object(settings.stockin_s3_bucket_name)
 
 
 async def buy_service(
@@ -38,6 +39,7 @@ async def buy_service(
     evaluation_file_storage: AbstractFileStorage = Depends(
         buy_lead_file_storage_evaluation
     ),
+    stockin_file_storage: AbstractFileStorage = Depends(buy_lead_file_storage_stockin),
     common_repository: CommonRepositoryInterface = Depends(get_common_repository),
 ) -> BuyServiceInterface:
     return BuyService(
@@ -45,5 +47,6 @@ async def buy_service(
         file_storage,
         error_file_storage,
         evaluation_file_storage,
+        stockin_file_storage,
         common_repository,
     )

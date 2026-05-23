@@ -35,12 +35,14 @@ class BuyService(BuyServiceInterface):
         file_storage: AbstractFileStorage,
         error_file_storage: AbstractFileStorage,
         evaluation_file_storage: AbstractFileStorage,
+        stockin_file_storage: AbstractFileStorage,
         common_repository: CommonRepositoryInterface,
     ) -> None:
         self.buy_repository = buy_repository
         self.file_storage = file_storage
         self.error_file_storage = error_file_storage
         self.evaluation_file_storage = evaluation_file_storage
+        self.stockin_file_storage = stockin_file_storage
         self.common_repository = common_repository
 
     async def create_lead(self, lead: BuyLeadModel, created_by: str) -> int:
@@ -562,6 +564,59 @@ class BuyService(BuyServiceInterface):
             await self.buy_repository.upsert_evaluation_photos(photo_records)
         except Exception:
             raise
+
+    async def process_stockin_documents(
+        self,
+        lead_id: int,
+        processed_documents: list[dict],
+        created_by: str,
+    ) -> None:
+        try:
+
+            async def upload_single_document(item: dict) -> dict:
+                document_name = item["document_name"]
+                filename = item["filename"]
+                file_bytes = item["file_bytes"]
+                content_type = item["content_type"]
+                extension = Path(filename).suffix.lower()
+
+                s3_key = f"lead_{lead_id}/" f"{document_name}{extension}"
+                file_obj = BytesIO(file_bytes)
+
+                uploaded_s3_key = await asyncio.to_thread(
+                    self.stockin_file_storage.upload_file,
+                    filename=s3_key,
+                    file_obj=file_obj,
+                    content_type=content_type,
+                )
+
+                return {
+                    "buylead_id": lead_id,
+                    "document_name": document_name,
+                    "s3_key": uploaded_s3_key,
+                    "content_type": content_type,
+                    "created_by": created_by,
+                }
+
+            document_records = await asyncio.gather(
+                *[upload_single_document(item) for item in processed_documents]
+            )
+
+            await self.buy_repository.upsert_stockin_documents(document_records)
+        except Exception:
+            raise
+
+    async def save_stockin(
+        self,
+        lead_id: int,
+        remarks: str,
+        created_by: str,
+    ) -> int:
+        return await self.buy_repository.save_stockin(
+            lead_id=lead_id,
+            remarks=remarks,
+            created_by=created_by,
+        )
 
     async def save_evaluation_parameters(
         self,

@@ -33,6 +33,8 @@ from orm.buy.buy import (
     tblbuylead_file,
     tblbuylead_followup,
     tblbuylead_payment,
+    tblbuylead_stockin,
+    tblbuylead_stockin_document,
     tblbuylead_vehicle,
     tblbuylead_vehicle_insurance,
 )
@@ -1131,6 +1133,59 @@ class BuyRepository(BuyRepositoryInterface):
         await self.session.execute(stmt)
         await self.session.commit()
         return lead_id
+
+    async def upsert_stockin_documents(
+        self,
+        stockin_documents: list[dict],
+    ) -> int:
+        if not stockin_documents:
+            return 0
+
+        lead_id = stockin_documents[0]["buylead_id"]
+
+        stmt = insert(tblbuylead_stockin_document).values(stockin_documents)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[
+                tblbuylead_stockin_document.c.buylead_id,
+                tblbuylead_stockin_document.c.document_name,
+            ],
+            set_={
+                "s3_key": stmt.excluded.s3_key,
+                "content_type": stmt.excluded.content_type,
+                "modified_by": stmt.excluded.created_by,
+                "modified_at": func.now(),
+            },
+        )
+        await self.session.execute(stmt)
+        await self.session.commit()
+        return lead_id
+
+    async def save_stockin(
+        self,
+        lead_id: int,
+        remarks: str,
+        created_by: str,
+    ) -> int:
+        try:
+            stmt = insert(tblbuylead_stockin).values(
+                buylead_id=lead_id,
+                remarks=remarks,
+                created_by=created_by,
+            )
+            stmt = stmt.on_conflict_do_update(
+                index_elements=[tblbuylead_stockin.c.buylead_id],
+                set_={
+                    "remarks": remarks,
+                    "modified_at": func.now(),
+                    "modified_by": created_by,
+                },
+            )
+            await self.session.execute(stmt)
+            await self.session.commit()
+            return lead_id
+        except Exception as ex:
+            await self.session.rollback()
+            raise ex
 
     async def save_evaluation_parameters(
         self,

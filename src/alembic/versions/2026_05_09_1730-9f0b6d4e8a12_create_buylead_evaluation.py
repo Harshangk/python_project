@@ -139,10 +139,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_index(
-        "idx_tblbuylead_evaluation_parameter_buylead_id",
-        table_name="tblbuylead_evaluation_parameter",
-    )
     op.drop_table("tblbuylead_evaluation_parameter")
     op.drop_table("tblbuylead_evaluation_photo")
     op.drop_table("tblbuylead_evaluation")

@@ -232,6 +232,38 @@ tblbuylead_evaluation_photo = Table(
     ),
 )
 
+tblbuylead_stockin = Table(
+    "tblbuylead_stockin",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("buylead_id", Integer, ForeignKey("tblbuylead.id"), nullable=False),
+    Column("remarks", String(500), nullable=False),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+    Column("modified_at", DateTime, nullable=True),
+    Column("modified_by", String(length=50), nullable=True),
+    UniqueConstraint("buylead_id", name="uq_tblbuylead_stockin_buylead_id"),
+)
+
+tblbuylead_stockin_document = Table(
+    "tblbuylead_stockin_document",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("buylead_id", Integer, ForeignKey("tblbuylead.id"), nullable=False),
+    Column("document_name", String(50), nullable=False),
+    Column("s3_key", Text(), nullable=False),
+    Column("content_type", String(100), nullable=True),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+    Column("modified_at", DateTime, nullable=True),
+    Column("modified_by", String(length=50), nullable=True),
+    UniqueConstraint(
+        "buylead_id",
+        "document_name",
+        name="uq_tblbuylead_stockin_document_buylead_id_document_name",
+    ),
+)
+
 tblbuylead_evaluation_parameter = Table(
     "tblbuylead_evaluation_parameter",
     mapper_registry.metadata,
@@ -269,6 +301,10 @@ def start_mappers() -> None:
     )
     mapper_registry.map_imperatively(
         BuyModel.BuyLeadEvaluationPhoto, tblbuylead_evaluation_photo
+    )
+    mapper_registry.map_imperatively(BuyModel.BuyLeadStockin, tblbuylead_stockin)
+    mapper_registry.map_imperatively(
+        BuyModel.BuyLeadStockinDocument, tblbuylead_stockin_document
     )
     mapper_registry.map_imperatively(
         BuyModel.BuyLeadEvaluationParameter, tblbuylead_evaluation_parameter

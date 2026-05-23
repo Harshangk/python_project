@@ -262,6 +262,24 @@ class BuyLeadEvaluationPhoto:
 
 
 @dataclass
+class BuyLeadStockinDocument:
+    buylead_id: int
+    document_name: str
+    s3_key: str
+    content_type: str | None = None
+
+
+@dataclass
+class BuyLeadStockin:
+    buylead_id: int
+    remarks: str
+    created_by: str
+    lead_vehicle: BuyLeadVehicle | None = None
+    lead_vehicle_insurance: BuyLeadVehicleInsurance | None = None
+    documents: List[BuyLeadStockinDocument] | None = None
+
+
+@dataclass
 class BuyLeadEvaluation:
     buylead_id: int
     lead: UpdateLead

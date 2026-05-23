@@ -210,6 +210,22 @@ class BuyRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def upsert_stockin_documents(
+        self,
+        stockin_documents: list[dict],
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def save_stockin(
+        self,
+        lead_id: int,
+        remarks: str,
+        created_by: str,
+    ) -> int:
+        pass
+
+    @abstractmethod
     async def save_evaluation_parameters(
         self,
         lead_id: int,

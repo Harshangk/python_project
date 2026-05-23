@@ -38,6 +38,7 @@ from common.schema_types import (
     validate_file_extension,
     validate_file_size,
     validate_photos,
+    validate_stockin_documents,
 )
 from schema.buy.buy import (
     AllocateLeadsRequest,
@@ -758,6 +759,68 @@ async def create_evaluation(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
     except Exception as ex:
         logger.error(f"[{trace_id}] Evaluation failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+    return Response(id=lead_id, message=constant.REQUEST)
+
+
+@router.post(
+    "/lead/{lead_id}/stockin",
+    response_model=Response,
+    status_code=201,
+)
+async def create_stockin(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    lead_id: Annotated[int, Path(gt=0)],
+    documents: Annotated[str, Form(...)],
+    files: Annotated[
+        list[UploadFile],
+        File(
+            ...,
+            description="Upload stockin documents",
+        ),
+    ],
+    remarks: Annotated[str, Form(...)],
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+):
+    logger.info(f"request: {request}, user: {current_user}, id:{lead_id}")
+    try:
+        lead = await buy_service.get_lead_by_id(lead_id)
+        if not lead:
+            logger.info(f"Not Found: {lead_id}")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
+
+        processed_documents = await validate_stockin_documents(
+            documents=documents,
+            files=files,
+        )
+
+        await buy_service.save_stockin(
+            lead_id=lead_id,
+            remarks=remarks,
+            created_by=current_user.user_name,
+        )
+
+        background_tasks.add_task(
+            buy_service.process_stockin_documents,
+            lead_id,
+            processed_documents,
+            current_user.user_name,
+        )
+
+    except HTTPException as ex:
+        logger.error(f"General HTTP exception [{trace_id}] Stockin failed: {str(ex)}")
+        raise ex
+    except CreationError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.FAILED)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"[{trace_id}] Stockin failed: {str(ex)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
     return Response(id=lead_id, message=constant.REQUEST)
 

@@ -33,6 +33,8 @@ FILELARGE = "file too large."
 EXTENSION = "only csv allowed."
 IMAGEEXTENSION = "only jpg, jpeg, png, webp allowed."
 IMAGECONTENTTYPE = "only image/jpeg, image/png, image/jpg, image/webp allowed."
+PDFEXTENSION = "only pdf allowed."
+PDFCONTENTTYPE = "only application/pdf allowed."
 
 MOBILEERROR = (
     "Mobile number must be between 10 and 15 digits, Mobile must contain only digits."

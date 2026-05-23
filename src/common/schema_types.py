@@ -3,6 +3,7 @@ import io
 import json
 from datetime import datetime, timedelta
 from enum import Enum
+from pathlib import Path as FilePath
 from typing import TypeVar
 
 from fastapi import HTTPException, Path, UploadFile, status
@@ -22,6 +23,8 @@ from app.constant import (
     INVALIDPAYLOAD,
     MISSINGCOLUMNS,
     MOBILEERROR,
+    PDFCONTENTTYPE,
+    PDFEXTENSION,
 )
 from app.core.config import settings
 from app.core.logging import logger
@@ -51,7 +54,13 @@ class HumanReadableBaseModel(PydanticBaseModel):
 T = TypeVar("T")
 
 
-async def validate_image(file: UploadFile, file_bytes: bytes):
+async def _validate_image(file: UploadFile, file_bytes: bytes):
+
+    if not file.filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=INVALID,
+        )
 
     extension = Path(file.filename).suffix.lower()
 
@@ -67,6 +76,122 @@ async def validate_image(file: UploadFile, file_bytes: bytes):
 
     if len(file_bytes) > settings.max_image_size:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, FILELARGE)
+
+
+async def _validate_document(file: UploadFile, file_bytes: bytes):
+
+    if not file.filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=INVALID,
+        )
+
+    extension = FilePath(file.filename).suffix.lower()
+
+    if extension not in settings.allowed_pdf_extension:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=PDFEXTENSION
+        )
+
+    if file.content_type not in settings.allowed_pdf_content_type:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=PDFCONTENTTYPE
+        )
+
+    if len(file_bytes) > settings.max_pdf_size:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, FILELARGE)
+
+
+async def validate_stockin_documents(
+    documents: str,
+    files: list[UploadFile],
+) -> list[dict]:
+    try:
+        document_mappings = json.loads(documents)
+    except json.JSONDecodeError:
+        logger.info("Invalid stockin documents payload")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=INVALIDPAYLOAD,
+        )
+
+    if len(document_mappings) != len(files):
+        logger.info(
+            f"Stockin documents count mismatch: "
+            f"{len(document_mappings)} != {len(files)}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=COUNTMISMATCH,
+        )
+
+    processed_documents = []
+    used_document_names = set()
+
+    for item in document_mappings:
+        if "document_name" not in item or "index" not in item:
+            logger.info(f"Invalid stockin mapping payload: {item}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=INVALIDPAYLOAD,
+            )
+
+        document_name = item["document_name"]
+        try:
+            index = int(item["index"])
+        except (TypeError, ValueError):
+            logger.info(f"Invalid index: {item}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=INVALID,
+            )
+
+        if index < 0 or index >= len(files):
+            logger.info(f"Index out of range: {index}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=INVALID,
+            )
+
+        if document_name not in StockinDocuments._value2member_map_:
+            logger.info(f"Invalid stockin document name: {document_name}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=INVALID,
+            )
+
+        if document_name in used_document_names:
+            logger.info(f"Duplicate stockin document name: {document_name}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=DUPLICATE,
+            )
+
+        used_document_names.add(document_name)
+
+        file = files[index]
+        filename = file.filename.strip()
+        file_bytes = await file.read()
+
+        if not file_bytes:
+            logger.info(f"Empty file uploaded: {filename}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=EMPTYFILE,
+            )
+
+        await _validate_document(file, file_bytes)
+
+        processed_documents.append(
+            {
+                "document_name": document_name,
+                "filename": filename,
+                "file_bytes": file_bytes,
+                "content_type": file.content_type,
+            }
+        )
+
+    return processed_documents
 
 
 async def validate_photos(
@@ -178,7 +303,7 @@ async def validate_photos(
             )
 
         # Validate image
-        validate_image(file, file_bytes)
+        await _validate_image(file, file_bytes)
 
         processed_files.append(
             {
@@ -426,3 +551,13 @@ class Photos(str, Enum):
     Other_1 = "Other_1"
     Other_2 = "Other_2"
     Other_3 = "Other_3"
+
+
+class StockinDocuments(str, Enum):
+    RC = "RC"
+    Insurance = "Insurance"
+    IDProof = "IDProof"
+    Token = "Token"
+    SecondKey = "2ndKey"
+    Agreement = "Agreement"
+    History = "History"
