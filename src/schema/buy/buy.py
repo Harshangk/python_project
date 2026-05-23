@@ -470,6 +470,8 @@ class LeadVehicle(CamelBaseModel):
     registration_no: str = Field(..., min_length=1, max_length=12)
     transmission: Transmission
     cubic_capacity: int | None = 0
+    chassis_no: str = Field(None, min_length=1, max_length=50)
+    engine_no: str = Field(None, min_length=1, max_length=50)
     push_button: CommonFieldStatus | None = None
     company_invoice: CommonFieldStatus | None = None
     noc: CommonFieldStatus | None = None
@@ -559,6 +561,8 @@ class CreateBuyLeadPayment(CamelBaseModel):
                     registration_no=self.lead_vehicle.registration_no,
                     transmission=self.lead_vehicle.transmission,
                     cubic_capacity=self.lead_vehicle.cubic_capacity,
+                    chassis_no=self.lead_vehicle.chassis_no,
+                    engine_no=self.lead_vehicle.engine_no,
                     push_button=self.lead_vehicle.push_button,
                     company_invoice=self.lead_vehicle.company_invoice,
                     noc=self.lead_vehicle.noc,

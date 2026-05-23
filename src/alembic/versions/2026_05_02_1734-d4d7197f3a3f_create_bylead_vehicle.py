@@ -33,6 +33,8 @@ def upgrade() -> None:
         sa.Column("buylead_id", sa.Integer(), nullable=False),
         sa.Column("registration_no", sa.String(12), nullable=False),
         sa.Column("transmission", sa.String(8), nullable=False),
+        sa.Column("chassis_no", sa.String(50), nullable=True),
+        sa.Column("engine_no", sa.String(50), nullable=True),
         sa.Column(
             "cubic_capacity", sa.Integer(), server_default=text("0"), nullable=False
         ),

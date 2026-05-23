@@ -179,6 +179,8 @@ class BuyLeadVehicle:
     registration_no: str
     transmission: Transmission
     cubic_capacity: int
+    chassis_no: str
+    engine_no: str
     push_button: CommonFieldStatus | None = None
     company_invoice: CommonFieldStatus | None = None
     noc: CommonFieldStatus | None = None

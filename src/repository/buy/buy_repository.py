@@ -967,6 +967,12 @@ class BuyRepository(BuyRepositoryInterface):
                         else None
                     ),
                     cubic_capacity=lead_vehicle.cubic_capacity,
+                    chassis_no=(
+                        lead_vehicle.chassis_no if lead_vehicle.chassis_no else None
+                    ),
+                    engine_no=(
+                        lead_vehicle.engine_no if lead_vehicle.engine_no else None
+                    ),
                     push_button=(
                         lead_vehicle.push_button.value
                         if lead_vehicle.push_button

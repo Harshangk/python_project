@@ -508,6 +508,8 @@ def build_buy_lead_evaluation_pdf(
             ("Registration No", evaluation.get("registration_no")),
             ("Transmission", evaluation.get("transmission")),
             ("Cubic Capacity", evaluation.get("cubic_capacity")),
+            ("Chassis No", evaluation.get("chassis_no")),
+            ("Engine No", evaluation.get("engine_no")),
             ("Push Button", evaluation.get("push_button")),
             ("Company Invoice", evaluation.get("company_invoice")),
             ("NOC", evaluation.get("noc")),
