@@ -83,6 +83,12 @@ def upgrade() -> None:
             name=op.f("fk_tblbuylead_model_id_mstmodel"),
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_tblbuylead")),
+        sa.UniqueConstraint(
+            "mobile",
+            "make_id",
+            "model_id",
+            name=op.f("uq_tblbuylead_mobile_make_id_model_id"),
+        ),
     )
 
     op.create_index("idx_tblbuylead_branch", "tblbuylead", ["branch"])

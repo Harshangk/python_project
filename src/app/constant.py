@@ -15,6 +15,7 @@ MAX_LIMIT = 100
 REMARKS = "Imported from CSV"
 
 REQUEST = "received request."
+EXISTS = "already exists."
 CREATED = "created successfully."
 UPDATED = "updated successfully."
 FAILED = "creation failed."

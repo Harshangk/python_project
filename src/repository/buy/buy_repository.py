@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import constant
-from auth.exceptions import AllocationError, CreationError, NotFound
+from auth.exceptions import AllocationError, AlreadyExistsError, CreationError, NotFound
 from common.schema_types import (
     BuyDisposition,
     BuyStage,
@@ -64,8 +64,35 @@ class BuyRepository(BuyRepositoryInterface):
     def __init__(self, session: Session):
         self.session = session
 
+    async def _check_existing_lead(self, lead: BuyLeadModel):
+        stmt = select(
+            tblbuylead.c.id,
+            tblbuylead.c.status,
+            tblbuylead.c.telecaller,
+            tblbuylead.c.executive,
+        ).where(
+            and_(
+                tblbuylead.c.mobile == lead.mobile,
+                tblbuylead.c.make_id == lead.make_id,
+                tblbuylead.c.model_id == lead.model_id,
+            )
+        )
+
+        result = await self.session.execute(stmt)
+        existing_lead = result.first()
+
+        if existing_lead:
+            raise AlreadyExistsError(
+                lead_id=existing_lead.id,
+                status=existing_lead.status,
+                telecaller=existing_lead.telecaller,
+                executive=existing_lead.executive,
+            )
+
     async def create_lead(self, lead: BuyLeadModel, created_by: str) -> int:
         try:
+            await self._check_existing_lead(lead)
+
             if lead.telecaller is None and lead.executive is None:
                 status = BuyStatus.NotAllocated.value
                 allocated_by = None

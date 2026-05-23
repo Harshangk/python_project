@@ -26,7 +26,7 @@ from app import constant
 from app.core.config import settings
 from app.core.logging import logger
 from auth.dto import AuthenticatedUser
-from auth.exceptions import CreationError, NotFound
+from auth.exceptions import AlreadyExistsError, CreationError, NotFound
 from common.csv_utils import stream_csv
 from common.cursor_pagination import build_next_page_url, normalize_limit
 from common.schema_types import (
@@ -77,6 +77,21 @@ async def create_lead(
     logger.info(f"request: {request}")
     try:
         buy_id = await buy_service.create_lead(lead.to_model(), current_user.user_name)
+    except AlreadyExistsError as ex:
+        logger.error(
+            f"Lead already exists | " f"Lead ID: {ex.lead_id} | " f"Status: {ex.status}"
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "message": constant.EXISTS,
+                "lead_id": ex.lead_id,
+                "status": ex.status,
+                "telecaller": ex.telecaller,
+                "executive": ex.executive,
+            },
+        )
     except CreationError as ex:
         logger.error(f"ValueError error: {ex}")
         raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.FAILED)

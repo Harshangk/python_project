@@ -63,8 +63,8 @@ class CreateBuyLead(CamelBaseModel):
     broker_name: str | None = Field(None, max_length=255)
     category: Category
     customer_name: str = Field(..., min_length=1, max_length=255)
-    owner_name: str = Field(..., min_length=1, max_length=255)
-    payment_name: str = Field(..., min_length=1, max_length=255)
+    owner_name: str = Field(None, min_length=1, max_length=255)
+    payment_name: str = Field(None, min_length=1, max_length=255)
     lead_address: LeadAddress | None = None
     make_id: int
     model_id: int

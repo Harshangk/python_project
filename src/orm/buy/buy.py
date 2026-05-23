@@ -56,6 +56,9 @@ tblbuylead = Table(
     Column("is_active", Boolean, server_default=text("true"), nullable=False),
     Column("is_deleted", Boolean, server_default=text("false"), nullable=False),
     Column("import_id", UUID(as_uuid=True), nullable=True),
+    UniqueConstraint(
+        "mobile", "make_id", "model_id", name="uq_tblbuylead_mobile_make_id_model_id"
+    ),
     Index("idx_tblbuylead_branch", "branch"),
     Index("idx_tblbuylead_mobile", "mobile"),
     Index("idx_tblbuylead_status", "status"),
