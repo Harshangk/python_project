@@ -61,12 +61,35 @@ class S3FileStorage(AbstractFileStorage):
 
     # def download_file(self, file_key: str, file_obj: IO[bytes]) -> None:
     #     self.bucket.download_fileobj(Key=file_key, Fileobj=file_obj)
-    def download_file(self, file_key: str) -> bytes:
+    def download_file(self, file_key: str, file_obj=None):
+        """
+        Download S3 file.
+
+        If file_obj provided:
+            writes directly into buffer
+
+        Else:
+            returns bytes
+        """
+
+        if file_obj:
+            self.bucket.download_fileobj(
+                Key=file_key,
+                Fileobj=file_obj,
+            )
+
+            file_obj.seek(0)
+            return file_obj
+
         buffer = BytesIO()
 
-        self.bucket.download_fileobj(Key=file_key, Fileobj=buffer)
+        self.bucket.download_fileobj(
+            Key=file_key,
+            Fileobj=buffer,
+        )
 
         buffer.seek(0)
+
         return buffer.read()
 
     def move_file(self, source_path: str, target_path: str) -> None:

@@ -16,6 +16,10 @@ from model.buy.buy import (
 class BuyRepositoryInterface(ABC):
 
     @abstractmethod
+    async def get_existing_duplicates(self, keys: list[tuple]):
+        pass
+
+    @abstractmethod
     async def create_lead(self, lead: BuyLeadModel, created_by: str) -> int:
         pass
 

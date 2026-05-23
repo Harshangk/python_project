@@ -300,12 +300,20 @@ class BuyService(BuyServiceInterface):
         source: str,
         broker_name: str | None = None,
     ):
+        processed_records = 0
+        error_records = 0
+        error_file_key = None
+
         try:
             reader = await self._get_csv_reader(s3_key)
 
             make_map, model_map, branch_map = await self._load_mappings()
 
-            processed_records, error_records, error_rows = await self._process_rows(
+            (
+                processed_records,
+                error_records,
+                error_rows,
+            ) = await self._process_rows(
                 reader,
                 file_uuid,
                 source,
@@ -316,7 +324,10 @@ class BuyService(BuyServiceInterface):
                 branch_map,
             )
 
-            error_file_key = await self._upload_error_file(file_uuid, error_rows)
+            error_file_key = await self._upload_error_file(
+                file_uuid,
+                error_rows,
+            )
 
             await self._update_status(
                 file_uuid,
@@ -371,6 +382,12 @@ class BuyService(BuyServiceInterface):
 
         batch_size = constant.BATCHSIZE
 
+        # CSV duplicate checker
+        csv_seen = set()
+
+        # Temporary transformed rows
+        transformed_rows = []
+
         for row in reader:
             try:
                 transformed, error = transform(
@@ -384,20 +401,78 @@ class BuyService(BuyServiceInterface):
                     broker_name,
                 )
 
-                if transformed:
-                    batch.append(transformed)
-                    processed_records += 1
-                else:
+                if not transformed:
                     error_records += 1
                     error_rows.append(self._build_error_row(row, error))
+                    continue
+
+                duplicate_key = (
+                    transformed.mobile,
+                    transformed.make_id,
+                    transformed.model_id,
+                )
+
+                # Duplicate inside CSV
+                if duplicate_key in csv_seen:
+                    error_records += 1
+                    error_rows.append(
+                        self._build_error_row(
+                            row,
+                            constant.DUPLICATE,
+                        )
+                    )
+                    continue
+
+                csv_seen.add(duplicate_key)
+
+                transformed_rows.append((row, transformed))
 
             except Exception as e:
                 error_records += 1
                 error_rows.append(self._build_error_row(row, str(e)))
 
+        # DB duplicate check
+        duplicate_keys = [
+            (
+                transformed.mobile,
+                transformed.make_id,
+                transformed.model_id,
+            )
+            for _, transformed in transformed_rows
+        ]
+
+        existing_duplicates = await self.buy_repository.get_existing_duplicates(
+            duplicate_keys
+        )
+
+        # Final insert processing
+        for original_row, transformed in transformed_rows:
+
+            duplicate_key = (
+                transformed.mobile,
+                transformed.make_id,
+                transformed.model_id,
+            )
+
+            # Already exists in DB
+            if duplicate_key in existing_duplicates:
+                error_records += 1
+
+                error_rows.append(
+                    self._build_error_row(
+                        original_row,
+                        constant.EXISTS,
+                    )
+                )
+                continue
+
+            batch.append(transformed)
+            processed_records += 1
+
             if len(batch) >= batch_size:
                 await self.buy_repository.bulk_insert_lead(batch)
                 batch.clear()
+
         if batch:
             await self.buy_repository.bulk_insert_lead(batch)
 

@@ -64,6 +64,39 @@ class BuyRepository(BuyRepositoryInterface):
     def __init__(self, session: Session):
         self.session = session
 
+    async def get_existing_duplicates(self, keys: list[tuple]):
+        """
+        keys format:
+        [
+            ("9876543210", 1, 10),
+            ("9999999999", 2, 20),
+        ]
+        """
+
+        if not keys:
+            return set()
+
+        conditions = [
+            (
+                (tblbuylead.c.mobile == mobile)
+                & (tblbuylead.c.make_id == make_id)
+                & (tblbuylead.c.model_id == model_id)
+            )
+            for mobile, make_id, model_id in keys
+        ]
+
+        stmt = select(
+            tblbuylead.c.mobile,
+            tblbuylead.c.make_id,
+            tblbuylead.c.model_id,
+        ).where(or_(*conditions))
+
+        result = await self.session.execute(stmt)
+
+        rows = result.fetchall()
+
+        return {(row.mobile, row.make_id, row.model_id) for row in rows}
+
     async def _check_existing_lead(self, lead: BuyLeadModel):
         stmt = select(
             tblbuylead.c.id,
@@ -852,11 +885,22 @@ class BuyRepository(BuyRepositoryInterface):
             raise CreationError(constant.FAILED)
 
     async def bulk_insert_lead(self, data):
-        payload = [
-            {k: v for k, v in vars(d).items() if not k.startswith("_")} for d in data
-        ]
-        await self.session.execute(insert(tblbuylead), payload)
-        await self.session.commit()
+        try:
+            payload = [
+                {k: v for k, v in vars(d).items() if not k.startswith("_")}
+                for d in data
+            ]
+
+            await self.session.execute(
+                insert(tblbuylead),
+                payload,
+            )
+
+            await self.session.commit()
+
+        except IntegrityError:
+            await self.session.rollback()
+            raise CreationError(constant.DUPLICATE)
 
     async def get_import_lead(
         self,
