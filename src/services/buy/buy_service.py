@@ -59,13 +59,15 @@ class BuyService(BuyServiceInterface):
         self,
         cursor: int | None,
         limit: int,
+        created_by: str,
+        role_id: int,
         search: str | None = None,
         buy_status: BuyStatus | None = None,
         sort_by: str | None = None,
         sort_order: str | None = None,
     ) -> List[BuyLeadItem]:
         rows = await self.buy_repository.get_lead(
-            cursor, limit, search, buy_status, sort_by, sort_order
+            cursor, limit, created_by, role_id, search, buy_status, sort_by, sort_order
         )
         leads = []
 
@@ -91,27 +93,37 @@ class BuyService(BuyServiceInterface):
         return leads
 
     async def get_total_lead(
-        self, search: str | None = None, buy_status: BuyStatus | None = None
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+        buy_status: BuyStatus | None = None,
     ) -> int:
-        return await self.buy_repository.get_total_lead(search, buy_status)
+        return await self.buy_repository.get_total_lead(
+            created_by, role_id, search, buy_status
+        )
 
     async def get_lead_export(
         self,
+        created_by: str,
+        role_id: int,
         search: str | None = None,
         buy_status: BuyStatus | None = None,
         sort_by: str | None = None,
         sort_order: str | None = None,
     ):
         async for row in self.buy_repository.get_lead_export(
-            search, buy_status, sort_by, sort_order
+            created_by, role_id, search, buy_status, sort_by, sort_order
         ):
             yield BuyLeadItem(**row)
 
     async def get_lead_by_id(
         self,
         lead_id: int,
+        created_by: str,
+        role_id: int,
     ) -> BuyLeadItem:
-        row = await self.buy_repository.get_lead_by_id(lead_id)
+        row = await self.buy_repository.get_lead_by_id(lead_id, created_by, role_id)
         if not row:
             return None
 
@@ -125,8 +137,8 @@ class BuyService(BuyServiceInterface):
         item_data["lead_address"] = lead_address
         return BuyLeadItem(**item_data)
 
-    async def remove_lead(self, lead_id: int, created_by: str) -> bool:
-        return await self.buy_repository.remove_lead(lead_id, created_by)
+    async def remove_lead(self, lead_id: int, created_by: str, role_id: int) -> bool:
+        return await self.buy_repository.remove_lead(lead_id, created_by, role_id)
 
     async def allocate_leads(
         self, allocate: AllocateLeadsRequest, created_by: str

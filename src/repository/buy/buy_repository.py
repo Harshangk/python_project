@@ -64,6 +64,24 @@ class BuyRepository(BuyRepositoryInterface):
     def __init__(self, session: Session):
         self.session = session
 
+    def _apply_role_filter(
+        self,
+        stmt,
+        created_by: str,
+        role_id: int,
+    ):
+        if role_id not in constant.ADMIN_ROLE_IDS:
+
+            stmt = stmt.where(
+                or_(
+                    tblbuylead.c.telecaller == created_by,
+                    tblbuylead.c.executive == created_by,
+                    tblbuylead.c.created_by == created_by,
+                )
+            )
+
+        return stmt
+
     async def get_existing_duplicates(self, keys: list[tuple]):
         """
         keys format:
@@ -89,7 +107,12 @@ class BuyRepository(BuyRepositoryInterface):
             tblbuylead.c.mobile,
             tblbuylead.c.make_id,
             tblbuylead.c.model_id,
-        ).where(or_(*conditions))
+        ).where(
+            and_(
+                or_(*conditions),
+                tblbuylead.c.status != BuyStatus.StockIn.value,
+            )
+        )
 
         result = await self.session.execute(stmt)
 
@@ -97,21 +120,33 @@ class BuyRepository(BuyRepositoryInterface):
 
         return {(row.mobile, row.make_id, row.model_id) for row in rows}
 
-    async def _check_existing_lead(self, lead: BuyLeadModel):
+    async def _check_existing_lead(
+        self,
+        lead: BuyLeadModel,
+        lead_id: int | None = None,
+    ):
+        conditions = [
+            tblbuylead.c.mobile == lead.mobile,
+            tblbuylead.c.make_id == lead.make_id,
+            tblbuylead.c.model_id == lead.model_id,
+            tblbuylead.c.status != BuyStatus.StockIn.value,
+            tblbuylead.c.is_active.is_(True),
+            tblbuylead.c.is_deleted.is_(False),
+        ]
+
+        # Ignore current lead during update
+        if lead_id:
+            conditions.append(tblbuylead.c.id != lead_id)
+
         stmt = select(
             tblbuylead.c.id,
             tblbuylead.c.status,
             tblbuylead.c.telecaller,
             tblbuylead.c.executive,
-        ).where(
-            and_(
-                tblbuylead.c.mobile == lead.mobile,
-                tblbuylead.c.make_id == lead.make_id,
-                tblbuylead.c.model_id == lead.model_id,
-            )
-        )
+        ).where(and_(*conditions))
 
         result = await self.session.execute(stmt)
+
         existing_lead = result.first()
 
         if existing_lead:
@@ -228,6 +263,10 @@ class BuyRepository(BuyRepositoryInterface):
             if not existing:
                 raise NotFound(constant.NOTFOUND)
 
+            await self._check_existing_lead(
+                lead,
+                lead_id=lead_id,
+            )
             stmt = (
                 update(tblbuylead)
                 .where(
@@ -329,12 +368,19 @@ class BuyRepository(BuyRepositoryInterface):
         self,
         cursor: int | None,
         limit: int,
+        created_by: str,
+        role_id: int,
         search: str | None = None,
         buy_status: BuyStatus | None = None,
         sort_by: str | None = None,
         sort_order: str | None = None,
     ) -> Sequence[Mapping[str, Any]]:
         stmt = self._base_lead_query()
+        stmt = self._apply_role_filter(
+            stmt,
+            created_by,
+            role_id,
+        )
         stmt = self._apply_search(stmt, search)
 
         if buy_status:
@@ -351,7 +397,11 @@ class BuyRepository(BuyRepositoryInterface):
         return result.mappings().all()
 
     async def get_total_lead(
-        self, search: str | None = None, buy_status: BuyStatus | None = None
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+        buy_status: BuyStatus | None = None,
     ) -> int:
         stmt = (
             select(func.count())
@@ -366,7 +416,11 @@ class BuyRepository(BuyRepositoryInterface):
             )
             .where(tblbuylead.c.is_active)
         )
-
+        stmt = self._apply_role_filter(
+            stmt,
+            created_by,
+            role_id,
+        )
         stmt = self._apply_search(stmt, search)
         if buy_status:
             stmt = stmt.where(tblbuylead.c.status == buy_status)
@@ -375,12 +429,15 @@ class BuyRepository(BuyRepositoryInterface):
 
     async def get_lead_export(
         self,
+        created_by: str,
+        role_id: int,
         search: str | None = None,
         buy_status: BuyStatus | None = None,
         sort_by: str | None = None,
         sort_order: str | None = None,
     ):
         stmt = self._base_lead_query()
+        stmt = self._apply_role_filter(stmt, created_by, role_id)
         stmt = self._apply_search(stmt, search)
         if buy_status:
             stmt = stmt.where(tblbuylead.c.status == buy_status)
@@ -395,8 +452,11 @@ class BuyRepository(BuyRepositoryInterface):
     async def get_lead_by_id(
         self,
         lead_id: int,
+        created_by: str,
+        role_id: int,
     ) -> BuyLeadModel:
         stmt = self._base_lead_query()
+        stmt = self._apply_role_filter(stmt, created_by, role_id)
         stmt = stmt.where(
             tblbuylead.c.id == lead_id,
             tblbuylead.c.is_active.is_(True),
@@ -405,7 +465,7 @@ class BuyRepository(BuyRepositoryInterface):
         result = await self.session.execute(stmt)
         return result.mappings().one_or_none()
 
-    async def remove_lead(self, lead_id: int, created_by: str) -> bool:
+    async def remove_lead(self, lead_id: int, created_by: str, role_id: int) -> bool:
         stmt = (
             update(tblbuylead)
             .where(
@@ -420,7 +480,7 @@ class BuyRepository(BuyRepositoryInterface):
                 is_deleted=True,
             )
         )
-
+        stmt = self._apply_role_filter(stmt, created_by, role_id)
         result = await self.session.execute(stmt)
         await self.session.commit()
 

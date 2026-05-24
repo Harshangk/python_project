@@ -156,9 +156,18 @@ async def get_buy_lead(
     try:
         limit = normalize_limit(limit)
         leads = await buy_service.get_lead(
-            cursor, limit, search, buy_status, sort_by.value, sort_order.value
+            cursor,
+            limit,
+            current_user.user_name,
+            current_user.role_id,
+            search,
+            buy_status,
+            sort_by.value,
+            sort_order.value,
         )
-        total = await buy_service.get_total_lead(search, buy_status)
+        total = await buy_service.get_total_lead(
+            current_user.user_name, current_user.role_id, search, buy_status
+        )
 
         next_url = None
         if len(leads) == limit:
@@ -189,7 +198,12 @@ async def export_lead(
     trace_id: UUID = Depends(get_trace_id),
 ):
     leads = buy_service.get_lead_export(
-        search, buy_status, sort_by.value, sort_order.value
+        current_user.user_name,
+        current_user.role_id,
+        search,
+        buy_status,
+        sort_by.value,
+        sort_order.value,
     )
     return stream_csv(rows=leads, filename="buy_lead_export.csv")
 
@@ -208,7 +222,9 @@ async def get_buy_lead_by_id(
 ) -> BuyLeadItem:
     logger.info(f"request: {request}, user: {current_user}, id:{lead_id}")
     try:
-        lead = await buy_service.get_lead_by_id(lead_id)
+        lead = await buy_service.get_lead_by_id(
+            lead_id, current_user.user_name, current_user.role_id
+        )
         if not lead:
             logger.info(f"Not Found: {lead_id}")
             raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
@@ -237,12 +253,16 @@ async def remove_buy_lead_by_id(
 ) -> Response:
     logger.info(f"request: {request}, user: {current_user}, id:{id}")
     try:
-        lead = await buy_service.get_lead_by_id(lead_id, current_user.user_name)
+        lead = await buy_service.get_lead_by_id(
+            lead_id, current_user.user_name, current_user.role_id
+        )
         if not lead:
             logger.info(f"Not Found: {id}")
             raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
 
-        await buy_service.remove_lead(lead_id)
+        await buy_service.remove_lead(
+            lead_id, current_user.user_name, current_user.role_id
+        )
         return Response(id=lead_id, message=constant.REMOVED)
     except HTTPException:
         raise

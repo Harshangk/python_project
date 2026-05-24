@@ -34,6 +34,8 @@ class BuyRepositoryInterface(ABC):
         self,
         cursor: Optional[int],
         limit: int,
+        created_by: str,
+        role_id: int,
         search: str | None = None,
         buy_status: BuyStatus | None = None,
         sort_by: str | None = None,
@@ -43,13 +45,19 @@ class BuyRepositoryInterface(ABC):
 
     @abstractmethod
     async def get_total_lead(
-        self, search: str | None = None, buy_status: BuyStatus | None = None
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+        buy_status: BuyStatus | None = None,
     ) -> int:
         pass
 
     @abstractmethod
     async def get_lead_export(
         self,
+        created_by: str,
+        role_id: int,
         search: str | None = None,
         buy_status: BuyStatus | None = None,
         sort_by: str | None = None,
@@ -61,11 +69,13 @@ class BuyRepositoryInterface(ABC):
     async def get_lead_by_id(
         self,
         lead_id: int,
+        created_by: str,
+        role_id: int,
     ) -> BuyLeadModel:
         pass
 
     @abstractmethod
-    async def remove_lead(self, lead_id: int, created_by: str) -> bool:
+    async def remove_lead(self, lead_id: int, created_by: str, role_id: int) -> bool:
         pass
 
     @abstractmethod

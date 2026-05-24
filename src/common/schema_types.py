@@ -405,6 +405,7 @@ class BuyStatus(str, Enum):
     Lost = "Lost"
     DND = "DND"
     Appointment = "Appointment"
+    StockIn = "StockIn"
 
 
 class BuyStage(str, Enum):
