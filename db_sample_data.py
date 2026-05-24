@@ -29,6 +29,14 @@
 #  (role_id, menu_id,created_by)
 #  select 1, id, 1 from mstmenu;
 
+#  insert into maprolemenu
+#  (role_id, menu_id,created_by)
+#  select 2, id, 1 from mstmenu;
+
+#  insert into maprolemenu
+#  (role_id, menu_id,created_by)
+#  select 3, id, 1 from mstmenu;
+
 #  insert into tblbank
 #  (bank_name,created_by)
 #  values
