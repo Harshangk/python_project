@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import constant
+from app.core.config import settings
 from auth.exceptions import AllocationError, AlreadyExistsError, CreationError, NotFound
 from common.schema_types import (
     BuyDisposition,
@@ -70,7 +71,7 @@ class BuyRepository(BuyRepositoryInterface):
         created_by: str,
         role_id: int,
     ):
-        if role_id not in constant.ADMIN_ROLE_IDS:
+        if role_id not in settings.admin_role_ids:
 
             stmt = stmt.where(
                 or_(
@@ -487,9 +488,12 @@ class BuyRepository(BuyRepositoryInterface):
         return result.rowcount > 0
 
     async def allocate_leads(
-        self, allocate: AllocateLeadsRequest, created_by: str
+        self, allocate: AllocateLeadsRequest, created_by: str, role_id: int
     ) -> int:
         try:
+            if not allocate.telecaller and not allocate.executive:
+                return 0
+
             update_data = {
                 "allocated_at": func.now(),
                 "allocated_by": created_by,
@@ -511,32 +515,40 @@ class BuyRepository(BuyRepositoryInterface):
                     tblbuylead.c.status == BuyStatus.NotAllocated.value,
                 )
                 .values(**update_data)
+                .returning(tblbuylead.c.id)
+            )
+            update_stmt = self._apply_role_filter(
+                update_stmt,
+                created_by,
+                role_id,
             )
             result = await self.session.execute(update_stmt)
+            updated_ids = result.scalars().all()
 
-            followup_data = [
-                {
-                    "buylead_id": lead_id,
-                    "stage": BuyStage.Fresh.value,
-                    "disposition": BuyDisposition.Fresh.value,
-                    "calldate": func.now(),
-                    "notes": BuyStage.Fresh.value,
-                    "created_by": created_by,
-                }
-                for lead_id in allocate.lead_ids
-            ]
+            if updated_ids:
+                followup_data = [
+                    {
+                        "buylead_id": lead_id,
+                        "stage": BuyStage.Fresh.value,
+                        "disposition": BuyDisposition.Fresh.value,
+                        "calldate": func.now(),
+                        "notes": BuyStage.Fresh.value,
+                        "created_by": created_by,
+                    }
+                    for lead_id in allocate.lead_ids
+                ]
 
-            insert_stmt = insert(tblbuylead_followup).values(followup_data)
-            await self.session.execute(insert_stmt)
+                insert_stmt = insert(tblbuylead_followup).values(followup_data)
+                await self.session.execute(insert_stmt)
 
             await self.session.commit()
-            return result.rowcount
+            return len(updated_ids)
         except IntegrityError:
             await self.session.rollback()
             raise AllocationError(constant.FAILED)
 
     async def reallocate_leads(
-        self, reallocate: AllocateLeadsRequest, created_by: str
+        self, reallocate: AllocateLeadsRequest, created_by: str, role_id: int
     ) -> int:
         try:
             update_data = {}
@@ -545,6 +557,9 @@ class BuyRepository(BuyRepositoryInterface):
 
             if reallocate.executive:
                 update_data["executive"] = reallocate.executive
+
+            if len(update_data) == 2:
+                return 0
 
             stmt = (
                 update(tblbuylead)
@@ -555,15 +570,24 @@ class BuyRepository(BuyRepositoryInterface):
                     tblbuylead.c.status == BuyStatus.Allocated.value,
                 )
                 .values(**update_data)
+                .returning(tblbuylead.c.id)
+            )
+            stmt = self._apply_role_filter(
+                stmt,
+                created_by,
+                role_id,
             )
             result = await self.session.execute(stmt)
+            updated_ids = result.scalars().all()
             await self.session.commit()
-            return result.rowcount
+            return len(updated_ids)
         except IntegrityError:
             await self.session.rollback()
             raise AllocationError(constant.FAILED)
 
-    async def reopen_leads(self, reopen: AllocateLeadsRequest, created_by: str) -> int:
+    async def reopen_leads(
+        self, reopen: AllocateLeadsRequest, created_by: str, role_id: int
+    ) -> int:
         try:
             update_data = {
                 "status": BuyStatus.Allocated.value,
@@ -581,27 +605,41 @@ class BuyRepository(BuyRepositoryInterface):
                     tblbuylead.c.id.in_(reopen.lead_ids),
                     tblbuylead.c.is_active.is_(True),
                     tblbuylead.c.is_deleted.is_(False),
-                    tblbuylead.c.status == BuyStatus.Lost.value,
+                    tblbuylead.c.status.in_(
+                        [
+                            BuyStatus.Lost.value,
+                            BuyStatus.DND.value,
+                        ]
+                    ),
                 )
                 .values(**update_data)
+                .returning(tblbuylead.c.id)
+            )
+            update_stmt = self._apply_role_filter(
+                update_stmt,
+                created_by,
+                role_id,
             )
             result = await self.session.execute(update_stmt)
+            updated_ids = result.scalars().all()
 
-            update_stmt = (
-                update(tblbuylead_followup)
-                .where(tblbuylead_followup.c.buylead_id.in_(reopen.lead_ids))
-                .values(
-                    stage=BuyStage.Fresh.value,
-                    disposition=BuyDisposition.Fresh.value,
-                    calldate=func.now(),
-                    notes=BuyStage.Fresh.value,
-                    created_by=created_by,
+            if updated_ids:
+                followup_stmt = (
+                    update(tblbuylead_followup)
+                    .where(tblbuylead_followup.c.buylead_id.in_(updated_ids))
+                    .values(
+                        stage=BuyStage.Fresh.value,
+                        disposition=BuyDisposition.Fresh.value,
+                        calldate=func.now(),
+                        notes=BuyStage.Fresh.value,
+                        created_by=created_by,
+                    )
                 )
-            )
-            await self.session.execute(update_stmt)
+
+                await self.session.execute(followup_stmt)
 
             await self.session.commit()
-            return result.rowcount
+            return len(updated_ids)
         except IntegrityError:
             await self.session.rollback()
             raise AllocationError(constant.FAILED)
@@ -736,13 +774,11 @@ class BuyRepository(BuyRepositoryInterface):
                 tblbuylead.c.status != BuyStatus.DND.value,
             )
         )
-        if role_id != 1:
-            stmt = stmt.where(
-                or_(
-                    tblbuylead.c.telecaller == created_by,
-                    tblbuylead.c.executive == created_by,
-                )
-            )
+        stmt = self._apply_role_filter(
+            stmt,
+            created_by,
+            role_id,
+        )
         return stmt
 
     def _apply_followup_search(self, stmt, search: str | None):
@@ -811,13 +847,11 @@ class BuyRepository(BuyRepositoryInterface):
                 tblbuylead.c.status != BuyStatus.DND.value,
             )
         )
-        if role_id != 1:
-            stmt = stmt.where(
-                or_(
-                    tblbuylead.c.telecaller == created_by,
-                    tblbuylead.c.executive == created_by,
-                )
-            )
+        stmt = self._apply_role_filter(
+            stmt,
+            created_by,
+            role_id,
+        )
 
         stmt = self._apply_followup_search(stmt, search)
         if buy_stage:
@@ -833,6 +867,7 @@ class BuyRepository(BuyRepositoryInterface):
         buy_stage: BuyStage | None = None,
     ):
         stmt = self._base_followup_lead_query(created_by, role_id)
+
         stmt = self._apply_followup_search(stmt, search)
         if buy_stage:
             stmt = stmt.where(tblbuylead_followup.c.stage == buy_stage)
@@ -855,7 +890,7 @@ class BuyRepository(BuyRepositoryInterface):
 
     def _base_import_lead_query(self, created_by: str, role_id: int):
         stmt = select(*IMPORT_LEAD_COLUMNS)
-        if role_id != 1:
+        if role_id not in settings.admin_role_ids:
             stmt = stmt.where(or_(tblbuylead_file.c.created_by == created_by))
         return stmt
 
@@ -989,7 +1024,7 @@ class BuyRepository(BuyRepositoryInterface):
         search: str | None = None,
     ) -> int:
         stmt = select(func.count()).select_from(tblbuylead_file)
-        if role_id != 1:
+        if role_id not in settings.admin_role_ids:
             stmt = stmt.where(or_(tblbuylead.c.created_by == created_by))
 
         stmt = self._apply_import_search(stmt, search)
@@ -1018,7 +1053,7 @@ class BuyRepository(BuyRepositoryInterface):
     ) -> BuyLeadFile:
         stmt = select(tblbuylead_file)
         stmt = stmt.where(tblbuylead_file.c.file_uuid == import_id)
-        if role_id != 1:
+        if role_id not in settings.admin_role_ids:
             stmt = stmt.where(or_(tblbuylead_file.c.created_by == created_by))
         result = await self.session.execute(stmt)
         return result.mappings().one_or_none()

@@ -80,18 +80,20 @@ class BuyRepositoryInterface(ABC):
 
     @abstractmethod
     async def allocate_leads(
-        self, allocate: AllocateLeadsRequest, created_by: str
+        self, allocate: AllocateLeadsRequest, created_by: str, role_id: int
     ) -> int:
         pass
 
     @abstractmethod
     async def reallocate_leads(
-        self, reallocate: AllocateLeadsRequest, created_by: str
+        self, reallocate: AllocateLeadsRequest, created_by: str, role_id: int
     ) -> int:
         pass
 
     @abstractmethod
-    async def reopen_leads(self, reopen: AllocateLeadsRequest, created_by: str) -> int:
+    async def reopen_leads(
+        self, reopen: AllocateLeadsRequest, created_by: str, role_id: int
+    ) -> int:
         pass
 
     @abstractmethod

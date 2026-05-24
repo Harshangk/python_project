@@ -141,19 +141,25 @@ class BuyService(BuyServiceInterface):
         return await self.buy_repository.remove_lead(lead_id, created_by, role_id)
 
     async def allocate_leads(
-        self, allocate: AllocateLeadsRequest, created_by: str
+        self, allocate: AllocateLeadsRequest, created_by: str, role_id: int
     ) -> int:
-        return await self.buy_repository.allocate_leads(allocate, created_by=created_by)
-
-    async def reallocate_leads(
-        self, reallocate: AllocateLeadsRequest, created_by: str
-    ) -> int:
-        return await self.buy_repository.reallocate_leads(
-            reallocate, created_by=created_by
+        return await self.buy_repository.allocate_leads(
+            allocate, created_by=created_by, role_id=role_id
         )
 
-    async def reopen_leads(self, reopen: AllocateLeadsRequest, created_by: str) -> int:
-        return await self.buy_repository.reopen_leads(reopen, created_by=created_by)
+    async def reallocate_leads(
+        self, reallocate: AllocateLeadsRequest, created_by: str, role_id: int
+    ) -> int:
+        return await self.buy_repository.reallocate_leads(
+            reallocate, created_by=created_by, role_id=role_id
+        )
+
+    async def reopen_leads(
+        self, reopen: AllocateLeadsRequest, created_by: str, role_id: int
+    ) -> int:
+        return await self.buy_repository.reopen_leads(
+            reopen, created_by=created_by, role_id=role_id
+        )
 
     async def create_lead_followup(
         self, lead_id: int, lead: BuyLeadFollowup, created_by: str

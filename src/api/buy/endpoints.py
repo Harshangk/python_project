@@ -291,7 +291,7 @@ async def allocate_leads(
         if len(allocate.lead_ids) > constant.MAX_LIMIT:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.MAXLIMITREACH)
         alocate_count = await buy_service.allocate_leads(
-            allocate.to_model(), current_user.user_name
+            allocate.to_model(), current_user.user_name, current_user.role_id
         )
         if alocate_count > 0:
             return Response(id=alocate_count, message=constant.CREATED)
@@ -322,7 +322,7 @@ async def reallocate_leads(
         if len(reallocate.lead_ids) > constant.MAX_LIMIT:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.MAXLIMITREACH)
         realocate_count = await buy_service.reallocate_leads(
-            reallocate.to_model(), current_user.user_name
+            reallocate.to_model(), current_user.user_name, current_user.role_id
         )
         if realocate_count > 0:
             return Response(id=realocate_count, message=constant.CREATED)
@@ -353,7 +353,7 @@ async def reopen_leads(
         if len(reopen.lead_ids) > constant.MAX_LIMIT:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.MAXLIMITREACH)
         reopen_count = await buy_service.reopen_leads(
-            reopen.to_model(), current_user.user_name
+            reopen.to_model(), current_user.user_name, current_user.role_id
         )
         if reopen_count > 0:
             return Response(id=reopen_count, message=constant.CREATED)
