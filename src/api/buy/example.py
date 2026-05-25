@@ -158,3 +158,12 @@ BUY_LEAD_PAYMENT = {
         "premium": 15000.00,
     },
 }
+
+BUY_LEAD_TARGET = {
+    "user_name": "john.doe",
+    "month": "June",
+    "year": "2026",
+    "normal": 40,
+    "premium": 10,
+    "total": 50,
+}

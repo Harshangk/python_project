@@ -10,6 +10,7 @@ from model.buy.buy import (
     BuyLeadFollowup,
     BuyLeadFollowupDetail,
     BuyLeadPayment,
+    BuyLeadTarget,
 )
 
 
@@ -258,4 +259,10 @@ class BuyRepositoryInterface(ABC):
         created_by: str,
         role_id: int,
     ) -> Mapping[str, Any] | None:
+        pass
+
+    @abstractmethod
+    async def create_buy_target(
+        self, buy_target: BuyLeadTarget, created_by: str
+    ) -> int:
         pass

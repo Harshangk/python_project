@@ -264,6 +264,31 @@ tblbuylead_stockin_document = Table(
     ),
 )
 
+tblbuylead_target = Table(
+    "tblbuylead_target",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("user_name", String(50), nullable=False),
+    Column("month", String(9), nullable=False),
+    Column("year", String(4), nullable=False),
+    Column("normal", Integer, server_default=text("0"), nullable=False),
+    Column("premium", Integer, server_default=text("0"), nullable=False),
+    Column("total", Integer, server_default=text("0"), nullable=False),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+    Column("modified_at", DateTime, nullable=True),
+    Column("modified_by", String(length=50), nullable=True),
+    UniqueConstraint(
+        "user_name",
+        "month",
+        "year",
+        name="uq_tblbuylead_target_user_month_year",
+    ),
+    Index("idx_tblbuylead_target_user_name", "user_name"),
+    Index("idx_tblbuylead_target_month", "month"),
+    Index("idx_tblbuylead_target_year", "year"),
+)
+
 tblbuylead_evaluation_parameter = Table(
     "tblbuylead_evaluation_parameter",
     mapper_registry.metadata,
@@ -306,6 +331,7 @@ def start_mappers() -> None:
     mapper_registry.map_imperatively(
         BuyModel.BuyLeadStockinDocument, tblbuylead_stockin_document
     )
+    mapper_registry.map_imperatively(BuyModel.BuyLeadTarget, tblbuylead_target)
     mapper_registry.map_imperatively(
         BuyModel.BuyLeadEvaluationParameter, tblbuylead_evaluation_parameter
     )

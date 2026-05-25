@@ -280,6 +280,17 @@ class BuyLeadStockin:
 
 
 @dataclass
+class BuyLeadTarget:
+    user_name: str
+    month: Months
+    year: str
+    normal: int
+    premium: int
+    total: int
+    created_by: str | None = None
+
+
+@dataclass
 class BuyLeadEvaluation:
     buylead_id: int
     lead: UpdateLead

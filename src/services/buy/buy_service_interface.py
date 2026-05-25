@@ -5,7 +5,7 @@ from uuid import UUID
 from common.schema_types import BuyStage, BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
-from model.buy.buy import BuyLeadFollowup, BuyLeadPayment
+from model.buy.buy import BuyLeadFollowup, BuyLeadPayment, BuyLeadTarget
 from schema.buy.buy import (
     BuyLeadFollowupDetail,
     BuyLeadFollowupItem,
@@ -264,4 +264,10 @@ class BuyServiceInterface(ABC):
         created_by: str,
         role_id: int,
     ) -> tuple[str, bytes] | None:
+        pass
+
+    @abstractmethod
+    async def create_buy_target(
+        self, buy_target: BuyLeadTarget, created_by: str
+    ) -> int:
         pass

@@ -24,6 +24,7 @@ from model.buy.buy import (
     BuyLeadFollowup,
     BuyLeadFollowupDetail,
     BuyLeadPayment,
+    BuyLeadTarget,
 )
 from orm.buy.buy import (
     tblbuylead,
@@ -36,6 +37,7 @@ from orm.buy.buy import (
     tblbuylead_payment,
     tblbuylead_stockin,
     tblbuylead_stockin_document,
+    tblbuylead_target,
     tblbuylead_vehicle,
     tblbuylead_vehicle_insurance,
 )
@@ -1525,3 +1527,39 @@ class BuyRepository(BuyRepositoryInterface):
         ]
 
         return lead
+
+    async def create_buy_target(
+        self,
+        buy_target: BuyLeadTarget,
+        created_by: str,
+    ) -> int:
+        try:
+            stmt = insert(tblbuylead_target).values(
+                user_name=buy_target.user_name,
+                month=buy_target.month.value,
+                year=buy_target.year,
+                normal=buy_target.normal,
+                premium=buy_target.premium,
+                total=buy_target.total,
+                created_by=created_by,
+            )
+            stmt = stmt.on_conflict_do_update(
+                index_elements=[
+                    tblbuylead_target.c.user_name,
+                    tblbuylead_target.c.month,
+                    tblbuylead_target.c.year,
+                ],
+                set_={
+                    "normal": buy_target.normal,
+                    "premium": buy_target.premium,
+                    "total": buy_target.total,
+                    "modified_at": func.now(),
+                    "modified_by": created_by,
+                },
+            )
+            result = await self.session.execute(stmt.returning(tblbuylead_target.c.id))
+            await self.session.commit()
+            return result.scalar_one()
+        except Exception as ex:
+            await self.session.rollback()
+            raise ex

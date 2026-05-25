@@ -17,6 +17,7 @@ from api.buy.example import (
     BUY_LEAD_ALLOCATION,
     BUY_LEAD_FOLLOWUP,
     BUY_LEAD_PAYMENT,
+    BUY_LEAD_TARGET,
     UPDATE_LEAD,
 )
 from app.constant import BROKERINVALID, SOURCEINVALID
@@ -604,6 +605,29 @@ class CreateBuyLeadPayment(CamelBaseModel):
                 if self.lead_vehicle_insurance
                 else None
             ),
+        )
+
+
+class CreateBuyTarget(CamelBaseModel):
+    user_name: str = Field(..., min_length=1, max_length=50)
+    month: Months
+    year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+    normal: int
+    premium: int
+    total: int
+
+    class config:
+        schema_extra = {"example": BUY_LEAD_TARGET}
+        orm_mode = True
+
+    def to_model(self) -> BuyModel.BuyLeadTarget:
+        return BuyModel.BuyLeadTarget(
+            user_name=self.user,
+            month=self.month,
+            year=self.year,
+            normal=self.normal,
+            premium=self.premium,
+            total=self.total,
         )
 
 

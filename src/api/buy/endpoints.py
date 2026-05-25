@@ -53,6 +53,7 @@ from schema.buy.buy import (
     CreateBuyLead,
     CreateBuyLeadFollowup,
     CreateBuyLeadPayment,
+    CreateBuyTarget,
     ImportBuyLeadRequest,
     Response,
     UpdateBuyLead,
@@ -910,3 +911,32 @@ async def download_lead_evaluation_pdf(
     except Exception as ex:
         logger.error(f"[{trace_id}] download_lead_evaluation_pdf failed: {str(ex)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
+@router.post(
+    "/target",
+    response_model=Response,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_buy_target(
+    request: Request,
+    target: CreateBuyTarget = Body(...),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(require_roles(settings.admin_role_ids)),
+    trace_id: UUID = Depends(get_trace_id),
+) -> Response:
+    logger.info(f"request: {request}, user: {current_user}, target: {target}")
+    try:
+        target_id = await buy_service.create_buy_target(
+            target.to_model(), current_user.user_name
+        )
+    except CreationError as ex:
+        logger.error(f"Creation error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.FAILED)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"[{trace_id}] create_buy_target failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+    return Response(id=target_id, message=constant.CREATED)

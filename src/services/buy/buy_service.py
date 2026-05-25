@@ -13,7 +13,7 @@ from common.payment_pdf import build_buy_lead_payment_pdf
 from common.schema_types import BuyStage, BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
-from model.buy.buy import BuyLeadFollowup, BuyLeadPayment
+from model.buy.buy import BuyLeadFollowup, BuyLeadPayment, BuyLeadTarget
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 from repository.common.common_repository_interface import CommonRepositoryInterface
 from schema.buy.buy import (
@@ -772,3 +772,11 @@ class BuyService(BuyServiceInterface):
 
         filename = f"buy_lead_evaluation_{lead_id}.pdf"
         return filename, build_buy_lead_evaluation_pdf(evaluation)
+
+    async def create_buy_target(
+        self, buy_target: BuyLeadTarget, created_by: str
+    ) -> int:
+        return await self.buy_repository.create_buy_target(
+            buy_target=buy_target,
+            created_by=created_by,
+        )
