@@ -25,6 +25,7 @@ from api.deps import get_authenticated_user, get_trace_id
 from app import constant
 from app.core.config import settings
 from app.core.logging import logger
+from app.core.permission import require_roles
 from auth.dto import AuthenticatedUser
 from auth.exceptions import AlreadyExistsError, CreationError, NotFound
 from common.csv_utils import stream_csv
@@ -660,7 +661,7 @@ async def create_lead_payment(
     lead_id: int,
     lead_payment: CreateBuyLeadPayment = Body(..., example=example.BUY_LEAD_PAYMENT),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
-    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_roles(settings.payment_role_ids)),
     trace_id: UUID = Depends(get_trace_id),
 ) -> Response:
     logger.info(f"request: {request}")
@@ -695,7 +696,7 @@ async def download_lead_payment_pdf(
     request: Request,
     lead_id: int,
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
-    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_roles(settings.payment_role_ids)),
     trace_id: UUID = Depends(get_trace_id),
 ):
     logger.info(f"request: {request}, user: {current_user}, id:{lead_id}")
@@ -746,7 +747,9 @@ async def create_evaluation(
     ],
     remarks: Annotated[str, Form(...)],
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
-    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    current_user: AuthenticatedUser = Depends(
+        require_roles(settings.evaluation_role_ids)
+    ),
     trace_id: UUID = Depends(get_trace_id),
 ):
 
@@ -817,7 +820,7 @@ async def create_stockin(
     ],
     remarks: Annotated[str, Form(...)],
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
-    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    current_user: AuthenticatedUser = Depends(require_roles(settings.payment_role_ids)),
     trace_id: UUID = Depends(get_trace_id),
 ):
     logger.info(f"request: {request}, user: {current_user}, id:{lead_id}")
@@ -868,7 +871,17 @@ async def download_lead_evaluation_pdf(
     request: Request,
     lead_id: int,
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
-    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    current_user: AuthenticatedUser = Depends(
+        require_roles(
+            list(
+                set(
+                    settings.admin_role_ids
+                    + settings.evaluation_role_ids
+                    + settings.payment_role_ids
+                )
+            )
+        )
+    ),
     trace_id: UUID = Depends(get_trace_id),
 ):
     logger.info(f"request: {request}, user: {current_user}, id:{lead_id}")

@@ -123,6 +123,8 @@ BUY_LEAD_PAYMENT = {
     "leadVehicle": {
         "registrationNo": "GJ01AB1234",
         "transmission": "Manual",
+        "chassisNo": "CHS123456789",
+        "engineNo": "ENG123456789",
         "cubicCapacity": 1197,
         "pushButton": "No",
         "regMonth": "January",

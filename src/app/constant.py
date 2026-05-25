@@ -3,6 +3,8 @@ REFRESH_TOKEN_COOKIE_NAME = "refreshToken"
 ACCESS_TOKEN_COOKIE_PATH = "/"
 REFRESH_TOKEN_COOKIE_PATH = "/auth"
 
+FORBIDDEN = "you do not have permission to perform this action."
+
 PAGE_WIDTH = 595
 PAGE_HEIGHT = 842
 MARGIN = 42
@@ -12,7 +14,7 @@ LINE_HEIGHT = 14
 
 DEFAULT_LIMIT = 10
 MAX_LIMIT = 100
-REMARKS = "Imported from CSV"
+REMARKS = "imported from CSV"
 
 REQUEST = "received request."
 EXISTS = "already exists."
@@ -38,7 +40,7 @@ PDFEXTENSION = "only pdf allowed."
 PDFCONTENTTYPE = "only application/pdf allowed."
 
 MOBILEERROR = (
-    "Mobile number must be between 10 and 15 digits, Mobile must contain only digits."
+    "mobile number must be between 10 and 15 digits, Mobile must contain only digits."
 )
 
 VALUEERROR = "validation error."
@@ -65,10 +67,10 @@ BUYREQUIREDINTCOLUMS = {
     "our_offer",
 }  # noqa
 
-SOURCEINVALID = "Source required."
-BROKERINVALID = "Broker/Dealer required."
-INVALIDCSV = "Invalid CSV file or missing header."
-MISSINGCOLUMNS = "Missing required columns."
-MISSINGVALUES = "Missing required columns value."
-WRONGVALUES = "Wrong data."
-MISSINGFILES = "Error accessing file from storage."
+SOURCEINVALID = "source required."
+BROKERINVALID = "broker/dealer required."
+INVALIDCSV = "invalid CSV file or missing header."
+MISSINGCOLUMNS = "missing required columns."
+MISSINGVALUES = "missing required columns value."
+WRONGVALUES = "wrong data."
+MISSINGFILES = "error accessing file from storage."

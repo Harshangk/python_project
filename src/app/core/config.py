@@ -6,6 +6,8 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     database_url: str
     admin_role_ids: List[int]
+    payment_role_ids: List[int]
+    evaluation_role_ids: List[int]
     allowed_extensions: List[str]
     allowed_image_extensions: List[str]
     allowed_content_types: List[str]
