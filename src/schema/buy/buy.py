@@ -622,13 +622,45 @@ class CreateBuyTarget(CamelBaseModel):
 
     def to_model(self) -> BuyModel.BuyLeadTarget:
         return BuyModel.BuyLeadTarget(
-            user_name=self.user,
+            user_name=self.user_name,
             month=self.month,
             year=self.year,
             normal=self.normal,
             premium=self.premium,
             total=self.total,
         )
+
+
+class UpdateBuyTarget(CamelBaseModel):
+    month: Months
+    year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+    normal: int
+    premium: int
+    total: int
+
+    class config:
+        orm_mode = True
+
+
+class BuyTargetItem(CamelBaseModel):
+    id: int
+    user_name: str
+    month: Months
+    year: str
+    normal: int
+    premium: int
+    total: int
+    created_at: datetime
+    created_by: str
+    modified_at: datetime | None = None
+    modified_by: str | None = None
+
+
+class BuyTargetList(CamelBaseModel):
+    total: int
+    limit: int
+    next: Optional[str]
+    items: List[BuyTargetItem]
 
 
 class EvaluationParameterRequest(CamelBaseModel):

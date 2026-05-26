@@ -5,6 +5,7 @@ from orm.buy.buy import (
     tblbuylead_file,
     tblbuylead_followup,
     tblbuylead_payment,
+    tblbuylead_target,
     tblbuylead_vehicle,
     tblbuylead_vehicle_insurance,
 )
@@ -321,3 +322,24 @@ LEAD_EVALUATION_PDF_COLUMNS = [
     tblbuylead_vehicle_insurance.c.ncb,
     tblbuylead_vehicle_insurance.c.premium,
 ]
+
+
+BUY_TARGET_COLUMNS = [
+    tblbuylead_target.c.id,
+    tblbuylead_target.c.user_name,
+    tblbuylead_target.c.month,
+    tblbuylead_target.c.year,
+    tblbuylead_target.c.normal,
+    tblbuylead_target.c.premium,
+    tblbuylead_target.c.total,
+    tblbuylead_target.c.created_by,
+    tblbuylead_target.c.created_at,
+    tblbuylead_target.c.modified_by,
+    tblbuylead_target.c.modified_at,
+]
+
+BUY_TARGET_SEARCHABLE_COLUMNS = {
+    "user_name": tblbuylead_target.c.user_name,
+    "month": tblbuylead_target.c.month,
+    "year": tblbuylead_target.c.year,
+}

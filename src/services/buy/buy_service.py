@@ -21,6 +21,7 @@ from schema.buy.buy import (
     BuyLeadFollowupItem,
     BuyLeadImportItem,
     BuyLeadItem,
+    BuyTargetItem,
     LeadAddress,
     LeadFollowup,
 )
@@ -779,4 +780,69 @@ class BuyService(BuyServiceInterface):
         return await self.buy_repository.create_buy_target(
             buy_target=buy_target,
             created_by=created_by,
+        )
+
+    async def get_buy_target(
+        self,
+        cursor: int | None,
+        limit: int,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> List[BuyTargetItem]:
+        rows = await self.buy_repository.get_buy_target(
+            cursor, limit, created_by, role_id, search
+        )
+        targets = [BuyTargetItem(**row) for row in rows]
+        return targets
+
+    async def get_total_buy_target(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> int:
+        return await self.buy_repository.get_total_buy_target(
+            created_by, role_id, search
+        )
+
+    async def get_buy_target_export(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ):
+        async for row in self.buy_repository.get_buy_target_export(
+            created_by, role_id, search
+        ):
+            yield BuyTargetItem(**row)
+
+    async def get_buy_target_by_id(
+        self,
+        target_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> BuyTargetItem:
+        row = await self.buy_repository.get_buy_target_by_id(
+            target_id, created_by, role_id
+        )
+        if not row:
+            return None
+        return BuyTargetItem(**row)
+
+    async def update_buy_target(
+        self,
+        target_id: int,
+        target: BuyLeadTarget,
+        created_by: str,
+    ) -> int:
+        return await self.buy_repository.update_buy_target(
+            target_id, target, created_by=created_by
+        )
+
+    async def remove_buy_target(
+        self, target_id: int, created_by: str, role_id: int
+    ) -> bool:
+        return await self.buy_repository.remove_buy_target(
+            target_id, created_by, role_id
         )

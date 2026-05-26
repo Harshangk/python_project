@@ -167,3 +167,11 @@ BUY_LEAD_TARGET = {
     "premium": 10,
     "total": 50,
 }
+
+UPDATE_BUY_LEAD_TARGET = {
+    "month": "July",
+    "year": "2026",
+    "normal": 30,
+    "premium": 10,
+    "total": 40,
+}

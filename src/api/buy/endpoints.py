@@ -50,6 +50,8 @@ from schema.buy.buy import (
     BuyLeadItem,
     BuyLeadList,
     BuyLeadSortBy,
+    BuyTargetItem,
+    BuyTargetList,
     CreateBuyLead,
     CreateBuyLeadFollowup,
     CreateBuyLeadPayment,
@@ -57,6 +59,7 @@ from schema.buy.buy import (
     ImportBuyLeadRequest,
     Response,
     UpdateBuyLead,
+    UpdateBuyTarget,
 )
 from services.buy.buy_service_interface import BuyServiceInterface
 from services.common.common_service_interface import CommonServiceInterface
@@ -113,7 +116,7 @@ async def create_lead(
 )
 async def update_lead(
     request: Request,
-    lead_id: int,
+    lead_id: int = Path(..., gt=0),
     lead: UpdateBuyLead = Body(..., example=example.UPDATE_LEAD),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
@@ -199,15 +202,20 @@ async def export_lead(
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ):
-    leads = buy_service.get_lead_export(
-        current_user.user_name,
-        current_user.role_id,
-        search,
-        buy_status,
-        sort_by.value,
-        sort_order.value,
-    )
-    return stream_csv(rows=leads, filename="buy_lead_export.csv")
+    logger.info(f"request: {request}, user: {current_user}")
+    try:
+        leads = buy_service.get_lead_export(
+            current_user.user_name,
+            current_user.role_id,
+            search,
+            buy_status,
+            sort_by.value,
+            sort_order.value,
+        )
+        return stream_csv(rows=leads, filename="buy_lead_export.csv")
+    except Exception as ex:
+        logger.error(f"[{trace_id}] export_buy_leads failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
 
 
 @router.get(
@@ -217,7 +225,7 @@ async def export_lead(
 )
 async def get_buy_lead_by_id(
     request: Request,
-    lead_id: int,
+    lead_id: int = Path(..., gt=0),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
@@ -248,7 +256,7 @@ async def get_buy_lead_by_id(
 )
 async def remove_buy_lead_by_id(
     request: Request,
-    lead_id: int,
+    lead_id: int = Path(..., gt=0),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
@@ -376,7 +384,7 @@ async def reopen_leads(
 )
 async def create_lead_followup(
     request: Request,
-    lead_id: int,
+    lead_id: int = Path(..., gt=0),
     lead: CreateBuyLeadFollowup = Body(..., example=example.BUY_LEAD_FOLLOWUP),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
@@ -456,10 +464,15 @@ async def export_followup_lead(
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ):
-    leads = buy_service.get_followup_lead_export(
-        current_user.user_name, current_user.role_id, search, buy_stage
-    )
-    return stream_csv(rows=leads, filename="buy_followup_export.csv")
+    logger.info(f"request: {request}, user: {current_user}")
+    try:
+        leads = buy_service.get_followup_lead_export(
+            current_user.user_name, current_user.role_id, search, buy_stage
+        )
+        return stream_csv(rows=leads, filename="buy_followup_export.csv")
+    except Exception as ex:
+        logger.error(f"[{trace_id}] export_buy_followup_leads failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
 
 
 @router.get(
@@ -469,7 +482,7 @@ async def export_followup_lead(
 )
 async def get_buy_followup_lead_by_id(
     request: Request,
-    lead_id: int,
+    lead_id: int = Path(..., gt=0),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
@@ -615,10 +628,15 @@ async def export_import_lead(
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
     trace_id: UUID = Depends(get_trace_id),
 ):
-    leads = buy_service.get_import_lead_export(
-        current_user.user_name, current_user.role_id, search
-    )
-    return stream_csv(rows=leads, filename="buy_import_export.csv")
+    logger.info(f"request: {request}, user: {current_user}")
+    try:
+        leads = buy_service.get_import_lead_export(
+            current_user.user_name, current_user.role_id, search
+        )
+        return stream_csv(rows=leads, filename="buy_import_export.csv")
+    except Exception as ex:
+        logger.error(f"[{trace_id}] export_buy_import_leads failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
 
 
 @router.get(
@@ -659,7 +677,7 @@ async def get_buy_import_lead_by_id(
 )
 async def create_lead_payment(
     request: Request,
-    lead_id: int,
+    lead_id: int = Path(..., gt=0),
     lead_payment: CreateBuyLeadPayment = Body(..., example=example.BUY_LEAD_PAYMENT),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(require_roles(settings.payment_role_ids)),
@@ -695,7 +713,7 @@ async def create_lead_payment(
 )
 async def download_lead_payment_pdf(
     request: Request,
-    lead_id: int,
+    lead_id: int = Path(..., gt=0),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(require_roles(settings.payment_role_ids)),
     trace_id: UUID = Depends(get_trace_id),
@@ -870,7 +888,7 @@ async def create_stockin(
 )
 async def download_lead_evaluation_pdf(
     request: Request,
-    lead_id: int,
+    lead_id: int = Path(..., gt=0),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(
         require_roles(
@@ -920,7 +938,7 @@ async def download_lead_evaluation_pdf(
 )
 async def create_buy_target(
     request: Request,
-    target: CreateBuyTarget = Body(...),
+    target: CreateBuyTarget = Body(..., example=example.BUY_LEAD_TARGET),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(require_roles(settings.admin_role_ids)),
     trace_id: UUID = Depends(get_trace_id),
@@ -940,3 +958,172 @@ async def create_buy_target(
         logger.error(f"[{trace_id}] create_buy_target failed: {str(ex)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
     return Response(id=target_id, message=constant.CREATED)
+
+
+@router.get(
+    "/target",
+    response_model=BuyTargetList,
+    status_code=status.HTTP_200_OK,
+)
+async def get_buy_target(
+    request: Request,
+    cursor: int | None = None,
+    limit: int | None = None,
+    search: str | None = None,
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(require_roles(settings.admin_role_ids)),
+    trace_id: UUID = Depends(get_trace_id),
+) -> BuyTargetList:
+    logger.info(f"request: {request}, user: {current_user}")
+    try:
+        limit = normalize_limit(limit)
+        targets = await buy_service.get_buy_target(
+            cursor,
+            limit,
+            current_user.user_name,
+            current_user.role_id,
+            search,
+        )
+        total = await buy_service.get_total_buy_target(
+            current_user.user_name, current_user.role_id, search
+        )
+
+        next_url = None
+        if len(targets) == limit:
+            last_id = targets[-1].id
+            next_url = build_next_page_url(request, last_id, limit)
+
+        return BuyTargetList(total=total, limit=limit, next=next_url, items=targets)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
+@router.get(
+    "/target/export",
+    status_code=status.HTTP_200_OK,
+)
+async def export_buy_target(
+    request: Request,
+    search: str | None = None,
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(require_roles(settings.admin_role_ids)),
+    trace_id: UUID = Depends(get_trace_id),
+):
+    logger.info(f"request: {request}, user: {current_user}")
+
+    try:
+        targets = buy_service.get_buy_target_export(
+            current_user.user_name,
+            current_user.role_id,
+            search,
+        )
+        return stream_csv(rows=targets, filename="buy_lead_target_export.csv")
+    except Exception as ex:
+        logger.error(f"[{trace_id}] export_buy_targets failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
+@router.get(
+    "/target/{target_id}",
+    response_model=BuyTargetItem,
+    status_code=status.HTTP_200_OK,
+)
+async def get_buy_target_by_id(
+    request: Request,
+    target_id: int = Path(..., gt=0),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(require_roles(settings.admin_role_ids)),
+    trace_id: UUID = Depends(get_trace_id),
+) -> BuyTargetItem:
+    logger.info(f"request: {request}, user: {current_user}, target_id: {target_id}")
+    try:
+        target = await buy_service.get_buy_target_by_id(
+            target_id, current_user.user_name, current_user.role_id
+        )
+        if not target:
+            logger.info(f"Not Found: {target_id}")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
+        return target
+    except HTTPException:
+        raise
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
+@router.put(
+    "/target/{target_id}",
+    response_model=Response,
+    status_code=status.HTTP_200_OK,
+)
+async def update_buy_target(
+    request: Request,
+    target_id: int = Path(..., gt=0),
+    target: UpdateBuyTarget = Body(..., example=example.UPDATE_BUY_LEAD_TARGET),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(require_roles(settings.admin_role_ids)),
+    trace_id: UUID = Depends(get_trace_id),
+) -> Response:
+    logger.info(
+        f"request: {request}, user: {current_user}, \
+            target_id: {target_id}, target: {target}"
+    )
+
+    try:
+        await buy_service.update_buy_target(
+            target_id, target.to_model(), current_user.user_name
+        )
+
+    except NotFound as ex:
+        logger.error(f"Not Found error: {ex}")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"[{trace_id}] update_buy_target failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+    return Response(id=target_id, message=constant.UPDATED)
+
+
+@router.delete(
+    "/target/{target_id}",
+    response_model=Response,
+    status_code=status.HTTP_200_OK,
+)
+async def remove_buy_target_by_id(
+    request: Request,
+    target_id: int = Path(..., gt=0),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(require_roles(settings.admin_role_ids)),
+    trace_id: UUID = Depends(get_trace_id),
+) -> Response:
+    logger.info(f"request: {request}, user: {current_user}, id:{id}")
+    try:
+        target = await buy_service.get_buy_target_by_id(
+            target_id, current_user.user_name, current_user.role_id
+        )
+        if not target:
+            logger.info(f"Not Found: {id}")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
+
+        await buy_service.remove_buy_target(
+            target_id, current_user.user_name, current_user.role_id
+        )
+        return Response(id=target_id, message=constant.REMOVED)
+    except HTTPException:
+        raise
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)

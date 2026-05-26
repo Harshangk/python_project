@@ -266,3 +266,53 @@ class BuyRepositoryInterface(ABC):
         self, buy_target: BuyLeadTarget, created_by: str
     ) -> int:
         pass
+
+    @abstractmethod
+    async def get_buy_target(
+        self,
+        cursor: Optional[int],
+        limit: int,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> Sequence[Mapping[str, Any]]:
+        pass
+
+    @abstractmethod
+    async def get_total_buy_target(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def get_buy_target_export(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ):
+        pass
+
+    @abstractmethod
+    async def get_buy_target_by_id(
+        self,
+        target_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> BuyLeadTarget:
+        pass
+
+    @abstractmethod
+    async def update_buy_target(
+        self, target_id: int, target: BuyLeadTarget, created_by: str
+    ) -> int:
+        pass
+
+    @abstractmethod
+    async def remove_buy_target(
+        self, target_id: int, created_by: str, role_id: int
+    ) -> bool:
+        pass

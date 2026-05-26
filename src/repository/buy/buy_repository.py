@@ -51,6 +51,8 @@ from orm.common.common import (
 )
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 from repository.buy.buy_search_sort import (
+    BUY_TARGET_COLUMNS,
+    BUY_TARGET_SEARCHABLE_COLUMNS,
     FOLLOWUP_LEAD_COLUMNS,
     FOLLOWUP_LEAD_SEARCHABLE_COLUMNS,
     IMPORT_LEAD_COLUMNS,
@@ -1528,6 +1530,28 @@ class BuyRepository(BuyRepositoryInterface):
 
         return lead
 
+    def _base_buy_target_query(self, created_by: str, role_id: int):
+        stmt = select(*BUY_TARGET_COLUMNS)
+        return stmt
+
+    def _apply_buy_target_search(self, stmt, search: str | None):
+        if search:
+            filters = []
+
+            for col in BUY_TARGET_SEARCHABLE_COLUMNS.values():
+                if col is None:
+                    continue
+
+                if hasattr(col.type, "python_type") and col.type.python_type is str:
+                    filters.append(col.ilike(f"%{search}%"))
+
+                else:
+                    filters.append(cast(col, String).ilike(f"%{search}%"))
+
+            stmt = stmt.where(or_(*filters))
+
+        return stmt
+
     async def create_buy_target(
         self,
         buy_target: BuyLeadTarget,
@@ -1563,3 +1587,126 @@ class BuyRepository(BuyRepositoryInterface):
         except Exception as ex:
             await self.session.rollback()
             raise ex
+
+    async def get_buy_target(
+        self,
+        cursor: int | None,
+        limit: int,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> Sequence[Mapping[str, Any]]:
+        stmt = self._base_buy_target_query(created_by, role_id)
+
+        stmt = self._apply_buy_target_search(stmt, search)
+
+        if cursor:
+            stmt = stmt.where(tblbuylead_target.c.id < cursor)
+
+        stmt = stmt.order_by(tblbuylead_target.c.id.desc())
+        stmt = stmt.limit(limit)
+        result = await self.session.execute(stmt)
+        return result.mappings().all()
+
+    async def get_total_buy_target(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ) -> int:
+        stmt = (
+            select(func.count())
+            .select_from(tblbuylead_target)
+            .where(tblbuylead_target.c.is_active.is_(True))
+        )
+        stmt = self._apply_buy_target_search(stmt, search)
+        result = await self.session.execute(stmt)
+        return result.scalar_one()
+
+    async def get_buy_target_export(
+        self,
+        created_by: str,
+        role_id: int,
+        search: str | None = None,
+    ):
+        stmt = self._base_buy_target_query(created_by, role_id)
+        stmt = self._apply_buy_target_search(stmt, search)
+        stmt = stmt.execution_options(stream_results=True)
+
+        stream = await self.session.stream(stmt)
+        async for row in stream:
+            yield dict(row._mapping)
+
+    async def get_buy_target_by_id(
+        self,
+        target_id: int,
+        created_by: str,
+        role_id: int,
+    ) -> BuyLeadTarget:
+        stmt = select(tblbuylead_target)
+        stmt = stmt.where(tblbuylead_target.c.id == target_id)
+        result = await self.session.execute(stmt)
+        return result.mappings().one_or_none()
+
+    async def update_buy_target(
+        self, target_id: int, target: BuyLeadTarget, created_by: str
+    ) -> int:
+        try:
+            existing_stmt = select(
+                tblbuylead_target.c.id,
+            ).where(
+                tblbuylead_target.c.id == target_id,
+                tblbuylead_target.c.is_active.is_(True),
+                tblbuylead_target.c.is_deleted.is_(False),
+            )
+
+            result = await self.session.execute(existing_stmt)
+            existing = result.fetchone()
+
+            if not existing:
+                raise NotFound(constant.NOTFOUND)
+
+            stmt = (
+                update(tblbuylead_target)
+                .where(
+                    tblbuylead_target.c.id == target_id,
+                    tblbuylead_target.c.is_active.is_(True),
+                    tblbuylead_target.c.is_deleted.is_(False),
+                )
+                .values(
+                    month=target.month.value,
+                    year=target.year,
+                    normal=target.normal,
+                    premium=target.premium,
+                    total=target.total,
+                    modified_by=created_by,
+                    modified_at=func.now(),
+                )
+            )
+            await self.session.execute(stmt)
+            await self.session.commit()
+            return target_id
+        except IntegrityError:
+            await self.session.rollback()
+            raise CreationError(constant.FAILED)
+
+    async def remove_buy_target(
+        self, target_id: int, created_by: str, role_id: int
+    ) -> bool:
+        stmt = (
+            update(tblbuylead_target)
+            .where(
+                tblbuylead_target.c.id == target_id,
+                tblbuylead_target.c.is_active.is_(True),
+                tblbuylead_target.c.is_deleted.is_(False),
+            )
+            .values(
+                modified_by=created_by,
+                modified_at=func.now(),
+                is_active=False,
+                is_deleted=True,
+            )
+        )
+        result = await self.session.execute(stmt)
+        await self.session.commit()
+        return result.rowcount > 0
