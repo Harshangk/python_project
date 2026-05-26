@@ -42,7 +42,7 @@ def upgrade() -> None:
         sa.Column("created_by", sa.String(50), nullable=False),
         sa.Column("modified_at", sa.DateTime(), nullable=True),
         sa.Column("modified_by", sa.String(50), nullable=True),
-        sa.PrimaryKeyConstraint("id", name=op.f("pk_tblbuylead_stockin")),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_tblbuylead_target")),
         sa.UniqueConstraint(
             "user_name",
             "month",
