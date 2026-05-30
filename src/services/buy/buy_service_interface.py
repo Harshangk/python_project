@@ -12,6 +12,7 @@ from schema.buy.buy import (
     BuyLeadImportItem,
     BuyLeadItem,
     BuyTargetItem,
+    CreateBuyLeadPreprice,
 )
 
 
@@ -321,4 +322,10 @@ class BuyServiceInterface(ABC):
     async def remove_buy_target(
         self, target_id: int, created_by: str, role_id: int
     ) -> bool:
+        pass
+
+    @abstractmethod
+    async def create_lead_preprice(
+        self, lead_id: int, lead_preprice: CreateBuyLeadPreprice, created_by: str
+    ) -> int:
         pass

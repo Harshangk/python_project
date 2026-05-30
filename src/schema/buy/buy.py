@@ -17,6 +17,7 @@ from api.buy.example import (
     BUY_LEAD_ALLOCATION,
     BUY_LEAD_FOLLOWUP,
     BUY_LEAD_PAYMENT,
+    BUY_LEAD_PREPRICE,
     BUY_LEAD_TARGET,
     UPDATE_LEAD,
 )
@@ -668,3 +669,18 @@ class EvaluationParameterRequest(CamelBaseModel):
     subpart_id: int
     subpartstatus_id: int
     subpartsubstatus_id: int | None = None
+
+
+class CreateBuyLeadPreprice(CamelBaseModel):
+    pre_price: Decimal = Decimal("0.00")
+    remarks: str = Field(..., min_length=1, max_length=500)
+
+    class config:
+        schema_extra = {"example": BUY_LEAD_PREPRICE}
+        orm_mode = True
+
+    def to_model(self) -> BuyModel.BuyLeadPreprice:
+        return BuyModel.BuyLeadPreprice(
+            pre_price=self.pre_price,
+            remarks=self.remarks,
+        )

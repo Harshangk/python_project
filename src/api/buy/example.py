@@ -175,3 +175,9 @@ UPDATE_BUY_LEAD_TARGET = {
     "premium": 10,
     "total": 40,
 }
+
+BUY_LEAD_PREPRICE = {
+    "prePrice": 450000.00,
+    "remarks": "Pre-price added for purchase lead",
+    "createdBy": "john.doe",
+}

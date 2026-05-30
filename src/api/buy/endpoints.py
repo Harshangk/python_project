@@ -55,6 +55,7 @@ from schema.buy.buy import (
     CreateBuyLead,
     CreateBuyLeadFollowup,
     CreateBuyLeadPayment,
+    CreateBuyLeadPreprice,
     CreateBuyTarget,
     ImportBuyLeadRequest,
     Response,
@@ -1127,3 +1128,49 @@ async def remove_buy_target_by_id(
     except Exception as ex:
         logger.error(f"Exception error: {ex}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
+@router.post(
+    "/{lead_id}/preprice",
+    response_model=Response,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_lead_preprice(
+    request: Request,
+    lead_id: int = Path(..., gt=0),
+    lead_preprice: CreateBuyLeadPreprice = Body(..., example=example.BUY_LEAD_PREPRICE),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(
+        require_roles(
+            list(
+                set(
+                    settings.admin_role_ids
+                    + settings.preprice_role_ids
+                    + settings.payment_role_ids
+                )
+            )
+        )
+    ),
+    trace_id: UUID = Depends(get_trace_id),
+) -> Response:
+    logger.info(f"request: {request}")
+    try:
+        preprice_id = await buy_service.create_lead_preprice(
+            lead_id=lead_id,
+            lead_preprice=lead_preprice.to_model(),
+            created_by=current_user.user_name,
+        )
+
+    except CreationError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.FAILED)
+    except NotFound as ex:
+        logger.error(f"Not Found error: {ex}")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"[{trace_id}] create_lead failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+    return Response(id=preprice_id, message=constant.CREATED)

@@ -313,6 +313,17 @@ tblbuylead_evaluation_parameter = Table(
     Index("idx_tblbuylead_evaluation_parameter_buylead_id", "buylead_id"),
 )
 
+tblbuylead_preprice = Table(
+    "tblbuylead_preprice",
+    mapper_registry.metadata,
+    Column("id", Integer, Identity(), primary_key=True, autoincrement=True),
+    Column("buylead_id", Integer, ForeignKey("tblbuylead.id"), nullable=False),
+    Column("pre_price", Numeric(12, 2), server_default=text("0.00"), nullable=False),
+    Column("remarks", String(500), nullable=False),
+    Column("created_at", DateTime, server_default=text("now()"), nullable=False),
+    Column("created_by", String(length=50), nullable=False),
+)
+
 
 def start_mappers() -> None:
     mapper_registry.map_imperatively(BuyModel.BuyLead, tblbuylead)
@@ -335,6 +346,7 @@ def start_mappers() -> None:
     mapper_registry.map_imperatively(
         BuyModel.BuyLeadEvaluationParameter, tblbuylead_evaluation_parameter
     )
+    mapper_registry.map_imperatively(BuyModel.BuyLeadPreprice, tblbuylead_preprice)
 
 
 def stop_mappers() -> None:

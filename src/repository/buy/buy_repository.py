@@ -24,6 +24,7 @@ from model.buy.buy import (
     BuyLeadFollowup,
     BuyLeadFollowupDetail,
     BuyLeadPayment,
+    BuyLeadPreprice,
     BuyLeadTarget,
 )
 from orm.buy.buy import (
@@ -35,6 +36,7 @@ from orm.buy.buy import (
     tblbuylead_file,
     tblbuylead_followup,
     tblbuylead_payment,
+    tblbuylead_preprice,
     tblbuylead_stockin,
     tblbuylead_stockin_document,
     tblbuylead_target,
@@ -1337,6 +1339,24 @@ class BuyRepository(BuyRepositoryInterface):
         created_by: str,
     ) -> int:
         try:
+            update_stmt = (
+                update(tblbuylead)
+                .where(
+                    tblbuylead.c.id == lead_id,
+                    tblbuylead.c.is_active.is_(True),
+                    tblbuylead.c.is_deleted.is_(False),
+                    or_(
+                        tblbuylead.c.status == BuyStatus.Appointment.value,
+                    ),
+                )
+                .values(
+                    status=BuyStatus.StockIn.value,
+                    modified_by=created_by,
+                    modified_at=func.now(),
+                )
+            )
+            await self.session.execute(update_stmt)
+
             stmt = insert(tblbuylead_stockin).values(
                 buylead_id=lead_id,
                 remarks=remarks,
@@ -1710,3 +1730,63 @@ class BuyRepository(BuyRepositoryInterface):
         result = await self.session.execute(stmt)
         await self.session.commit()
         return result.rowcount > 0
+
+    async def create_lead_preprice(
+        self, lead_id: int, lead_preprice: BuyLeadPreprice, created_by: str
+    ) -> int:
+        try:
+            existing_stmt = select(
+                tblbuylead.c.id,
+            ).where(
+                tblbuylead.c.id == lead_id,
+                tblbuylead.c.is_active.is_(True),
+                tblbuylead.c.is_deleted.is_(False),
+                or_(
+                    tblbuylead.c.status == BuyStatus.Allocated.value,
+                ),
+            )
+
+            result = await self.session.execute(existing_stmt)
+            existing = result.fetchone()
+
+            if not existing:
+                raise NotFound(constant.NOTFOUND)
+
+            stmt = (
+                update(tblbuylead)
+                .where(
+                    tblbuylead.c.id == lead_id,
+                    tblbuylead.c.is_active.is_(True),
+                    tblbuylead.c.is_deleted.is_(False),
+                    or_(
+                        tblbuylead.c.status == BuyStatus.Allocated.value,
+                    ),
+                )
+                .values(
+                    status=BuyStatus.PrePrice.value,
+                    modified_by=created_by,
+                    modified_at=func.now(),
+                )
+            )
+            await self.session.execute(stmt)
+
+            preprice_values = dict(
+                buylead_id=lead_id,
+                pre_price=lead_preprice.pre_price,
+                remarks=lead_preprice.remarks,
+                created_by=created_by,
+            )
+
+            stmt = (
+                insert(tblbuylead_preprice)
+                .values(**preprice_values)
+                .returning(tblbuylead_preprice.c.id)
+            )
+            result = await self.session.execute(stmt)
+            preprice_id = result.scalar_one()
+
+            await self.session.commit()
+            return preprice_id
+        except IntegrityError:
+            await self.session.rollback()
+            raise CreationError(constant.FAILED)

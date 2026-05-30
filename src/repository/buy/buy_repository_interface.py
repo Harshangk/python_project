@@ -10,6 +10,7 @@ from model.buy.buy import (
     BuyLeadFollowup,
     BuyLeadFollowupDetail,
     BuyLeadPayment,
+    BuyLeadPreprice,
     BuyLeadTarget,
 )
 
@@ -315,4 +316,10 @@ class BuyRepositoryInterface(ABC):
     async def remove_buy_target(
         self, target_id: int, created_by: str, role_id: int
     ) -> bool:
+        pass
+
+    @abstractmethod
+    async def create_lead_preprice(
+        self, lead_id: int, lead_preprice: BuyLeadPreprice, created_by: str
+    ) -> int:
         pass

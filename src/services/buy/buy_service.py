@@ -13,7 +13,12 @@ from common.payment_pdf import build_buy_lead_payment_pdf
 from common.schema_types import BuyStage, BuyStatus, FileStatus
 from model.buy.buy import AllocateLeadsRequest
 from model.buy.buy import BuyLead as BuyLeadModel
-from model.buy.buy import BuyLeadFollowup, BuyLeadPayment, BuyLeadTarget
+from model.buy.buy import (
+    BuyLeadFollowup,
+    BuyLeadPayment,
+    BuyLeadPreprice,
+    BuyLeadTarget,
+)
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 from repository.common.common_repository_interface import CommonRepositoryInterface
 from schema.buy.buy import (
@@ -845,4 +850,11 @@ class BuyService(BuyServiceInterface):
     ) -> bool:
         return await self.buy_repository.remove_buy_target(
             target_id, created_by, role_id
+        )
+
+    async def create_lead_preprice(
+        self, lead_id: int, lead_preprice: BuyLeadPreprice, created_by: str
+    ) -> int:
+        return await self.buy_repository.create_lead_preprice(
+            lead_id=lead_id, lead_preprice=lead_preprice, created_by=created_by
         )

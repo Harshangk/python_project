@@ -299,3 +299,10 @@ class BuyLeadEvaluation:
     lead_vehicle_insurance: BuyLeadVehicleInsurance | None = None
     evaluation_parameters: List[BuyLeadEvaluationParameter] | None = None
     photos: List[BuyLeadEvaluationPhoto] | None = None
+
+
+@dataclass
+class BuyLeadPreprice:
+    pre_price: Decimal = Decimal("0.00")
+    remarks: str
+    created_by: str | None = None
