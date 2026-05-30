@@ -12,7 +12,7 @@ from schema.buy.buy import (
     BuyLeadImportItem,
     BuyLeadItem,
     BuyTargetItem,
-    CreateBuyLeadPreprice,
+    ProvideBuyLeadPreprice,
 )
 
 
@@ -111,6 +111,14 @@ class BuyServiceInterface(ABC):
         search: str | None = None,
         buy_stage: BuyStage | None = None,
     ) -> List[BuyLeadFollowupItem]:
+        pass
+
+    @abstractmethod
+    async def get_followup_lead_status_count(
+        self,
+        created_by: str,
+        role_id: int,
+    ) -> dict[str, int]:
         pass
 
     @abstractmethod
@@ -325,7 +333,11 @@ class BuyServiceInterface(ABC):
         pass
 
     @abstractmethod
-    async def create_lead_preprice(
-        self, lead_id: int, lead_preprice: CreateBuyLeadPreprice, created_by: str
+    async def sent_lead_preprice(self, lead_id: int, created_by: str) -> int:
+        pass
+
+    @abstractmethod
+    async def provide_lead_preprice(
+        self, lead_id: int, lead_preprice: ProvideBuyLeadPreprice, created_by: str
     ) -> int:
         pass

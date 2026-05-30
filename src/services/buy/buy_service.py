@@ -16,8 +16,8 @@ from model.buy.buy import BuyLead as BuyLeadModel
 from model.buy.buy import (
     BuyLeadFollowup,
     BuyLeadPayment,
-    BuyLeadPreprice,
     BuyLeadTarget,
+    ProvideBuyLeadPreprice,
 )
 from repository.buy.buy_repository_interface import BuyRepositoryInterface
 from repository.common.common_repository_interface import CommonRepositoryInterface
@@ -208,6 +208,16 @@ class BuyService(BuyServiceInterface):
             leads.append(BuyLeadFollowupItem(**item_data))
 
         return leads
+
+    async def get_followup_lead_status_count(
+        self,
+        created_by: str,
+        role_id: int,
+    ) -> dict[str, int]:
+        rows = await self.buy_repository.get_followup_lead_status_count(
+            created_by, role_id
+        )
+        return {row["stage"]: row["count"] for row in rows}
 
     async def get_total_followup_lead(
         self,
@@ -852,9 +862,14 @@ class BuyService(BuyServiceInterface):
             target_id, created_by, role_id
         )
 
-    async def create_lead_preprice(
-        self, lead_id: int, lead_preprice: BuyLeadPreprice, created_by: str
+    async def sent_lead_preprice(self, lead_id: int, created_by: str) -> int:
+        return await self.buy_repository.sent_lead_preprice(
+            lead_id=lead_id, created_by=created_by
+        )
+
+    async def provide_lead_preprice(
+        self, lead_id: int, lead_preprice: ProvideBuyLeadPreprice, created_by: str
     ) -> int:
-        return await self.buy_repository.create_lead_preprice(
+        return await self.buy_repository.provide_lead_preprice(
             lead_id=lead_id, lead_preprice=lead_preprice, created_by=created_by
         )

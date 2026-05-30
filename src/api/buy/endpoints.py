@@ -55,9 +55,9 @@ from schema.buy.buy import (
     CreateBuyLead,
     CreateBuyLeadFollowup,
     CreateBuyLeadPayment,
-    CreateBuyLeadPreprice,
     CreateBuyTarget,
     ImportBuyLeadRequest,
+    ProvideBuyLeadPreprice,
     Response,
     UpdateBuyLead,
     UpdateBuyTarget,
@@ -445,6 +445,33 @@ async def get_buy_followup_lead(
             next_url = build_next_page_url(request, last_id, limit)
 
         return BuyLeadFollowupList(total=total, limit=limit, next=next_url, items=leads)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
+@router.get(
+    "/followup/status/count",
+    response_model=dict[str, int],
+    status_code=status.HTTP_200_OK,
+)
+async def get_buy_followup_lead_status_count(
+    request: Request,
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> dict[str, int]:
+
+    logger.info(f"request: {request}, user: {current_user}")
+    try:
+        return await buy_service.get_followup_lead_status_count(
+            current_user.user_name,
+            current_user.role_id,
+        )
+
     except ValueError as ex:
         logger.error(f"ValueError error: {ex}")
         raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
@@ -1130,22 +1157,58 @@ async def remove_buy_target_by_id(
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
 
 
+@router.patch(
+    "/{lead_id}/sent/preprice",
+    response_model=Response,
+    status_code=status.HTTP_200_OK,
+)
+async def sent_lead_preprice(
+    request: Request,
+    lead_id: int = Path(..., gt=0),
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> Response:
+    logger.info(f"request: {request}")
+    try:
+        lead_id = await buy_service.sent_lead_preprice(
+            lead_id=lead_id,
+            created_by=current_user.user_name,
+        )
+
+    except CreationError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.FAILED)
+    except NotFound as ex:
+        logger.error(f"Not Found error: {ex}")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, constant.NOTFOUND)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"[{trace_id}] sent_preprice_lead failed: {str(ex)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+    return Response(id=lead_id, message=constant.SENT)
+
+
 @router.post(
-    "/{lead_id}/preprice",
+    "/{lead_id}/provide/preprice",
     response_model=Response,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_lead_preprice(
+async def provide_lead_preprice(
     request: Request,
     lead_id: int = Path(..., gt=0),
-    lead_preprice: CreateBuyLeadPreprice = Body(..., example=example.BUY_LEAD_PREPRICE),
+    lead_preprice: ProvideBuyLeadPreprice = Body(
+        ..., example=example.PROVIDE_BUY_LEAD_PREPRICE
+    ),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(
         require_roles(
             list(
                 set(
                     settings.admin_role_ids
-                    + settings.preprice_role_ids
+                    + settings.pricing_role_ids
                     + settings.payment_role_ids
                 )
             )
@@ -1155,7 +1218,7 @@ async def create_lead_preprice(
 ) -> Response:
     logger.info(f"request: {request}")
     try:
-        preprice_id = await buy_service.create_lead_preprice(
+        preprice_id = await buy_service.provide_lead_preprice(
             lead_id=lead_id,
             lead_preprice=lead_preprice.to_model(),
             created_by=current_user.user_name,

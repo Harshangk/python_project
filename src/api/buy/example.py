@@ -84,8 +84,8 @@ BUY_LEAD_FOLLOWUP = {
     "variant": "",
     "color": "",
     "fuelType": "Petrol",
-    "mfg_month": "January",
-    "mfg_year": "2022",
+    "mfgMonth": "January",
+    "mfgYear": "2022",
     "kms": 35000,
     "owner": "1",
     "clientOffer": 500000,
@@ -176,7 +176,7 @@ UPDATE_BUY_LEAD_TARGET = {
     "total": 40,
 }
 
-BUY_LEAD_PREPRICE = {
+PROVIDE_BUY_LEAD_PREPRICE = {
     "prePrice": 450000.00,
     "remarks": "Pre-price added for purchase lead",
     "createdBy": "john.doe",

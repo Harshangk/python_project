@@ -10,8 +10,8 @@ from model.buy.buy import (
     BuyLeadFollowup,
     BuyLeadFollowupDetail,
     BuyLeadPayment,
-    BuyLeadPreprice,
     BuyLeadTarget,
+    ProvideBuyLeadPreprice,
 )
 
 
@@ -113,6 +113,14 @@ class BuyRepositoryInterface(ABC):
         role_id: int,
         search: str | None = None,
         buy_stage: BuyStage | None = None,
+    ) -> Sequence[Mapping[str, Any]]:
+        pass
+
+    @abstractmethod
+    async def get_followup_lead_status_count(
+        self,
+        created_by: str,
+        role_id: int,
     ) -> Sequence[Mapping[str, Any]]:
         pass
 
@@ -319,7 +327,11 @@ class BuyRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    async def create_lead_preprice(
-        self, lead_id: int, lead_preprice: BuyLeadPreprice, created_by: str
+    async def sent_lead_preprice(self, lead_id: int, created_by: str) -> int:
+        pass
+
+    @abstractmethod
+    async def provide_lead_preprice(
+        self, lead_id: int, lead_preprice: ProvideBuyLeadPreprice, created_by: str
     ) -> int:
         pass

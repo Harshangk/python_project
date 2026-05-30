@@ -17,8 +17,8 @@ from api.buy.example import (
     BUY_LEAD_ALLOCATION,
     BUY_LEAD_FOLLOWUP,
     BUY_LEAD_PAYMENT,
-    BUY_LEAD_PREPRICE,
     BUY_LEAD_TARGET,
+    PROVIDE_BUY_LEAD_PREPRICE,
     UPDATE_LEAD,
 )
 from app.constant import BROKERINVALID, SOURCEINVALID
@@ -292,6 +292,7 @@ class CreateBuyLeadFollowup(CamelBaseModel):
     variant: str | None = Field(None, max_length=255)
     color: Annotated[Color | None, BeforeValidator(empty_to_none)] = None
     fuel_type: FuelType
+    mfg_month: Months
     mfg_year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
     kms: int
     owner: str = Field(..., min_length=1, max_length=1)
@@ -318,6 +319,7 @@ class CreateBuyLeadFollowup(CamelBaseModel):
             variant=self.variant,
             color=self.color,
             fuel_type=self.fuel_type,
+            mfg_month=self.mfg_month,
             mfg_year=self.mfg_year,
             kms=self.kms,
             owner=self.owner,
@@ -671,16 +673,16 @@ class EvaluationParameterRequest(CamelBaseModel):
     subpartsubstatus_id: int | None = None
 
 
-class CreateBuyLeadPreprice(CamelBaseModel):
+class ProvideBuyLeadPreprice(CamelBaseModel):
     pre_price: Decimal = Decimal("0.00")
     remarks: str = Field(..., min_length=1, max_length=500)
 
     class config:
-        schema_extra = {"example": BUY_LEAD_PREPRICE}
+        schema_extra = {"example": PROVIDE_BUY_LEAD_PREPRICE}
         orm_mode = True
 
-    def to_model(self) -> BuyModel.BuyLeadPreprice:
-        return BuyModel.BuyLeadPreprice(
+    def to_model(self) -> BuyModel.ProvideBuyLeadPreprice:
+        return BuyModel.ProvideBuyLeadPreprice(
             pre_price=self.pre_price,
             remarks=self.remarks,
         )

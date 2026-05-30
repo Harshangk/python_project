@@ -24,8 +24,8 @@ from model.buy.buy import (
     BuyLeadFollowup,
     BuyLeadFollowupDetail,
     BuyLeadPayment,
-    BuyLeadPreprice,
     BuyLeadTarget,
+    ProvideBuyLeadPreprice,
 )
 from orm.buy.buy import (
     tblbuylead,
@@ -825,6 +825,31 @@ class BuyRepository(BuyRepositoryInterface):
             stmt = stmt.where(tblbuylead.c.id < cursor)
 
         stmt = stmt.limit(limit)
+        result = await self.session.execute(stmt)
+        return result.mappings().all()
+
+    async def get_followup_lead_status_count(
+        self,
+        created_by: str,
+        role_id: int,
+    ) -> Sequence[Mapping[str, Any]]:
+        stmt = (
+            select(
+                tblbuylead_followup.c.stage,
+                func.count().label("count"),
+            )
+            .join(tblbuylead, tblbuylead.c.id == tblbuylead_followup.c.buylead_id)
+            .where(
+                tblbuylead.c.is_active,
+                tblbuylead.c.status != BuyStatus.NotAllocated.value,
+            )
+            .group_by(tblbuylead_followup.c.stage)
+        )
+        stmt = self._apply_role_filter(
+            stmt,
+            created_by,
+            role_id,
+        )
         result = await self.session.execute(stmt)
         return result.mappings().all()
 
@@ -1731,9 +1756,7 @@ class BuyRepository(BuyRepositoryInterface):
         await self.session.commit()
         return result.rowcount > 0
 
-    async def create_lead_preprice(
-        self, lead_id: int, lead_preprice: BuyLeadPreprice, created_by: str
-    ) -> int:
+    async def sent_lead_preprice(self, lead_id: int, created_by: str) -> int:
         try:
             existing_stmt = select(
                 tblbuylead.c.id,
@@ -1741,9 +1764,7 @@ class BuyRepository(BuyRepositoryInterface):
                 tblbuylead.c.id == lead_id,
                 tblbuylead.c.is_active.is_(True),
                 tblbuylead.c.is_deleted.is_(False),
-                or_(
-                    tblbuylead.c.status == BuyStatus.Allocated.value,
-                ),
+                tblbuylead.c.status == BuyStatus.Allocated.value,
             )
 
             result = await self.session.execute(existing_stmt)
@@ -1754,16 +1775,44 @@ class BuyRepository(BuyRepositoryInterface):
 
             stmt = (
                 update(tblbuylead)
-                .where(
-                    tblbuylead.c.id == lead_id,
-                    tblbuylead.c.is_active.is_(True),
-                    tblbuylead.c.is_deleted.is_(False),
-                    or_(
-                        tblbuylead.c.status == BuyStatus.Allocated.value,
-                    ),
-                )
+                .where(tblbuylead.c.id == lead_id)
                 .values(
                     status=BuyStatus.PrePrice.value,
+                    modified_by=created_by,
+                    modified_at=func.now(),
+                )
+            )
+            await self.session.execute(stmt)
+            await self.session.commit()
+            return lead_id
+        except IntegrityError:
+            await self.session.rollback()
+            raise CreationError(constant.FAILED)
+
+    async def provide_lead_preprice(
+        self, lead_id: int, lead_preprice: ProvideBuyLeadPreprice, created_by: str
+    ) -> int:
+        try:
+            existing_stmt = select(
+                tblbuylead.c.id,
+            ).where(
+                tblbuylead.c.id == lead_id,
+                tblbuylead.c.is_active.is_(True),
+                tblbuylead.c.is_deleted.is_(False),
+                tblbuylead.c.status == BuyStatus.PrePrice.value,
+            )
+
+            result = await self.session.execute(existing_stmt)
+            existing = result.fetchone()
+
+            if not existing:
+                raise NotFound(constant.NOTFOUND)
+
+            stmt = (
+                update(tblbuylead)
+                .where(tblbuylead.c.id == lead_id)
+                .values(
+                    status=BuyStatus.Allocated.value,
                     modified_by=created_by,
                     modified_at=func.now(),
                 )
