@@ -32,7 +32,7 @@ def upgrade() -> None:
         ),
         sa.Column("user_name", sa.String(50), nullable=False),
         sa.Column("month", sa.String(9), nullable=False),
-        sa.Column("Year", sa.String(4), nullable=False),
+        sa.Column("year", sa.String(4), nullable=False),
         sa.Column("normal", sa.Integer(), server_default=text("0"), nullable=False),
         sa.Column("premium", sa.Integer(), server_default=text("0"), nullable=False),
         sa.Column("total", sa.Integer(), server_default=text("0"), nullable=False),
@@ -46,7 +46,7 @@ def upgrade() -> None:
         sa.UniqueConstraint(
             "user_name",
             "month",
-            "Year",
+            "year",
             name=op.f("uq_tblbuylead_target_user_name_month_year"),
         ),
     )
@@ -55,7 +55,7 @@ def upgrade() -> None:
         "idx_tblbuylead_target_user_name", "tblbuylead_target", ["user_name"]
     )
     op.create_index("idx_tblbuylead_target_month", "tblbuylead_target", ["month"])
-    op.create_index("idx_tblbuylead_target_year", "tblbuylead_target", ["Year"])
+    op.create_index("idx_tblbuylead_target_year", "tblbuylead_target", ["year"])
 
 
 def downgrade() -> None:

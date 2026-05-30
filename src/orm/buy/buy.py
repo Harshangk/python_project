@@ -282,7 +282,7 @@ tblbuylead_target = Table(
         "user_name",
         "month",
         "year",
-        name="uq_tblbuylead_target_user_month_year",
+        name="uq_tblbuylead_target_user_name_month_year",
     ),
     Index("idx_tblbuylead_target_user_name", "user_name"),
     Index("idx_tblbuylead_target_month", "month"),

@@ -303,6 +303,6 @@ class BuyLeadEvaluation:
 
 @dataclass
 class BuyLeadPreprice:
-    pre_price: Decimal = Decimal("0.00")
     remarks: str
+    pre_price: Decimal = Decimal("0.00")
     created_by: str | None = None
