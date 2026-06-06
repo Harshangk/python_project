@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app import constant
 from app.core.config import settings
+from app.db.mongo import get_mongo_collection
 from auth.exceptions import AllocationError, AlreadyExistsError, CreationError, NotFound
 from common.schema_types import (
     BuyDisposition,
@@ -682,6 +683,14 @@ class BuyRepository(BuyRepositoryInterface):
             if not existing:
                 raise NotFound(constant.NOTFOUND)
 
+            # Snapshot existing followup row before updates
+            followup_snapshot_stmt = select(tblbuylead_followup).where(
+                tblbuylead_followup.c.buylead_id == lead_id
+            )
+            followup_result = await self.session.execute(followup_snapshot_stmt)
+            followup_row = followup_result.mappings().one_or_none()
+            followup_snapshot = dict(followup_row) if followup_row else None
+
             stmt = (
                 update(tblbuylead)
                 .where(
@@ -757,6 +766,12 @@ class BuyRepository(BuyRepositoryInterface):
             await self.session.execute(stmt)
 
             await self.session.commit()
+
+            # Insert snapshot to MongoDB only after successful commit
+            if followup_snapshot:
+                coll = get_mongo_collection("buylead_followup_history")
+                await coll.insert_one(followup_snapshot)
+
             return lead_id
         except IntegrityError:
             await self.session.rollback()
