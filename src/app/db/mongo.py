@@ -16,7 +16,7 @@ def get_mongo_client() -> AsyncIOMotorClient:
 @cache
 def get_mongo_db():
     """Cached MongoDB database instance."""
-    db_name = settings.mongo_database or "poc_car"
+    db_name = settings.mongo_database
     return get_mongo_client()[db_name]
 
 
