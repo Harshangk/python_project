@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from typing import Any, Mapping, Sequence
 from uuid import UUID
 
@@ -273,6 +274,8 @@ class BuyRepository(BuyRepositoryInterface):
         try:
             existing_stmt = select(
                 tblbuylead.c.id,
+                tblbuylead.c.client_offer,
+                tblbuylead.c.our_offer,
             ).where(
                 tblbuylead.c.id == lead_id,
                 tblbuylead.c.is_active.is_(True),
@@ -284,6 +287,9 @@ class BuyRepository(BuyRepositoryInterface):
 
             if not existing:
                 raise NotFound(constant.NOTFOUND)
+
+            prev_client_offer = existing.client_offer
+            prev_our_offer = existing.our_offer
 
             await self._check_existing_lead(
                 lead,
@@ -342,6 +348,29 @@ class BuyRepository(BuyRepositoryInterface):
                 await self.session.execute(stmt)
 
             await self.session.commit()
+
+            # Log offer price changes to MongoDB after successful commit
+            if (
+                lead.client_offer != prev_client_offer
+                or lead.our_offer != prev_our_offer
+            ):
+                try:
+                    coll = get_mongo_collection("buylead_offer_history")
+                    await coll.insert_one(
+                        {
+                            "buylead_id": lead_id,
+                            "prev_client_offer": prev_client_offer,
+                            "prev_our_offer": prev_our_offer,
+                            "new_client_offer": lead.client_offer,
+                            "new_our_offer": lead.our_offer,
+                            "changed_at": datetime.now(),
+                            "changed_by": created_by,
+                        }
+                    )
+                except Exception:
+                    await self.session.rollback()
+                    raise CreationError(constant.FAILED)
+
             return lead_id
         except IntegrityError:
             await self.session.rollback()
