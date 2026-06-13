@@ -1,8 +1,21 @@
+import asyncio
 from typing import Any, Mapping, Sequence
 from uuid import UUID
 
 from bson import ObjectId
-from sqlalchemy import String, and_, asc, cast, delete, desc, func, or_, select, update
+from sqlalchemy import (
+    String,
+    and_,
+    asc,
+    cast,
+    delete,
+    desc,
+    exists,
+    func,
+    or_,
+    select,
+    update,
+)
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -1864,10 +1877,14 @@ class BuyRepository(BuyRepositoryInterface):
         self, lead_id: int, cursor: str | None, limit: int
     ) -> list[dict]:
         coll = get_mongo_collection("buylead_followup_history")
-        query: dict = {"buylead_id": lead_id}
+
+        query = {"buylead_id": lead_id}
+
         if cursor:
             query["_id"] = {"$lt": ObjectId(cursor)}
+
         projection = {
+            "_id": 1,
             "buylead_id": 1,
             "stage": 1,
             "disposition": 1,
@@ -1877,13 +1894,69 @@ class BuyRepository(BuyRepositoryInterface):
             "created_at": 1,
             "created_by": 1,
         }
-        docs = (
-            await coll.find(query, projection)
+
+        # Reserve one slot for latest PostgreSQL followup
+        mongo_limit = limit - 1 if cursor is None else limit
+
+        mongo_task = (
+            coll.find(query, projection)
             .sort("_id", -1)
-            .limit(limit)
-            .to_list(length=limit)
+            .limit(max(mongo_limit, 0))
+            .to_list(length=max(mongo_limit, 0))
         )
-        return [
+
+        pg_task = None
+
+        if cursor is None:
+            latest_followup_stmt = (
+                select(
+                    tblbuylead_followup.c.id,
+                    tblbuylead_followup.c.buylead_id,
+                    tblbuylead_followup.c.stage,
+                    tblbuylead_followup.c.disposition,
+                    tblbuylead_followup.c.calldate,
+                    tblbuylead_followup.c.preferred_time,
+                    tblbuylead_followup.c.notes,
+                    tblbuylead_followup.c.created_at,
+                    tblbuylead_followup.c.created_by,
+                )
+                .where(tblbuylead_followup.c.buylead_id == lead_id)
+                .order_by(desc(tblbuylead_followup.c.created_at))
+                .limit(1)
+            )
+
+            pg_task = self.session.execute(latest_followup_stmt)
+
+            mongo_docs, pg_result = await asyncio.gather(
+                mongo_task,
+                pg_task,
+            )
+
+            pg_record = pg_result.mappings().first()
+
+        else:
+            mongo_docs = await mongo_task
+            pg_record = None
+
+        response = []
+
+        if pg_record:
+            response.append(
+                {
+                    "doc_id": str(pg_record["id"]),
+                    "buylead_id": pg_record["buylead_id"],
+                    "stage": pg_record["stage"],
+                    "disposition": pg_record["disposition"],
+                    "calldate": pg_record["calldate"],
+                    "preferred_time": pg_record["preferred_time"],
+                    "notes": pg_record["notes"],
+                    "created_at": pg_record["created_at"],
+                    "created_by": pg_record["created_by"],
+                    "source": "postgres",
+                }
+            )
+
+        response.extend(
             {
                 "doc_id": str(doc["_id"]),
                 "buylead_id": doc.get("buylead_id"),
@@ -1894,10 +1967,30 @@ class BuyRepository(BuyRepositoryInterface):
                 "notes": doc.get("notes"),
                 "created_at": doc.get("created_at"),
                 "created_by": doc.get("created_by"),
+                "source": "mongo",
             }
-            for doc in docs
-        ]
+            for doc in mongo_docs
+        )
 
-    async def get_total_followup_history(self, lead_id: int) -> int:
+        return response
+
+    async def get_total_followup_history(
+        self,
+        lead_id: int,
+    ) -> int:
         coll = get_mongo_collection("buylead_followup_history")
-        return await coll.count_documents({"buylead_id": lead_id})
+
+        mongo_count_task = coll.count_documents({"buylead_id": lead_id})
+
+        pg_exists_stmt = select(
+            exists().where(tblbuylead_followup.c.buylead_id == lead_id)
+        )
+
+        pg_exists_task = self.session.scalar(pg_exists_stmt)
+
+        mongo_count, pg_exists = await asyncio.gather(
+            mongo_count_task,
+            pg_exists_task,
+        )
+
+        return mongo_count + int(bool(pg_exists))

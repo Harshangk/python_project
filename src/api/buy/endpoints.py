@@ -396,15 +396,23 @@ async def get_followup_history(
     logger.info(f"request: {request}, user: {current_user}, lead_id: {lead_id}")
     try:
         limit = normalize_limit(limit)
-        items, total = await buy_service.get_followup_history(lead_id, cursor, limit)
-
+        leads = await buy_service.get_followup_history(
+            lead_id,
+            cursor,
+            limit,
+        )
+        total = await buy_service.get_total_followup_history(lead_id)
         next_url = None
-        if len(items) == limit:
-            next_url = build_next_page_url(request, items[-1].doc_id, limit)
+        if len(leads) == limit:
+            last_id = leads[-1].id
+            next_url = build_next_page_url(request, last_id, limit)
 
-        return FollowupHistoryList(total=total, limit=limit, next=next_url, items=items)
+        return FollowupHistoryList(total=total, limit=limit, next=next_url, items=leads)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
     except Exception as ex:
-        logger.error(f"[{trace_id}] get_followup_history failed: {str(ex)}")
+        logger.error(f"Exception error: {ex}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
 
 

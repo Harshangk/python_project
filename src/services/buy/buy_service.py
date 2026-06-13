@@ -876,11 +876,14 @@ class BuyService(BuyServiceInterface):
         )
 
     async def get_followup_history(
-        self, lead_id: int, cursor: str | None, limit: int
-    ) -> tuple[list[FollowupHistoryItem], int]:
-        raw, total = await asyncio.gather(
-            self.buy_repository.get_followup_history(lead_id, cursor, limit),
-            self.buy_repository.get_total_followup_history(lead_id),
-        )
-        items = [FollowupHistoryItem(**doc) for doc in raw]
-        return items, total
+        self,
+        lead_id: int,
+        cursor: int | None,
+        limit: int,
+    ) -> List[FollowupHistoryItem]:
+        rows = await self.buy_repository.get_followup_history(lead_id, cursor, limit)
+        leads = [FollowupHistoryItem(**row) for row in rows]
+        return leads
+
+    async def get_total_followup_history(self, lead_id: int) -> int:
+        return await self.buy_repository.get_total_followup_history(lead_id)

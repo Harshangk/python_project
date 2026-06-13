@@ -345,6 +345,13 @@ class BuyServiceInterface(ABC):
 
     @abstractmethod
     async def get_followup_history(
-        self, lead_id: int, cursor: str | None, limit: int
-    ) -> tuple[list[FollowupHistoryItem], int]:
+        self,
+        lead_id: int,
+        cursor: Optional[int],
+        limit: int,
+    ) -> List[FollowupHistoryItem]:
+        pass
+
+    @abstractmethod
+    async def get_total_followup_history(self, lead_id: int) -> int:
         pass
