@@ -345,3 +345,13 @@ class BuyRepositoryInterface(ABC):
     @abstractmethod
     async def get_total_followup_history(self, lead_id: int) -> int:
         pass
+
+    @abstractmethod
+    async def get_offer_history(
+        self, lead_id: int, cursor: str | None, limit: int
+    ) -> list[dict]:
+        pass
+
+    @abstractmethod
+    async def get_total_offer_history(self, lead_id: int) -> int:
+        pass

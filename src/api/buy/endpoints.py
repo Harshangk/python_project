@@ -1,3 +1,4 @@
+import asyncio
 import io
 from typing import Annotated
 from uuid import UUID, uuid4
@@ -58,6 +59,7 @@ from schema.buy.buy import (
     CreateBuyTarget,
     FollowupHistoryList,
     ImportBuyLeadRequest,
+    OfferHistoryList,
     ProvideBuyLeadPreprice,
     Response,
     UpdateBuyLead,
@@ -408,6 +410,39 @@ async def get_followup_history(
             next_url = build_next_page_url(request, last_id, limit)
 
         return FollowupHistoryList(total=total, limit=limit, next=next_url, items=leads)
+    except ValueError as ex:
+        logger.error(f"ValueError error: {ex}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
+    except Exception as ex:
+        logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
+@router.get(
+    "/{lead_id}/offer/history",
+    response_model=OfferHistoryList,
+    status_code=status.HTTP_200_OK,
+)
+async def get_offer_history(
+    request: Request,
+    lead_id: int = Path(..., gt=0),
+    cursor: str | None = None,
+    limit: int | None = None,
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> OfferHistoryList:
+    logger.info(f"request: {request}, user: {current_user}, lead_id: {lead_id}")
+    try:
+        limit = normalize_limit(limit)
+        items, total = await asyncio.gather(
+            buy_service.get_offer_history(lead_id, cursor, limit),
+            buy_service.get_total_offer_history(lead_id),
+        )
+        next_url = None
+        if len(items) == limit:
+            next_url = build_next_page_url(request, items[-1].id, limit)
+        return OfferHistoryList(total=total, limit=limit, next=next_url, items=items)
     except ValueError as ex:
         logger.error(f"ValueError error: {ex}")
         raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)

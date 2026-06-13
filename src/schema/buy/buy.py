@@ -705,3 +705,21 @@ class FollowupHistoryList(CamelBaseModel):
     limit: int
     next: Optional[str]
     items: List[FollowupHistoryItem]
+
+
+class OfferHistoryItem(CamelBaseModel):
+    id: str
+    buylead_id: int
+    prev_client_offer: int | None = None
+    prev_our_offer: int | None = None
+    new_client_offer: int | None = None
+    new_our_offer: int | None = None
+    changed_at: datetime | None = None
+    changed_by: str | None = None
+
+
+class OfferHistoryList(CamelBaseModel):
+    total: int
+    limit: int
+    next: Optional[str]
+    items: List[OfferHistoryItem]

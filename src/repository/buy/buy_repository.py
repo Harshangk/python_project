@@ -2058,3 +2058,32 @@ class BuyRepository(BuyRepositoryInterface):
         )
 
         return mongo_count + int(bool(pg_exists))
+
+    async def get_offer_history(
+        self, lead_id: int, cursor: str | None, limit: int
+    ) -> list[dict]:
+        coll = get_mongo_collection("buylead_offer_history")
+
+        query = {"buylead_id": lead_id}
+        if cursor:
+            query["_id"] = {"$lt": ObjectId(cursor)}
+
+        docs = await coll.find(query).sort("_id", -1).limit(limit).to_list(length=limit)
+
+        return [
+            {
+                "id": str(doc["_id"]),
+                "buylead_id": doc.get("buylead_id"),
+                "prev_client_offer": doc.get("prev_client_offer"),
+                "prev_our_offer": doc.get("prev_our_offer"),
+                "new_client_offer": doc.get("new_client_offer"),
+                "new_our_offer": doc.get("new_our_offer"),
+                "changed_at": doc.get("changed_at"),
+                "changed_by": doc.get("changed_by"),
+            }
+            for doc in docs
+        ]
+
+    async def get_total_offer_history(self, lead_id: int) -> int:
+        coll = get_mongo_collection("buylead_offer_history")
+        return await coll.count_documents({"buylead_id": lead_id})

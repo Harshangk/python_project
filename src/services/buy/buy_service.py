@@ -30,6 +30,7 @@ from schema.buy.buy import (
     FollowupHistoryItem,
     LeadAddress,
     LeadFollowup,
+    OfferHistoryItem,
 )
 from services.buy.buy_service_interface import BuyServiceInterface
 from services.buy.buy_transform import transform
@@ -887,3 +888,15 @@ class BuyService(BuyServiceInterface):
 
     async def get_total_followup_history(self, lead_id: int) -> int:
         return await self.buy_repository.get_total_followup_history(lead_id)
+
+    async def get_offer_history(
+        self,
+        lead_id: int,
+        cursor: str | None,
+        limit: int,
+    ) -> List[OfferHistoryItem]:
+        rows = await self.buy_repository.get_offer_history(lead_id, cursor, limit)
+        return [OfferHistoryItem(**row) for row in rows]
+
+    async def get_total_offer_history(self, lead_id: int) -> int:
+        return await self.buy_repository.get_total_offer_history(lead_id)
