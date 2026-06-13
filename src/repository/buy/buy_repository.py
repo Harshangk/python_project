@@ -1,6 +1,7 @@
 from typing import Any, Mapping, Sequence
 from uuid import UUID
 
+from bson import ObjectId
 from sqlalchemy import String, and_, asc, cast, delete, desc, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
@@ -1858,3 +1859,45 @@ class BuyRepository(BuyRepositoryInterface):
         except IntegrityError:
             await self.session.rollback()
             raise CreationError(constant.FAILED)
+
+    async def get_followup_history(
+        self, lead_id: int, cursor: str | None, limit: int
+    ) -> list[dict]:
+        coll = get_mongo_collection("buylead_followup_history")
+        query: dict = {"buylead_id": lead_id}
+        if cursor:
+            query["_id"] = {"$lt": ObjectId(cursor)}
+        projection = {
+            "buylead_id": 1,
+            "stage": 1,
+            "disposition": 1,
+            "calldate": 1,
+            "preferred_time": 1,
+            "notes": 1,
+            "created_at": 1,
+            "created_by": 1,
+        }
+        docs = (
+            await coll.find(query, projection)
+            .sort("_id", -1)
+            .limit(limit)
+            .to_list(length=limit)
+        )
+        return [
+            {
+                "doc_id": str(doc["_id"]),
+                "buylead_id": doc.get("buylead_id"),
+                "stage": doc.get("stage"),
+                "disposition": doc.get("disposition"),
+                "calldate": doc.get("calldate"),
+                "preferred_time": doc.get("preferred_time"),
+                "notes": doc.get("notes"),
+                "created_at": doc.get("created_at"),
+                "created_by": doc.get("created_by"),
+            }
+            for doc in docs
+        ]
+
+    async def get_total_followup_history(self, lead_id: int) -> int:
+        coll = get_mongo_collection("buylead_followup_history")
+        return await coll.count_documents({"buylead_id": lead_id})

@@ -56,6 +56,7 @@ from schema.buy.buy import (
     CreateBuyLeadFollowup,
     CreateBuyLeadPayment,
     CreateBuyTarget,
+    FollowupHistoryList,
     ImportBuyLeadRequest,
     ProvideBuyLeadPreprice,
     Response,
@@ -375,6 +376,35 @@ async def reopen_leads(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, constant.VALUEERROR)
     except Exception as ex:
         logger.error(f"Exception error: {ex}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+
+
+@router.get(
+    "/{lead_id}/followup/history",
+    response_model=FollowupHistoryList,
+    status_code=status.HTTP_200_OK,
+)
+async def get_followup_history(
+    request: Request,
+    lead_id: int = Path(..., gt=0),
+    cursor: str | None = None,
+    limit: int | None = None,
+    buy_service: BuyServiceInterface = Depends(deps.buy_service),
+    current_user: AuthenticatedUser = Depends(get_authenticated_user),
+    trace_id: UUID = Depends(get_trace_id),
+) -> FollowupHistoryList:
+    logger.info(f"request: {request}, user: {current_user}, lead_id: {lead_id}")
+    try:
+        limit = normalize_limit(limit)
+        items, total = await buy_service.get_followup_history(lead_id, cursor, limit)
+
+        next_url = None
+        if len(items) == limit:
+            next_url = build_next_page_url(request, items[-1].doc_id, limit)
+
+        return FollowupHistoryList(total=total, limit=limit, next=next_url, items=items)
+    except Exception as ex:
+        logger.error(f"[{trace_id}] get_followup_history failed: {str(ex)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
 
 

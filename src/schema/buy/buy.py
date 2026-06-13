@@ -686,3 +686,22 @@ class ProvideBuyLeadPreprice(CamelBaseModel):
             pre_price=self.pre_price,
             remarks=self.remarks,
         )
+
+
+class FollowupHistoryItem(CamelBaseModel):
+    doc_id: str
+    buylead_id: int
+    stage: str | None = None
+    disposition: str | None = None
+    calldate: datetime | None = None
+    preferred_time: str | None = None
+    notes: str | None = None
+    created_at: datetime | None = None
+    created_by: str | None = None
+
+
+class FollowupHistoryList(CamelBaseModel):
+    total: int
+    limit: int
+    next: Optional[str]
+    items: List[FollowupHistoryItem]

@@ -335,3 +335,13 @@ class BuyRepositoryInterface(ABC):
         self, lead_id: int, lead_preprice: ProvideBuyLeadPreprice, created_by: str
     ) -> int:
         pass
+
+    @abstractmethod
+    async def get_followup_history(
+        self, lead_id: int, cursor: str | None, limit: int
+    ) -> list[dict]:
+        pass
+
+    @abstractmethod
+    async def get_total_followup_history(self, lead_id: int) -> int:
+        pass

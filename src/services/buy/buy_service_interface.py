@@ -12,6 +12,7 @@ from schema.buy.buy import (
     BuyLeadImportItem,
     BuyLeadItem,
     BuyTargetItem,
+    FollowupHistoryItem,
     ProvideBuyLeadPreprice,
 )
 
@@ -340,4 +341,10 @@ class BuyServiceInterface(ABC):
     async def provide_lead_preprice(
         self, lead_id: int, lead_preprice: ProvideBuyLeadPreprice, created_by: str
     ) -> int:
+        pass
+
+    @abstractmethod
+    async def get_followup_history(
+        self, lead_id: int, cursor: str | None, limit: int
+    ) -> tuple[list[FollowupHistoryItem], int]:
         pass
