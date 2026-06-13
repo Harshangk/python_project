@@ -769,8 +769,12 @@ class BuyRepository(BuyRepositoryInterface):
 
             # Insert snapshot to MongoDB only after successful commit
             if followup_snapshot:
-                coll = get_mongo_collection("buylead_followup_history")
-                await coll.insert_one(followup_snapshot)
+                try:
+                    coll = get_mongo_collection("buylead_followup_history")
+                    await coll.insert_one(followup_snapshot)
+                except Exception:
+                    await self.session.rollback()
+                    raise CreationError(constant.FAILED)
 
             return lead_id
         except IntegrityError:

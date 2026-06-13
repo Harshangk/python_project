@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -5,18 +7,29 @@ from api import authrouter as api_auth_router
 from api import router as api_router
 from api.exception_handlers import EXCEPTION_HANDLERS
 from app.core.logging import setup_logging
+from app.db.mongo import close_mongo_client, setup_mongo_indexes
 from common.logging_middleware import LoggingMiddleware
 
 setup_logging()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await setup_mongo_indexes()
+    yield
+    close_mongo_client()
+
+
 app = FastAPI(
     title="POC Cars API",
+    lifespan=lifespan,
     openapi_url="/v1/poc/openapi.json",
     exception_handlers=EXCEPTION_HANDLERS,
     swagger_ui_parameters={
-        "filter": True,  # Adds search/filter box
-        "docExpansion": "none",  # Keeps endpoints collapsed by default
-        "tagsSorter": "alpha",  # Sorts tags alphabetically
-        "operationsSorter": "alpha",  # Sorts operations alphabetically
+        "filter": True,
+        "docExpansion": "none",
+        "tagsSorter": "alpha",
+        "operationsSorter": "alpha",
     },
 )
 app.add_middleware(LoggingMiddleware)
