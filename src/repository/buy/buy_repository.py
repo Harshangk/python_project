@@ -1943,7 +1943,7 @@ class BuyRepository(BuyRepositoryInterface):
         if pg_record:
             response.append(
                 {
-                    "doc_id": str(pg_record["id"]),
+                    "id": str(pg_record["id"]),
                     "buylead_id": pg_record["buylead_id"],
                     "stage": pg_record["stage"],
                     "disposition": pg_record["disposition"],
@@ -1958,7 +1958,7 @@ class BuyRepository(BuyRepositoryInterface):
 
         response.extend(
             {
-                "doc_id": str(doc["_id"]),
+                "id": str(doc["_id"]),
                 "buylead_id": doc.get("buylead_id"),
                 "stage": doc.get("stage"),
                 "disposition": doc.get("disposition"),

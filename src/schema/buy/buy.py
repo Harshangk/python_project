@@ -689,7 +689,7 @@ class ProvideBuyLeadPreprice(CamelBaseModel):
 
 
 class FollowupHistoryItem(CamelBaseModel):
-    doc_id: str
+    id: str
     buylead_id: int
     stage: str | None = None
     disposition: str | None = None
