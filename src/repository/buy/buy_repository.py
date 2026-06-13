@@ -272,24 +272,29 @@ class BuyRepository(BuyRepositoryInterface):
         self, lead_id: int, lead: BuyLeadModel, created_by: str
     ) -> int:
         try:
-            existing_stmt = select(
-                tblbuylead.c.id,
-                tblbuylead.c.client_offer,
-                tblbuylead.c.our_offer,
-            ).where(
+            # Fetch full lead row for snapshot + offer comparison
+            existing_stmt = select(tblbuylead).where(
                 tblbuylead.c.id == lead_id,
                 tblbuylead.c.is_active.is_(True),
                 tblbuylead.c.is_deleted.is_(False),
             )
-
             result = await self.session.execute(existing_stmt)
-            existing = result.fetchone()
+            existing_row = result.mappings().one_or_none()
 
-            if not existing:
+            if not existing_row:
                 raise NotFound(constant.NOTFOUND)
 
-            prev_client_offer = existing.client_offer
-            prev_our_offer = existing.our_offer
+            lead_snapshot = dict(existing_row)
+            prev_client_offer = lead_snapshot.get("client_offer")
+            prev_our_offer = lead_snapshot.get("our_offer")
+
+            # Fetch address row for snapshot
+            addr_stmt = select(tblbuylead_address).where(
+                tblbuylead_address.c.buylead_id == lead_id
+            )
+            addr_result = await self.session.execute(addr_stmt)
+            addr_row = addr_result.mappings().one_or_none()
+            address_snapshot = dict(addr_row) if addr_row else None
 
             await self._check_existing_lead(
                 lead,
@@ -349,7 +354,38 @@ class BuyRepository(BuyRepositoryInterface):
 
             await self.session.commit()
 
-            # Log offer price changes to MongoDB after successful commit
+            # Push tblbuylead snapshot to its own collection
+            try:
+                coll = get_mongo_collection("buylead_history")
+                await coll.insert_one(
+                    {
+                        "buylead_id": lead_id,
+                        **lead_snapshot,
+                        "snapshotted_at": datetime.now(),
+                        "snapshotted_by": created_by,
+                        "action": "update",
+                    }
+                )
+            except Exception:
+                pass
+
+            # Push tblbuylead_address snapshot only when address exists
+            if address_snapshot:
+                try:
+                    coll = get_mongo_collection("buylead_address_history")
+                    await coll.insert_one(
+                        {
+                            "buylead_id": lead_id,
+                            **address_snapshot,
+                            "snapshotted_at": datetime.now(),
+                            "snapshotted_by": created_by,
+                            "action": "update",
+                        }
+                    )
+                except Exception:
+                    pass
+
+            # Push offer change to MongoDB only when price changed
             if (
                 lead.client_offer != prev_client_offer
                 or lead.our_offer != prev_our_offer
@@ -368,8 +404,7 @@ class BuyRepository(BuyRepositoryInterface):
                         }
                     )
                 except Exception:
-                    await self.session.rollback()
-                    raise CreationError(constant.FAILED)
+                    pass
 
             return lead_id
         except IntegrityError:

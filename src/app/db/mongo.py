@@ -33,6 +33,8 @@ async def setup_mongo_indexes():
             "buylead_id"
         )
         await get_mongo_collection("buylead_offer_history").create_index("buylead_id")
+        await get_mongo_collection("buylead_history").create_index("buylead_id")
+        await get_mongo_collection("buylead_address_history").create_index("buylead_id")
     except Exception:
         raise RuntimeError(
             "Failed to create MongoDB indexes, check connection and configuration"
