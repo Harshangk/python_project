@@ -67,6 +67,7 @@ from schema.buy.buy import (
 )
 from services.buy.buy_service_interface import BuyServiceInterface
 from services.common.common_service_interface import CommonServiceInterface
+from ws.notifications import push_lead_notification
 
 router = APIRouter(prefix="/buy", tags=["buy"])
 
@@ -295,6 +296,7 @@ async def remove_buy_lead_by_id(
 )
 async def allocate_leads(
     request: Request,
+    background_tasks: BackgroundTasks,
     allocate: AllocateLeadsRequest = Body(..., example=example.BUY_LEAD_ALLOCATION),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
@@ -308,6 +310,9 @@ async def allocate_leads(
             allocate.to_model(), current_user.user_name, current_user.role_id
         )
         if alocate_count > 0:
+            background_tasks.add_task(
+                push_lead_notification, list(allocate.lead_ids), "fresh_allocation"
+            )
             return Response(id=alocate_count, message=constant.CREATED)
         else:
             return Response(id=alocate_count, message=constant.FAILED)
@@ -326,6 +331,7 @@ async def allocate_leads(
 )
 async def reallocate_leads(
     request: Request,
+    background_tasks: BackgroundTasks,
     reallocate: AllocateLeadsRequest = Body(..., example=example.BUY_LEAD_ALLOCATION),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
@@ -339,6 +345,9 @@ async def reallocate_leads(
             reallocate.to_model(), current_user.user_name, current_user.role_id
         )
         if realocate_count > 0:
+            background_tasks.add_task(
+                push_lead_notification, list(reallocate.lead_ids), "reallocation"
+            )
             return Response(id=realocate_count, message=constant.CREATED)
         else:
             return Response(id=realocate_count, message=constant.FAILED)
@@ -357,6 +366,7 @@ async def reallocate_leads(
 )
 async def reopen_leads(
     request: Request,
+    background_tasks: BackgroundTasks,
     reopen: AllocateLeadsRequest = Body(..., example=example.BUY_LEAD_ALLOCATION),
     buy_service: BuyServiceInterface = Depends(deps.buy_service),
     current_user: AuthenticatedUser = Depends(get_authenticated_user),
@@ -370,6 +380,9 @@ async def reopen_leads(
             reopen.to_model(), current_user.user_name, current_user.role_id
         )
         if reopen_count > 0:
+            background_tasks.add_task(
+                push_lead_notification, list(reopen.lead_ids), "reopen"
+            )
             return Response(id=reopen_count, message=constant.CREATED)
         else:
             return Response(id=reopen_count, message=constant.FAILED)
@@ -1271,6 +1284,7 @@ async def sent_lead_preprice(
 )
 async def provide_lead_preprice(
     request: Request,
+    background_tasks: BackgroundTasks,
     lead_id: int = Path(..., gt=0),
     lead_preprice: ProvideBuyLeadPreprice = Body(
         ..., example=example.PROVIDE_BUY_LEAD_PREPRICE
@@ -1309,4 +1323,5 @@ async def provide_lead_preprice(
     except Exception as ex:
         logger.error(f"[{trace_id}] create_lead failed: {str(ex)}")
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, constant.EXCEPTION)
+    background_tasks.add_task(push_lead_notification, [lead_id], "preprice_provided")
     return Response(id=preprice_id, message=constant.CREATED)

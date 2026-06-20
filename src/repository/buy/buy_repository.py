@@ -2090,3 +2090,34 @@ class BuyRepository(BuyRepositoryInterface):
     async def get_total_offer_history(self, lead_id: int) -> int:
         coll = get_mongo_collection("buylead_offer_history")
         return await coll.count_documents({"buylead_id": lead_id})
+
+    async def get_leads_for_notification(self, lead_ids: list[int]) -> list[dict]:
+        stmt = (
+            select(
+                tblbuylead.c.id,
+                tblbuylead.c.customer_name,
+                tblbuylead.c.mobile,
+                tblbuylead.c.telecaller,
+                tblbuylead.c.executive,
+                tblbuylead.c.mfg_year,
+                mstmake.c.make,
+                mstmodel.c.model,
+            )
+            .join(mstmake, tblbuylead.c.make_id == mstmake.c.id)
+            .join(mstmodel, tblbuylead.c.model_id == mstmodel.c.id)
+            .where(tblbuylead.c.id.in_(lead_ids))
+        )
+        result = await self.session.execute(stmt)
+        return [
+            {
+                "id": row.id,
+                "customer_name": row.customer_name,
+                "mobile": row.mobile,
+                "telecaller": row.telecaller,
+                "executive": row.executive,
+                "make": row.make,
+                "model": row.model,
+                "year": row.mfg_year,
+            }
+            for row in result.fetchall()
+        ]

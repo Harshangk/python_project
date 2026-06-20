@@ -9,6 +9,7 @@ from api.exception_handlers import EXCEPTION_HANDLERS
 from app.core.logging import setup_logging
 from app.db.mongo import close_mongo_client, setup_mongo_indexes
 from common.logging_middleware import LoggingMiddleware
+from ws.router import ws_router
 
 setup_logging()
 
@@ -45,6 +46,7 @@ app.add_middleware(
 )
 app.include_router(api_router, prefix="/v1/poc")
 app.include_router(api_auth_router, prefix="")
+app.include_router(ws_router)
 
 
 @app.get("/")

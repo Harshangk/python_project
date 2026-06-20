@@ -355,3 +355,7 @@ class BuyRepositoryInterface(ABC):
     @abstractmethod
     async def get_total_offer_history(self, lead_id: int) -> int:
         pass
+
+    @abstractmethod
+    async def get_leads_for_notification(self, lead_ids: list[int]) -> list[dict]:
+        pass
