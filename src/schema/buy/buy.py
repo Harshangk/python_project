@@ -144,6 +144,7 @@ class UpdateBuyLead(CamelBaseModel):
     color: Annotated[Color | None, BeforeValidator(empty_to_none)] = None
     fuel_type: FuelType
     mfg_year: Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+    mfg_month: Months | None = "January"
     kms: int
     owner: str = Field(..., min_length=1, max_length=1)
     client_offer: int
@@ -166,6 +167,7 @@ class UpdateBuyLead(CamelBaseModel):
             variant=self.variant,
             color=self.color,
             fuel_type=self.fuel_type,
+            mfg_month=self.mfg_month,
             mfg_year=self.mfg_year,
             kms=self.kms,
             owner=self.owner,

@@ -147,9 +147,10 @@ class BuyRepository(BuyRepositoryInterface):
         self,
         lead: BuyLeadModel,
         lead_id: int | None = None,
+        mobile: str | None = None,
     ):
         conditions = [
-            tblbuylead.c.mobile == lead.mobile,
+            tblbuylead.c.mobile == (mobile or lead.mobile),
             tblbuylead.c.make_id == lead.make_id,
             tblbuylead.c.model_id == lead.model_id,
             tblbuylead.c.status != BuyStatus.StockIn.value,
@@ -287,6 +288,7 @@ class BuyRepository(BuyRepositoryInterface):
             lead_snapshot = dict(existing_row)
             prev_client_offer = lead_snapshot.get("client_offer")
             prev_our_offer = lead_snapshot.get("our_offer")
+            mobile = lead_snapshot.get("mobile")
 
             # Fetch address row for snapshot
             addr_stmt = select(tblbuylead_address).where(
@@ -299,6 +301,7 @@ class BuyRepository(BuyRepositoryInterface):
             await self._check_existing_lead(
                 lead,
                 lead_id=lead_id,
+                mobile=mobile,
             )
             stmt = (
                 update(tblbuylead)
